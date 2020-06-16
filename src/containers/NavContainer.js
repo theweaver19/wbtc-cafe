@@ -117,8 +117,9 @@ class NavContainer extends React.Component {
         } = this.props
 
         const walletAddress = store.get('localWeb3Address')
+        const walletConnectError = store.get('walletConnectError')
 
-        const isSignedIn = walletAddress && walletAddress.length
+        const isSignedIn = walletAddress && walletAddress.length && !walletConnectError
         const balance = store.get('wbtcBalance')
 
         return <Grid item xs={12} className={classes.navContainer}>

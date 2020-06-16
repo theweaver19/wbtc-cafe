@@ -295,28 +295,31 @@ export const initLocalWeb3 = async function() {
                   initMonitoring()
                 // }
 
-                // listen for changes
-                currentProvider.on('accountsChanged', async () => {
-                    window.location.reload()
-                    // resetWallet()
-                    // initLocalWeb3()
-                })
+                if (currentProvider.on) {
+                    // listen for changes
+                    currentProvider.on('accountsChanged', async () => {
+                        window.location.reload()
+                        // resetWallet()
+                        // initLocalWeb3()
+                    })
 
-                currentProvider.on('chainChanged', async () => {
-                    window.location.reload()
-                    // resetWallet()
-                    // initLocalWeb3()
-                })
+                    currentProvider.on('chainChanged', async () => {
+                        window.location.reload()
+                        // resetWallet()
+                        // initLocalWeb3()
+                    })
 
-                currentProvider.on('networkChanged', async () => {
-                    window.location.reload()
-                    // resetWallet()
-                    // initLocalWeb3()
-                })
+                    currentProvider.on('networkChanged', async () => {
+                        window.location.reload()
+                        // resetWallet()
+                        // initLocalWeb3()
+                    })
+                }
             } catch(e) {
               store.set('loadingTransactions', false)
               store.set('walletConnectError', true)
               console.log(e)
+              // alert(e.toString())
             }
         }, 1000)
     } catch(e) {

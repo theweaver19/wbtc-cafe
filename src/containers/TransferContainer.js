@@ -344,10 +344,11 @@ class TransferContainer extends React.Component {
         const allowance = store.get('convert.adapterWbtcAllowance')
         const hasAllowance = Number(amount) <= Number(allowance)
         const allowanceRequesting = store.get('convert.adapterWbtcAllowanceRequesting')
+        const walletConnectError = store.get('walletConnectError')
 
         const convertAddressValid = store.get('convert.destinationValid')
-        const canConvertTo = amount > 0.00010001 && convertAddressValid
-        const canConvertFrom = Number(total) > 0.00010001 && amount <= Number(wbtcBalance) && convertAddressValid
+        const canConvertTo = amount > 0.00010001 && convertAddressValid && !walletConnectError
+        const canConvertFrom = Number(total) > 0.00010001 && amount <= Number(wbtcBalance) && convertAddressValid && !walletConnectError
 
         const sourceAsset = selectedDirection ? 'WBTC' : 'BTC'
         const destAsset = selectedDirection ? 'BTC' : 'WBTC'
@@ -355,6 +356,8 @@ class TransferContainer extends React.Component {
         const maxSlippage = store.get('convert.maxSlippage')
         const slippageOptions = [0.005, 0.01, 0.05]
         const customSlippageValue = slippageOptions.indexOf(maxSlippage) > -1 ? maxSlippage : 0
+
+
 
         // console.log('transfer render', store.getState())
 

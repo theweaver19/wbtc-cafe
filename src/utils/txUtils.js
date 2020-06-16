@@ -323,9 +323,11 @@ export const completeConvertToEthereum = async function(transaction, approveSwap
         return
     }
 
-    const newMinExchangeRate = approveSwappedAsset === 'wbtc' ?
-        RenJS.utils.value(exchangeRate, "btc").sats().toNumber().toFixed(0) :
-        params.contractCalls[0].contractParams[0].value
+    let newMinExchangeRate = params.contractCalls[0].contractParams[0].value
+    if (approveSwappedAsset === 'wbtc') {
+        const rateMinusOne = RenJS.utils.value(exchangeRate, "btc").sats().toNumber() - 1
+        newMinExchangeRate = rateMinusOne.toFixed(0)
+    }
 
     // setTimeout(async () => {
         if (!tx.destTxHash) {
