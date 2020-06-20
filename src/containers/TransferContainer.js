@@ -345,10 +345,13 @@ class TransferContainer extends React.Component {
         const hasAllowance = Number(amount) <= Number(allowance)
         const allowanceRequesting = store.get('convert.adapterWbtcAllowanceRequesting')
         const walletConnectError = store.get('walletConnectError')
+        const fsUser = store.get('fsUser')
+        const validUser = fsUser && fsUser.uid
+        const loadingTransactions = store.get('loadingTransactions')
 
         const convertAddressValid = store.get('convert.destinationValid')
-        const canConvertTo = amount > 0.00010001 && convertAddressValid && !walletConnectError
-        const canConvertFrom = Number(total) > 0.00010001 && amount <= Number(wbtcBalance) && convertAddressValid && !walletConnectError
+        const canConvertTo = amount > 0.00010001 && convertAddressValid && !walletConnectError && validUser && !loadingTransactions
+        const canConvertFrom = Number(total) > 0.00010001 && amount <= Number(wbtcBalance) && convertAddressValid && !walletConnectError && validUser && !loadingTransactions
 
         const sourceAsset = selectedDirection ? 'WBTC' : 'BTC'
         const destAsset = selectedDirection ? 'BTC' : 'WBTC'

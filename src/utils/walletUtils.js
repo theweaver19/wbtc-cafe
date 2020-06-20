@@ -261,15 +261,16 @@ export const initLocalWeb3 = async function() {
             }
         } else {
             // create user
-            await doc.set({
+            const setResult = await doc.set({
                 uid: fsUser.uid,
                 updated: firebase.firestore.Timestamp.fromDate(new Date(Date.now())),
                 signatures: [signature]
             })
+            store.set('fsSetResult', setResult)
         }
 
-        setTimeout(async () => {
-            try {
+        // setTimeout(async () => {
+            // try {
                 const fsDataSnapshot = await db.collection("transactions")
                     .where("walletSignature", "==", signature).get()
 
@@ -315,13 +316,13 @@ export const initLocalWeb3 = async function() {
                         // initLocalWeb3()
                     })
                 }
-            } catch(e) {
-              store.set('loadingTransactions', false)
-              store.set('walletConnectError', true)
-              console.log(e)
-              // alert(e.toString())
-            }
-        }, 1000)
+            // } catch(e) {
+            //   store.set('loadingTransactions', false)
+            //   store.set('walletConnectError', true)
+            //   console.log(e)
+            //   // alert(e.toString())
+            // }
+        // }, 1000)
     } catch(e) {
         store.set('loadingTransactions', false)
         store.set('walletConnectError', true)
