@@ -260,7 +260,6 @@ export const getTaggedTxs = async function() {
 // BTC to WBTC
 export const monitorMintTx = async function(tx) {
     const store = getStore()
-    const sdk = store.get('sdk')
     const web3 = store.get('localWeb3')
 
     const interval = setInterval(async () => {
@@ -276,11 +275,22 @@ export const monitorMintTx = async function(tx) {
 
             // Update confs
             if (confs > 0) {
-                updateTx(Object.assign(latestTx, {
-                    destTxConfs: confs,
-                    awaiting: '',
-                    error: false
-                }))
+                const receipt = await web3.eth.getTransactionReceipt(latestTx.destTxHash)
+
+                // reverted because gas ran out
+                if (receipt && receipt.status === '0x0' || receipt.status === false) {
+                    updateTx(Object.assign(latestTx, {
+                        error: true,
+                        destTxHash: ''
+                    }))
+                } else {
+                    updateTx(Object.assign(latestTx, {
+                        destTxConfs: confs,
+                        awaiting: '',
+                        error: false
+                    }))
+                }
+
                 clearInterval(interval)
             }
         } else {
@@ -329,41 +339,39 @@ export const completeConvertToEthereum = async function(transaction, approveSwap
         newMinExchangeRate = rateMinusOne.toFixed(0)
     }
 
-    // setTimeout(async () => {
-        if (!tx.destTxHash) {
-            updateTx(Object.assign(tx, {
-                awaiting: 'eth-settle',
-            }))
-            try {
-                await adapterContract.methods.mintThenSwap(
-                    params.contractCalls[0].contractParams[0].value,
-                    newMinExchangeRate,
-                    params.contractCalls[0].contractParams[1].value,
-                    params.contractCalls[0].contractParams[2].value,
-                    utxoAmountSats,
-                    renResponse.autogen.nhash,
-                    renSignature
-                ).send({
-                    from: localWeb3Address
-                })
-                .on('transactionHash', hash => {
-                    // console.log(hash)
-                    const newTx = updateTx(Object.assign(tx, {
-                        destTxHash: hash,
-                        error: false
-                    }))
-                    monitorMintTx(newTx)
-                })
+    if (!tx.destTxHash) {
+        updateTx(Object.assign(tx, {
+            awaiting: 'eth-settle',
+        }))
+        try {
+            await adapterContract.methods.mintThenSwap(
+                params.contractCalls[0].contractParams[0].value,
+                newMinExchangeRate,
+                params.contractCalls[0].contractParams[1].value,
+                params.contractCalls[0].contractParams[2].value,
+                utxoAmountSats,
+                renResponse.autogen.nhash,
+                renSignature
+            ).send({
+                from: localWeb3Address
+            })
+            .on('transactionHash', hash => {
+                // console.log(hash)
+                const newTx = updateTx(Object.assign(tx, {
+                    destTxHash: hash,
+                    error: false
+                }))
+                monitorMintTx(newTx)
+            })
 
-                store.set('convert.pendingConvertToEthereum', pending.filter(p => p !== id))
-            } catch(e) {
-                console.log(e)
-                updateTx(Object.assign(tx, { error: true }))
-            }
-        } else {
-            monitorMintTx(getTx(tx.id))
+            store.set('convert.pendingConvertToEthereum', pending.filter(p => p !== id))
+        } catch(e) {
+            console.log(e)
+            updateTx(Object.assign(tx, { error: true }))
         }
-    // }, 1000)
+    } else {
+        monitorMintTx(getTx(tx.id))
+    }
 }
 
 export const initMint = function(tx) {
