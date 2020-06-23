@@ -53,6 +53,9 @@ const styles = () => ({
         [theme.breakpoints.down('xs')]: {
             width: '100%',
             marginTop: theme.spacing(2)
+        },
+        [theme.breakpoints.down('sm')]: {
+            display: 'none'
         }
     },
     title: {

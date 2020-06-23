@@ -24,16 +24,30 @@ const styles = () => ({
         height: '100%'
     },
     titleWrapper: {
-      paddingBottom: theme.spacing(2)
+        paddingBottom: theme.spacing(2)
     },
     actionsCell: {
-      minWidth: 150
+        minWidth: 150
     },
     emptyMessage: {
-      display: 'flex',
-      paddingTop: theme.spacing(8),
-      justifyContent: 'center',
-      height: '100%'
+        display: 'flex',
+        paddingTop: theme.spacing(8),
+        justifyContent: 'center',
+        height: '100%'
+    },
+    message: {
+        [theme.breakpoints.down('sm')]: {
+            display: 'none'
+        }
+    },
+    mobileMessage: {
+        display: 'none',
+        paddingTop: theme.spacing(8),
+        justifyContent: 'center',
+        height: '100%',
+        [theme.breakpoints.down('sm')]: {
+            display: 'flex'
+        }
     }
 })
 
@@ -98,19 +112,25 @@ class TransactionsTableContainer extends React.Component {
               })}
             </TableBody>
           </Table>
-          {!showTransactions && <div className={classes.emptyMessage}>
-              {loadingTransactions ?
-                      <Typography variant='caption'>Loading transactions...</Typography>
-                  : <React.Fragment>
-                      {error ?
-                        <Typography variant='caption'>Connect failed. <ActionLink onClick={initLocalWeb3}>Retry</ActionLink></Typography>
-                      : signedIn && !transactions.length ?
-                        <Typography variant='caption'>No transactions</Typography>
-                      : !signedIn ?
-                        <Typography variant='caption'>Please <ActionLink onClick={initLocalWeb3}>connect wallet</ActionLink> to view transactions</Typography>
-                      : null}
-                  </React.Fragment>}
-          </div>}
+          <div className={classes.message}>
+              {!showTransactions && <div className={classes.emptyMessage}>
+                  {loadingTransactions ?
+                          <Typography variant='caption'>Loading transactions...</Typography>
+                      : <React.Fragment>
+                          {error ?
+                            <Typography variant='caption'>Connect failed. <ActionLink onClick={initLocalWeb3}>Retry</ActionLink></Typography>
+                          : signedIn && !transactions.length ?
+                            <Typography variant='caption'>No transactions</Typography>
+                          : !signedIn ?
+                            <Typography variant='caption'>Please <ActionLink onClick={initLocalWeb3}>connect wallet</ActionLink> to view transactions</Typography>
+                          : null}
+                      </React.Fragment>}
+              </div>}
+          </div>
+
+          <div className={classes.mobileMessage}>
+                <Typography variant='caption'>WBTC Cafe is currently only supported on desktop&nbsp;browsers.</Typography>
+          </div>
 
           {/*!signedIn && <div className={classes.emptyMessage}>
               {error ?

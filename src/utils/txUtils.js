@@ -629,6 +629,7 @@ export const initConvertFromEthereum = async function(tx) {
     }
 }
 
+// On start-up
 export const initMonitoring = function() {
     const store = getStore()
     const network = store.get('selectedNetwork')
