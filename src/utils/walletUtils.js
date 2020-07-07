@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import RenSDK from "@renproject/ren";
 import Web3Modal from 'web3modal'
+import WalletConnectProvider from "@walletconnect/web3-provider";
 import firebase from 'firebase'
 
 import BTC from '../assets/btc.png'
@@ -154,7 +155,14 @@ export const initLocalWeb3 = async function() {
     const fsUser = store.get('fsUser')
     const disclosureAccepted = store.get('disclosureAccepted')
 
-    const providerOptions = {}
+    const providerOptions = {
+        walletconnect: {
+            package: WalletConnectProvider, // required
+            options: {
+                infuraId:  '6de9092ee3284217bb744cc1a6daab94' // required
+            }
+        }
+    }
 
     const web3Modal = new Web3Modal({
         network: selectedNetwork === 'testnet' ? 'kovan' : 'mainnet', // optional
@@ -171,11 +179,13 @@ export const initLocalWeb3 = async function() {
 
     store.set('walletConnectError', false)
 
+    console.log(currentProvider)
+
     let network = ''
-    if (currentProvider.networkVersion === '1') {
+    const netId = Number(currentProvider.networkVersion || currentProvider.networkId)
+    if (netId === 1) {
         network = 'mainnet'
-    } else if (currentProvider.networkVersion === '42' ||
-      (currentProvider.authereum && currentProvider.authereum.networkId === 42)) {
+    } else if (netId === 42) {
         network = 'testnet'
     }
 
@@ -243,7 +253,7 @@ export const initLocalWeb3 = async function() {
         } else {
             fsUser = currentFsUser
         }
-
+        
         store.set('fsUser', fsUser)
 
         // update user collection
