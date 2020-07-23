@@ -26,6 +26,7 @@
     "graphql": "^15.0.0",
     "is-incognito": "^1.0.0",
     "material-ui": "^0.20.2",
+    "prettier": "^2.0.5",
     "qrcode.react": "^1.0.0",
     "query-string": "^6.12.1",
     "react": "^16.9.0",
@@ -44,10 +45,13 @@
     "start": "react-scripts start",
     "build": "react-scripts --max_old_space_size=4096 build",
     "test": "react-scripts test",
+    "lint": "eslint ./src && prettier -c './src/**/*.js'",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app"
+    ]
   },
   "browserslist": {
     "production": [
