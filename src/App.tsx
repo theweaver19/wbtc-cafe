@@ -1,7 +1,8 @@
-import React from "react";
+import * as React from "react";
 import { createStore, withStore } from "@spyna/react-store";
 import { storeListener } from "./services/storeService";
-import queryString from "query-string";
+import * as queryString from "query-string";
+import Marquee from "react-smooth-marquee";
 
 import NavContainer from "./containers/NavContainer";
 import TransferContainer from "./containers/TransferContainer";
@@ -19,25 +20,16 @@ import RenVM from "./assets/renvm-powered.svg";
 
 import { withStyles, ThemeProvider } from "@material-ui/styles";
 import theme from "./theme/theme";
-import classNames from "classnames";
 
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
-import Table from "@material-ui/core/Table";
 
-import RenSDK from "@renproject/ren";
-
-import firebase from "firebase";
+import * as firebase from "firebase/app";
 
 import {
-  ZBTC_MAIN,
-  ZBTC_TEST,
-  WBTC_TEST,
   ADAPTER_MAIN,
   ADAPTER_TEST,
-  BTC_SHIFTER_MAIN,
-  BTC_SHIFTER_TEST,
   CURVE_TEST,
   CURVE_MAIN,
 } from "./utils/web3Utils";
@@ -157,8 +149,8 @@ const initialState = {
   "convert.maxSlippage": 0.01,
 };
 
-class AppWrapper extends React.Component {
-  constructor(props) {
+class AppWrapper extends React.Component<{ store: any; classes: any }> {
+  constructor(props: any) {
     super(props);
     this.state = {};
   }
@@ -190,15 +182,13 @@ class AppWrapper extends React.Component {
         <NetworkModalContainer />
         <SwapRevertModalContainer />
         <NavContainer />
-        <Container size="lg">
+        <Container fixed maxWidth="lg">
           <Grid container className={classes.contentContainer} spacing={2}>
             <Grid item xs={12} className={classes.disclosure}>
-              <div>
-                <marquee scrollamount={6}>
-                  Welcome to the WBTC Cafe! This is a new project, so please use
-                  caution.
-                </marquee>
-              </div>
+              <Marquee>
+                Welcome to the WBTC Cafe! This is a new project, so please use
+                caution.
+              </Marquee>
             </Grid>
             <Grid item xs={12} sm={12} md={4}>
               <TransferContainer />
@@ -215,7 +205,7 @@ class AppWrapper extends React.Component {
           </Grid>
         </Container>
         <Grid container className={classes.footerContainer}>
-          <Container size="lg">
+          <Container fixed maxWidth="lg">
             <Grid container alignItems="center" justify="flex-start">
               <a target="_blank" href={"https://renproject.io"}>
                 <img className={classes.footerLogo} src={RenVM} />
@@ -259,8 +249,8 @@ class AppWrapper extends React.Component {
 
 const AppWrapperComponent = withStore(AppWrapper);
 
-class App extends React.Component {
-  constructor(props) {
+class App extends React.Component<{ classes: any }> {
+  constructor(props: any) {
     super(props);
   }
 

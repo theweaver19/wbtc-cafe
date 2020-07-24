@@ -27,3 +27,11 @@ div {
 tspan, .recharts-legend-item-text {
   font-size: 12px;
 }
+
+.Marquee {
+    overflow-x: hidden;
+    display: block;
+}
+.MarqueeContent {
+    display: inline-block;
+}
