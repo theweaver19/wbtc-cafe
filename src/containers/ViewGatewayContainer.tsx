@@ -1,19 +1,21 @@
-import React from "react";
-import { withStore } from "@spyna/react-store";
-import { withStyles } from "@material-ui/styles";
-import QRCode from "qrcode.react";
-import classNames from "classnames";
-import Grid from "@material-ui/core/Grid";
-import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
-import Modal from "@material-ui/core/Modal";
 import Backdrop from "@material-ui/core/Backdrop";
+import Button from "@material-ui/core/Button";
 import Fade from "@material-ui/core/Fade";
+import Grid from "@material-ui/core/Grid";
+import Modal from "@material-ui/core/Modal";
+import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
+import Typography from "@material-ui/core/Typography";
+import { withStyles } from "@material-ui/styles";
+import { withStore } from "@spyna/react-store";
+import classNames from "classnames";
+import QRCode from "qrcode.react";
+import React from "react";
 
 import ActionLink from "../components/ActionLink";
+import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -70,7 +72,6 @@ const styles = () => ({
     marginTop: theme.spacing(2),
     padding: theme.spacing(1),
     border: "1px solid " + theme.palette.divider,
-    width: "100%",
     fontWeight: "bold",
     width: "100%",
   },
@@ -91,8 +92,16 @@ const styles = () => ({
   },
 });
 
-class ViewGatewayContainer extends React.Component {
-  constructor(props) {
+interface Props extends WithStyles<typeof styles> {
+  store: StoreInterface;
+}
+
+interface State {
+  address: string;
+}
+
+class ViewGatewayContainer extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       address: "",
@@ -174,12 +183,17 @@ class ViewGatewayContainer extends React.Component {
                     className={classes.copyLink}
                     onClick={() => {
                       const copyText = document.getElementById(
-                        "gatewayAddress"
+                        "gatewayAddress",
                       );
-                      copyText.select();
-                      copyText.setSelectionRange(0, 99999);
-                      document.execCommand("copy");
-                      alert("Address copied to clipboard: " + copyText.value);
+                      if (copyText) {
+                        (copyText as any).select();
+                        (copyText as any).setSelectionRange(0, 99999);
+                        document.execCommand("copy");
+                        alert(
+                          "Address copied to clipboard: " +
+                            (copyText as any).value,
+                        );
+                      }
                     }}
                   >
                     Copy Address

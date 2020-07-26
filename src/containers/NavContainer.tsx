@@ -1,17 +1,19 @@
-import React from "react";
-import { withStore } from "@spyna/react-store";
-import { withStyles } from "@material-ui/styles";
-import classNames from "classnames";
+import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
-import Button from "@material-ui/core/Button";
+import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
+import { withStyles } from "@material-ui/styles";
+import { withStore } from "@spyna/react-store";
+import classNames from "classnames";
+import React from "react";
 
 import CafeLogo from "../assets/cafe-logo.svg";
+import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 import { initLocalWeb3 } from "../utils/walletUtils";
 
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   navContainer: {
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
@@ -91,14 +93,12 @@ const styles = () => ({
   },
 });
 
-class NavContainer extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+interface Props extends WithStyles<typeof styles> {
+  store: StoreInterface;
+}
 
+class NavContainer extends React.Component<Props> {
   anchorRef = React.createRef();
-
-  async componentDidMount() {}
 
   toggleNeworkMenu() {
     const { store } = this.props;
@@ -120,6 +120,7 @@ class NavContainer extends React.Component {
 
     return (
       <Grid item xs={12} className={classes.navContainer}>
+        {/* @ts-ignore: no property "size" (TODO) */}
         <Container size="lg">
           {
             <Grid container alignItems="center">
@@ -131,7 +132,11 @@ class NavContainer extends React.Component {
                     </Grid>*/}
                 <Grid container alignItems="center">
                   <div>
-                    <img className={classes.logo} src={CafeLogo} />
+                    <img
+                      alt="WBTC Cafe"
+                      className={classes.logo}
+                      src={CafeLogo}
+                    />
                   </div>
                 </Grid>
               </Grid>
@@ -149,7 +154,7 @@ class NavContainer extends React.Component {
                       variant="outlined"
                       onClick={() => {
                         if (!isSignedIn) {
-                          initLocalWeb3();
+                          initLocalWeb3().catch(console.error);
                         }
                       }}
                       disableRipple={true}

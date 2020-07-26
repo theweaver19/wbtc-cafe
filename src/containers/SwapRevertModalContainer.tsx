@@ -1,18 +1,20 @@
-import React from "react";
-import { withStore } from "@spyna/react-store";
-import { withStyles } from "@material-ui/styles";
-import classNames from "classnames";
-import Grid from "@material-ui/core/Grid";
-import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
-import Modal from "@material-ui/core/Modal";
 import Backdrop from "@material-ui/core/Backdrop";
+import Button from "@material-ui/core/Button";
 import Fade from "@material-ui/core/Fade";
+import Grid from "@material-ui/core/Grid";
+import Modal from "@material-ui/core/Modal";
+import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
+import Typography from "@material-ui/core/Typography";
+import { withStyles } from "@material-ui/styles";
+import { withStore } from "@spyna/react-store";
+import classNames from "classnames";
+import React from "react";
 
+import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 import { completeConvertToEthereum, updateTx } from "../utils/txUtils";
 
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -69,8 +71,12 @@ const styles = () => ({
   },
 });
 
-class SwapRevertModalContainer extends React.Component {
-  constructor(props) {
+interface Props extends WithStyles<typeof styles> {
+  store: StoreInterface;
+}
+
+class SwapRevertModalContainer extends React.Component<Props> {
+  constructor(props: Props) {
     super(props);
     this.state = props.store.getState();
   }
@@ -81,9 +87,8 @@ class SwapRevertModalContainer extends React.Component {
     const showSwapRevertModal = store.get("showSwapRevertModal");
     const swapRevertModalTx = store.get("swapRevertModalTx");
     const swapRevertModalExchangeRate = store.get(
-      "swapRevertModalExchangeRate"
+      "swapRevertModalExchangeRate",
     );
-    const selectedNetwork = store.get("selectedNetwork");
     const fees = store.get("fees");
 
     if (!swapRevertModalTx || !fees) return <div />;
@@ -96,11 +101,15 @@ class SwapRevertModalContainer extends React.Component {
     ).toFixed(8);
     const networkFee = Number(fixedFee).toFixed(8);
     const net =
-      Number(amount - renVMFee - fixedFee) > 0
-        ? Number(amount - renVMFee - fixedFee).toFixed(8)
+      Number(Number(amount) - Number(renVMFee) - fixedFee) > 0
+        ? Number(Number(amount) - Number(renVMFee) - fixedFee).toFixed(8)
         : "0.00000000";
-    const total = Number(net * swapRevertModalExchangeRate).toFixed(8);
-    const minRate = Number(swapRevertModalTx.minExchangeRate.toFixed(8));
+    const total = Number(
+      Number(net) * Number(swapRevertModalExchangeRate),
+    ).toFixed(8);
+    const minRate = Number(
+      Number(swapRevertModalTx.minExchangeRate).toFixed(8),
+    );
 
     return (
       <Modal
@@ -167,7 +176,7 @@ class SwapRevertModalContainer extends React.Component {
                     className={classNames(
                       classes.receiptTitle,
                       classes.total,
-                      classes.continueTitle
+                      classes.continueTitle,
                     )}
                   >
                     Continuing With renBTC
@@ -258,7 +267,9 @@ class SwapRevertModalContainer extends React.Component {
               fullWidth={true}
               className={classNames(classes.button)}
               onClick={() => {
-                completeConvertToEthereum(swapRevertModalTx, "wbtc");
+                completeConvertToEthereum(swapRevertModalTx, "wbtc").catch(
+                  console.error,
+                );
                 store.set("showSwapRevertModal", false);
               }}
             >
@@ -273,9 +284,9 @@ class SwapRevertModalContainer extends React.Component {
                 const newTx = updateTx(
                   Object.assign(swapRevertModalTx, {
                     swapReverted: true,
-                  })
+                  }),
                 );
-                completeConvertToEthereum(newTx, "renbtc");
+                completeConvertToEthereum(newTx, "renbtc").catch(console.error);
                 store.set("showSwapRevertModal", false);
               }}
             >

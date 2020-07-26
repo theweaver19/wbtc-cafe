@@ -1,20 +1,17 @@
-import React from "react";
-import theme from "../theme/theme";
-import classNames from "classnames";
-import { withStyles } from "@material-ui/styles";
-
-import Input from "@material-ui/core/Input";
-import InputLabel from "@material-ui/core/InputLabel";
-import Select from "@material-ui/core/Select";
-import MenuItem from "@material-ui/core/MenuItem";
-import TextField from "@material-ui/core/TextField";
-import InputAdornment from "@material-ui/core/InputAdornment";
+import { WithStyles } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
+import InputAdornment from "@material-ui/core/InputAdornment";
 import Menu from "@material-ui/core/Menu";
+import MenuItem from "@material-ui/core/MenuItem";
+import { Styles } from "@material-ui/core/styles/withStyles";
+import TextField from "@material-ui/core/TextField";
+import { withStyles } from "@material-ui/styles";
+import React from "react";
 
+import theme from "../theme/theme";
 import { MINI_ICON_MAP } from "../utils/walletUtils";
 
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   amountField: {
     width: "100%",
     // marginBottom: theme.spacing(2)
@@ -53,15 +50,31 @@ const styles = () => ({
   },
 });
 
-class CurrencyInput extends React.Component {
-  constructor(props) {
+interface Props extends WithStyles<typeof styles> {
+  onCurrencyChange: any;
+  onAmountChange: any;
+  items: any;
+  inputRef?: any;
+  disabled?: boolean;
+}
+
+interface State {
+  currency: string;
+  open: boolean;
+}
+
+class CurrencyInput extends React.Component<Props, State> {
+  private anchorEl: React.RefObject<any>;
+  private defaultInputRef: React.RefObject<any>;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       currency: "",
       open: false,
     };
-    this.anchorEl = React.createRef();
-    this.defaultInputRef = React.createRef();
+    this.anchorEl = React.createRef<any>();
+    this.defaultInputRef = React.createRef<any>();
   }
 
   handleOpen() {
@@ -70,7 +83,7 @@ class CurrencyInput extends React.Component {
     });
   }
 
-  handleClose(event) {
+  handleClose(event: any) {
     // console.log(event, event.target, event.target.value)
     const value = event.target.value;
     if (value) {
@@ -81,13 +94,7 @@ class CurrencyInput extends React.Component {
   }
 
   render() {
-    const {
-      classes,
-      onCurrencyChange,
-      onAmountChange,
-      items,
-      inputRef,
-    } = this.props;
+    const { classes, onAmountChange, items, inputRef } = this.props;
 
     const { currency, open } = this.state;
 
@@ -120,7 +127,19 @@ class CurrencyInput extends React.Component {
                   onClick={this.handleOpen.bind(this)}
                 >
                   <img
-                    src={MINI_ICON_MAP[selected.toLowerCase()]}
+                    alt=""
+                    role="presentation"
+                    src={
+                      MINI_ICON_MAP[
+                        selected.toLowerCase() as
+                          | "btc"
+                          | "eth"
+                          | "zec"
+                          | "dai"
+                          | "usdc"
+                          | "wbtc"
+                      ]
+                    }
                     className={classes.icon}
                   />
                   <span>{selected}</span>
@@ -132,7 +151,7 @@ class CurrencyInput extends React.Component {
                   open={open}
                   onClose={this.handleClose.bind(this)}
                 >
-                  {items.map((i, index) => (
+                  {items.map((i: any, index: number) => (
                     <MenuItem
                       onClick={() => {
                         this.handleClose.bind(this)({
@@ -145,7 +164,19 @@ class CurrencyInput extends React.Component {
                       value={i}
                     >
                       <img
-                        src={MINI_ICON_MAP[i.toLowerCase()]}
+                        alt=""
+                        role="presentation"
+                        src={
+                          MINI_ICON_MAP[
+                            i.toLowerCase() as
+                              | "btc"
+                              | "eth"
+                              | "zec"
+                              | "dai"
+                              | "usdc"
+                              | "wbtc"
+                          ]
+                        }
                         className={classes.icon}
                       />
                       <span>{i}</span>
@@ -176,7 +207,19 @@ class CurrencyInput extends React.Component {
                   <div className={classes.item}>
                     {
                       <img
-                        src={MINI_ICON_MAP[items[0].toLowerCase()]}
+                        alt=""
+                        role="presentation"
+                        src={
+                          MINI_ICON_MAP[
+                            items[0].toLowerCase() as
+                              | "btc"
+                              | "eth"
+                              | "zec"
+                              | "dai"
+                              | "usdc"
+                              | "wbtc"
+                          ]
+                        }
                         className={classes.icon}
                       />
                     }

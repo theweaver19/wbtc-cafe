@@ -1,15 +1,15 @@
+import { EthArgs, UnmarshalledFees } from "@renproject/interfaces";
 import RenJS from "@renproject/ren";
-import sha256 from "crypto-js/sha256";
-import Base64 from "crypto-js/enc-base64";
 import firebase from "firebase/app";
+import { AbiItem } from "web3-utils";
 
 import { getStore } from "../services/storeService";
-import adapterABI from "./adapterCurveABI.json";
-import curveABI from "./curveABI.json";
+import adapterABI from "./ABIs/adapterCurveABI.json";
+import curveABI from "./ABIs/curveABI.json";
 import { CURVE_MAIN, CURVE_TEST } from "./web3Utils";
 
 // Changing TX State
-export const addTx = (tx) => {
+const addTx = (tx) => {
   // add timestamps
   const timestamp = firebase.firestore.Timestamp.fromDate(new Date(Date.now()));
   tx.created = timestamp;
@@ -21,7 +21,7 @@ export const addTx = (tx) => {
   const localWeb3Address = store.get("localWeb3Address");
   const fsSignature = store.get("fsSignature");
   const storeString = "convert.transactions";
-  let txs = store.get(storeString);
+  const txs = store.get(storeString);
   txs.push(tx);
   store.set(storeString, txs);
 
@@ -29,7 +29,7 @@ export const addTx = (tx) => {
   localStorage.setItem(storeString, JSON.stringify(txs));
 
   // for debugging
-  window.txs = txs;
+  // window.txs = txs;
 
   if (fsEnabled) {
     try {
@@ -41,9 +41,10 @@ export const addTx = (tx) => {
           id: tx.id,
           updated: timestamp,
           data: JSON.stringify(tx),
-        });
+        })
+        .catch(console.error);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 };
@@ -69,7 +70,7 @@ export const updateTx = (newTx) => {
   localStorage.setItem(storeString, JSON.stringify(txs));
 
   // for debugging
-  window.txs = txs;
+  // window.txs = txs;
 
   if (fsEnabled) {
     try {
@@ -78,9 +79,10 @@ export const updateTx = (newTx) => {
         .update({
           data: JSON.stringify(newTx),
           updated: newTx.updated,
-        });
+        })
+        .catch(console.error);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 
@@ -92,7 +94,7 @@ export const removeTx = (tx) => {
   const db = store.get("db");
   const fsEnabled = store.get("fsEnabled");
   const storeString = "convert.transactions";
-  let txs = store.get(storeString).filter((t) => t.id !== tx.id);
+  const txs = store.get(storeString).filter((t) => t.id !== tx.id);
   // console.log(txs)
   store.set(storeString, txs);
 
@@ -100,24 +102,24 @@ export const removeTx = (tx) => {
   localStorage.setItem(storeString, JSON.stringify(txs));
 
   // for debugging
-  window.txs = txs;
+  // window.txs = txs;
 
   if (fsEnabled) {
     try {
-      db.collection("transactions").doc(tx.id).delete();
+      db.collection("transactions").doc(tx.id).delete().catch(console.error);
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
   }
 };
 
-export const getTx = function (id) {
+const getTx = (id) => {
   return getStore()
     .get("convert.transactions")
     .filter((t) => t.id === id)[0];
 };
 
-export const txExists = function (tx) {
+const txExists = (tx) => {
   return (
     getStore()
       .get("convert.transactions")
@@ -126,7 +128,7 @@ export const txExists = function (tx) {
 };
 
 // External Data
-export const updateRenVMFees = async function () {
+export const updateRenVMFees = async () => {
   const store = getStore();
   try {
     const fees = await fetch("https://lightnode-mainnet.herokuapp.com", {
@@ -141,44 +143,44 @@ export const updateRenVMFees = async function () {
         params: {},
       }),
     });
-    const data = (await fees.json()).result;
+    const data: UnmarshalledFees = (await fees.json()).result;
     // console.log(data)
     // console.log('renvm fees', await fees.json())
     store.set("fees", data);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
-export const getFinalDepositExchangeRate = async function (tx) {
+const getFinalDepositExchangeRate = async (tx) => {
   const store = getStore();
   const dataWeb3 = store.get("dataWeb3");
   const selectedNetwork = store.get("selectedNetwork");
   const fees = store.get("fees");
-  const { sourceAsset, renResponse } = tx;
+  const { renResponse } = tx;
 
   // const utxoAmount = renResponse.autogen.amount / (10 ** 8)
 
   // console.log('tx', tx)
 
   const utxoAmountInSats = Number(renResponse.autogen.amount);
-  const dynamicFeeRate = Number(fees["btc"].ethereum["mint"] / 10000);
+  const dynamicFeeRate = Number(fees!["btc"].ethereum["mint"] / 10000);
   const finalAmount = Math.round(utxoAmountInSats * (1 - dynamicFeeRate));
   // console.log(finalAmount, dynamicFeeRate)
 
-  const curve = new dataWeb3.eth.Contract(
-    curveABI,
-    selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN
+  const curve = new dataWeb3!.eth.Contract(
+    curveABI as AbiItem[],
+    selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN,
   );
   try {
     const swapResult = await curve.methods.get_dy(0, 1, finalAmount).call();
     return Number(swapResult / finalAmount);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
-export const gatherFeeData = async function () {
+export const gatherFeeData = async () => {
   const store = getStore();
   const dataWeb3 = store.get("dataWeb3");
   const amount = store.get("convert.amount");
@@ -189,30 +191,30 @@ export const gatherFeeData = async function () {
   const fixedFeeKey = selectedDirection ? "release" : "lock";
   const dynamicFeeKey = selectedDirection ? "burn" : "mint";
 
-  const fixedFee = Number(fees[selectedAsset][fixedFeeKey] / 10 ** 8);
+  const fixedFee = Number(fees![selectedAsset][fixedFeeKey] / 10 ** 8);
   const dynamicFeeRate = Number(
-    fees[selectedAsset].ethereum[dynamicFeeKey] / 10000
+    fees![selectedAsset].ethereum[dynamicFeeKey] / 10000,
   );
 
   if (!amount || !dataWeb3 || !fees) return;
 
   try {
-    let exchangeRate;
-    let renVMFee;
-    let total;
+    let exchangeRate: number;
+    let renVMFee: number;
+    let total: number | string;
     const amountInSats = Math.round(
-      RenJS.utils.value(amount, "btc").sats().toNumber()
+      RenJS.utils.value(amount, "btc").sats().toNumber(),
     );
     const curve = new dataWeb3.eth.Contract(
-      curveABI,
-      selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN
+      curveABI as AbiItem[],
+      selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN,
     );
 
     // withdraw
     if (selectedDirection) {
       const swapResult =
         (await curve.methods.get_dy(1, 0, amountInSats).call()) / 10 ** 8;
-      exchangeRate = Number(swapResult / amount);
+      exchangeRate = Number(swapResult / Number(amount));
       renVMFee = Number(swapResult) * dynamicFeeRate;
       total =
         Number(swapResult - renVMFee - fixedFee) > 0
@@ -221,11 +223,11 @@ export const gatherFeeData = async function () {
     } else {
       renVMFee = Number(amount) * dynamicFeeRate;
       const amountAfterMint =
-        Number(amount - renVMFee - fixedFee) > 0
-          ? Number(amount - renVMFee - fixedFee)
+        Number(Number(amount) - renVMFee - fixedFee) > 0
+          ? Number(Number(amount) - renVMFee - fixedFee)
           : 0;
       const amountAfterMintInSats = Math.round(
-        RenJS.utils.value(amountAfterMint, "btc").sats().toNumber()
+        RenJS.utils.value(amountAfterMint, "btc").sats().toNumber(),
       );
 
       // console.log(amountAfterMintInSats, renVMFee, fixedFee)
@@ -247,39 +249,39 @@ export const gatherFeeData = async function () {
     store.set("convert.networkFee", fixedFee);
     store.set("convert.conversionTotal", total);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
-export const getTaggedTxs = async function () {
-  const store = getStore();
-  const localWeb3Address = store.get("localWeb3Address");
-  try {
-    const res = await fetch("https://lightnode-testnet.herokuapp.com", {
-      method: "POST", // or 'PUT'
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: 67,
-        jsonrpc: "2.0",
-        method: "ren_queryTxs",
-        params: {
-          tags: [Base64.stringify(sha256(localWeb3Address))],
-        },
-      }),
-    });
-    const data = await res.json();
-    // console.log(data)
-    // console.log('renvm fees', await fees.json())
-    // store.set('fees', data)
-  } catch (e) {
-    console.log(e);
-  }
-};
+// export const getTaggedTxs = async () => {
+//   const store = getStore();
+//   const localWeb3Address = store.get("localWeb3Address");
+//   try {
+//     const res = await fetch("https://lightnode-testnet.herokuapp.com", {
+//       method: "POST", // or 'PUT'
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         id: 67,
+//         jsonrpc: "2.0",
+//         method: "ren_queryTxs",
+//         params: {
+//           tags: [Base64.stringify(sha256(localWeb3Address))],
+//         },
+//       }),
+//     });
+//     // const data = await res.json();
+//     // console.log(data)
+//     // console.log('renvm fees', await fees.json())
+//     // store.set('fees', data)
+//   } catch (e) {
+//     console.error(e);
+//   }
+// };
 
 // BTC to WBTC
-export const monitorMintTx = async function (tx) {
+const monitorMintTx = async (tx) => {
   const store = getStore();
   const web3 = store.get("localWeb3");
 
@@ -289,9 +291,9 @@ export const monitorMintTx = async function (tx) {
     // console.log('latestTx', latestTx)
 
     // Get transaction details
-    const txDetails = await web3.eth.getTransaction(latestTx.destTxHash);
+    const txDetails = await web3!.eth.getTransaction(latestTx.destTxHash);
     if (txDetails) {
-      const currentBlock = await web3.eth.getBlockNumber();
+      const currentBlock = await web3!.eth.getBlockNumber();
       const confs =
         txDetails.blockNumber === null || txDetails.blockNumber > currentBlock
           ? 0
@@ -299,17 +301,20 @@ export const monitorMintTx = async function (tx) {
 
       // Update confs
       if (confs > 0) {
-        const receipt = await web3.eth.getTransactionReceipt(
-          latestTx.destTxHash
+        const receipt = await web3!.eth.getTransactionReceipt(
+          latestTx.destTxHash,
         );
 
         // reverted because gas ran out
-        if ((receipt && receipt.status === "0x0") || receipt.status === false) {
+        if (
+          (receipt && ((receipt.status as unknown) as string) === "0x0") ||
+          receipt.status === false
+        ) {
           updateTx(
             Object.assign(latestTx, {
               error: true,
               destTxHash: "",
-            })
+            }),
           );
         } else {
           updateTx(
@@ -317,7 +322,7 @@ export const monitorMintTx = async function (tx) {
               destTxConfs: confs,
               awaiting: "",
               error: false,
-            })
+            }),
           );
         }
 
@@ -327,17 +332,17 @@ export const monitorMintTx = async function (tx) {
       updateTx(
         Object.assign(latestTx, {
           error: true,
-        })
+        }),
       );
       clearInterval(interval);
     }
   }, 1000);
 };
 
-export const completeConvertToEthereum = async function (
-  transaction,
-  approveSwappedAsset
-) {
+export const completeConvertToEthereum = async (
+  transaction: any,
+  approveSwappedAsset?: string,
+) => {
   const store = getStore();
   const localWeb3 = store.get("localWeb3");
   const localWeb3Address = store.get("localWeb3Address");
@@ -346,30 +351,30 @@ export const completeConvertToEthereum = async function (
 
   // amount user sent
   const userBtcTxAmount = Number(
-    (renResponse.in.utxo.amount / 10 ** 8).toFixed(8)
+    (renResponse.in.utxo.amount / 10 ** 8).toFixed(8),
   );
   // amount in renvm after fixed fee
   const utxoAmountSats = renResponse.autogen.amount;
 
   // update amount to the actual amount sent
   const tx = updateTx(
-    Object.assign(transaction, { sourceAmount: userBtcTxAmount })
+    Object.assign(transaction, { sourceAmount: userBtcTxAmount }),
   );
 
   const { id, params, renSignature, minExchangeRate } = tx;
-  const adapterContract = new localWeb3.eth.Contract(
-    adapterABI,
-    store.get("convert.adapterAddress")
+  const adapterContract = new localWeb3!.eth.Contract(
+    adapterABI as AbiItem[],
+    store.get("convert.adapterAddress"),
   );
 
   // if swap will revert to renBTC, let the user know before proceeding
   const exchangeRate = await getFinalDepositExchangeRate(tx);
   updateTx(Object.assign(tx, { exchangeRateOnSubmit: exchangeRate }));
   // console.log(exchangeRate, minExchangeRate)
-  if (!approveSwappedAsset && exchangeRate < minExchangeRate) {
+  if (!approveSwappedAsset && exchangeRate! < minExchangeRate) {
     // console.log('showing modal')
     store.set("swapRevertModalTx", tx);
-    store.set("swapRevertModalExchangeRate", exchangeRate.toFixed(8));
+    store.set("swapRevertModalExchangeRate", exchangeRate!.toFixed(8));
     store.set("showSwapRevertModal", true);
     updateTx(Object.assign(tx, { awaiting: "eth-init" }));
     return;
@@ -378,7 +383,7 @@ export const completeConvertToEthereum = async function (
   let newMinExchangeRate = params.contractCalls[0].contractParams[0].value;
   if (approveSwappedAsset === "wbtc") {
     const rateMinusOne =
-      RenJS.utils.value(exchangeRate, "btc").sats().toNumber() - 1;
+      RenJS.utils.value(exchangeRate!, "btc").sats().toNumber() - 1;
     newMinExchangeRate = rateMinusOne.toFixed(0);
   }
 
@@ -386,7 +391,7 @@ export const completeConvertToEthereum = async function (
     updateTx(
       Object.assign(tx, {
         awaiting: "eth-settle",
-      })
+      }),
     );
     try {
       await adapterContract.methods
@@ -397,7 +402,7 @@ export const completeConvertToEthereum = async function (
           params.contractCalls[0].contractParams[2].value,
           utxoAmountSats,
           renResponse.autogen.nhash,
-          renSignature
+          renSignature,
         )
         .send({
           from: localWeb3Address,
@@ -408,40 +413,40 @@ export const completeConvertToEthereum = async function (
             Object.assign(tx, {
               destTxHash: hash,
               error: false,
-            })
+            }),
           );
-          monitorMintTx(newTx);
+          monitorMintTx(newTx).catch(console.error);
         });
 
       store.set(
         "convert.pendingConvertToEthereum",
-        pending.filter((p) => p !== id)
+        pending.filter((p) => p !== id),
       );
     } catch (e) {
-      console.log(e);
+      console.error(e);
       updateTx(Object.assign(tx, { error: true }));
     }
   } else {
-    monitorMintTx(getTx(tx.id));
+    monitorMintTx(getTx(tx.id)).catch(console.error);
   }
 };
 
-export const initMint = function (tx) {
+const initMint = (tx) => {
   const {
     type,
     amount,
     params,
     destAddress,
-    minSwapProceeds,
+    // minSwapProceeds,
     minExchangeRate,
     maxSlippage,
   } = tx;
   const store = getStore();
-  const { sdk, localWeb3, localWeb3Address } = store.getState();
+  const { sdk, localWeb3Address } = store.getState();
 
   let adapterAddress = "";
   let contractFn = "";
-  let contractParams = [];
+  let contractParams: EthArgs = [];
 
   if (type === "convert") {
     adapterAddress = store.get("convert.adapterAddress");
@@ -490,7 +495,7 @@ export const initMint = function (tx) {
   };
 
   // console.log('init mint', data, tx)
-  const mint = sdk.lockAndMint(data);
+  const mint = sdk!.lockAndMint(data);
 
   return mint;
 };
@@ -523,9 +528,11 @@ export const initConvertToEthereum = async function (tx) {
 
   // ren already exposed a signature
   if (renResponse && renSignature) {
-    completeConvertToEthereum.bind(this)(tx);
+    // @ts-ignore: 'this' implicitly has type 'any' (TODO)
+    completeConvertToEthereum.bind(this)(tx).catch(console.error);
   } else {
     // create or re-create shift in
+    // @ts-ignore: 'this' implicitly has type 'any' (TODO)
     const mint = await initMint.bind(this)(tx);
 
     // console.log('initConvertToEthereum mint', mint, tx)
@@ -533,9 +540,10 @@ export const initConvertToEthereum = async function (tx) {
     if (!params) {
       addTx(
         Object.assign(tx, {
+          // @ts-ignore: property 'params' is private (TODO)
           params: mint.params,
           renBtcAddress: await mint.gatewayAddress(),
-        })
+        }),
       );
     }
 
@@ -561,7 +569,8 @@ export const initConvertToEthereum = async function (tx) {
                 txHash: sourceTxHash,
                 vOut: sourceTxVOut,
               }
-            : null
+            : // TODO: should be undefined?
+              ((null as unknown) as undefined),
         )
         .on("deposit", (dep) => {
           // console.log('on deposit', dep)
@@ -576,7 +585,7 @@ export const initConvertToEthereum = async function (tx) {
                   btcConfirmations: dep.utxo.confirmations,
                   sourceTxHash: dep.utxo.txHash,
                   sourceTxVOut: dep.utxo.vOut,
-                })
+                }),
               );
             } else {
               updateTx(
@@ -584,7 +593,7 @@ export const initConvertToEthereum = async function (tx) {
                   btcConfirmations: dep.utxo.confirmations,
                   sourceTxHash: dep.utxo.txHash,
                   sourceTxVOut: dep.utxo.vOut,
-                })
+                }),
               );
             }
           }
@@ -601,10 +610,11 @@ export const initConvertToEthereum = async function (tx) {
         Object.assign(tx, {
           renResponse: signature.renVMResponse,
           renSignature: signature.signature,
-        })
+        }),
       );
 
-      completeConvertToEthereum.bind(this)(tx);
+      // @ts-ignore: 'this' implicitly has type 'any' (TODO)
+      completeConvertToEthereum.bind(this)(tx).catch(console.error);
     } catch (e) {
       console.log("renvm submit error", e);
     }
@@ -612,7 +622,7 @@ export const initConvertToEthereum = async function (tx) {
 };
 
 // WBTC to BTC
-export const monitorBurnTx = async function (tx) {
+const monitorBurnTx = async (tx) => {
   const store = getStore();
   const sdk = store.get("sdk");
   const web3 = store.get("localWeb3");
@@ -620,15 +630,15 @@ export const monitorBurnTx = async function (tx) {
 
   let burn;
   try {
-    burn = await sdk
+    burn = await sdk!
       .burnAndRelease({
         sendToken: RenJS.Tokens.BTC.Eth2Btc,
-        web3Provider: web3.currentProvider,
+        web3Provider: web3!.currentProvider,
         ethereumTxHash: tx.sourceTxHash,
       })
       .readFromEthereum();
   } catch (e) {
-    console.log(e);
+    console.error(e);
     updateTx(Object.assign(tx, { error: true }));
     return;
   }
@@ -639,8 +649,8 @@ export const monitorBurnTx = async function (tx) {
     console.log("latestTx", latestTx, burn);
 
     // Get transaction details
-    const txDetails = await web3.eth.getTransaction(latestTx.sourceTxHash);
-    const currentBlock = await web3.eth.getBlockNumber();
+    const txDetails = await web3!.eth.getTransaction(latestTx.sourceTxHash!);
+    const currentBlock = await web3!.eth.getBlockNumber();
     const confs =
       txDetails.blockNumber === null || txDetails.blockNumber > currentBlock
         ? 0
@@ -652,12 +662,12 @@ export const monitorBurnTx = async function (tx) {
     }
 
     // After enough confs, start watching RenVM
-    if (latestTx.sourceTxConfs >= targetConfs) {
+    if (latestTx.sourceTxConfs! >= targetConfs) {
       if (latestTx.awaiting === "eth-settle") {
         updateTx(
           Object.assign(latestTx, {
             awaiting: "ren-settle",
-          })
+          }),
         );
       }
 
@@ -669,12 +679,12 @@ export const monitorBurnTx = async function (tx) {
             Object.assign(latestTx, {
               awaiting: "",
               error: false,
-            })
+            }),
           );
           clearInterval(interval);
         }
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     }
   }, 1000);
@@ -688,8 +698,12 @@ export const initConvertFromEthereum = async function (tx) {
   const { amount, destAddress, minSwapProceeds } = tx;
 
   const from = walletAddress;
-  const adapter = new web3.eth.Contract(adapterABI, adapterAddress);
+  const adapter = new web3!.eth.Contract(
+    adapterABI as AbiItem[],
+    adapterAddress,
+  );
 
+  // @ts-ignore: 'this' implicitly has type 'any' (TODO)
   if (!txExists.bind(this)(tx)) {
     addTx(tx);
   } else if (tx.error) {
@@ -702,7 +716,7 @@ export const initConvertFromEthereum = async function (tx) {
       .swapThenBurn(
         RenJS.utils.BTC.addressToHex(destAddress), //_to
         RenJS.utils.value(amount, "btc").sats().toNumber().toFixed(0), // _amount in Satoshis
-        RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0)
+        RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0),
       )
       .send({ from })
       .on("transactionHash", (hash) => {
@@ -712,9 +726,9 @@ export const initConvertFromEthereum = async function (tx) {
             awaiting: "eth-settle",
             sourceTxHash: hash,
             error: false,
-          })
+          }),
         );
-        monitorBurnTx(getTx(tx.id));
+        monitorBurnTx(getTx(tx.id)).catch(console.error);
       });
   } catch (e) {
     console.log("eth burn error", e);
@@ -727,32 +741,21 @@ export const initConvertFromEthereum = async function (tx) {
 export const initMonitoring = function () {
   const store = getStore();
   const network = store.get("selectedNetwork");
-  let txs = store
+  const txs = store
     .get("convert.transactions")
     .filter((t) => t.sourceNetworkVersion === network);
 
   txs.map((tx) => {
     if (tx.sourceNetwork === "bitcoin") {
       if (tx.destTxHash) {
-        monitorMintTx(tx);
+        monitorMintTx(tx).catch(console.error);
       } else {
-        initConvertToEthereum.bind(this)(tx);
+        // @ts-ignore: 'this' implicitly has type 'any' (TODO)
+        initConvertToEthereum.bind(this)(tx).catch(console.error);
       }
     } else if (tx.sourceNetwork === "ethereum" && tx.awaiting && !tx.error) {
-      monitorBurnTx(tx);
+      monitorBurnTx(tx).catch(console.error);
     }
+    return null;
   });
-};
-
-window.getTaggedTxs = getTaggedTxs;
-window.RenJS = RenJS;
-
-export default {
-  addTx,
-  updateTx,
-  removeTx,
-  initMint,
-  initConvertToEthereum,
-  initConvertFromEthereum,
-  initMonitoring,
 };

@@ -1,16 +1,19 @@
-import React from "react";
-// import classNames from 'classnames'
-import { withStyles } from "@material-ui/styles";
+import { WithStyles } from "@material-ui/core";
+import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
+import { withStyles } from "@material-ui/styles";
+import React from "react";
 
-import theme from "../theme/theme";
+const styles: Styles<{}, {}> = () => ({});
 
-const styles = () => ({});
+interface Props extends WithStyles<typeof styles> {
+  tx: any;
+}
 
-const ConversionStatus = function (props) {
+const ConversionStatus = (props: Props) => {
   const { tx } = props;
 
-  const direction = tx.destNetwork === "ethereum" ? "in" : "out";
+  // const direction = tx.destNetwork === "ethereum" ? "in" : "out";
   const targetBtcConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
   const targetEthConfs = tx.sourceNetworkVersion === "testnet" ? 13 : 30;
 

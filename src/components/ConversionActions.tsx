@@ -1,14 +1,20 @@
-import React from "react";
-import theme from "../theme/theme";
-import { withStyles } from "@material-ui/styles";
-import {
-  removeTx,
-  initConvertFromEthereum,
-  completeConvertToEthereum,
-} from "../utils/txUtils";
-import { getStore } from "../services/storeService";
+// eslint-disable jsx-a11y/anchor-is-valid
 
-const styles = () => ({
+import { WithStyles } from "@material-ui/core";
+import { Styles } from "@material-ui/core/styles/withStyles";
+import { withStyles } from "@material-ui/styles";
+import React from "react";
+
+import { getStore } from "../services/storeService";
+import theme from "../theme/theme";
+import {
+  completeConvertToEthereum,
+  initConvertFromEthereum,
+  removeTx,
+} from "../utils/txUtils";
+import { ExternalLink } from "./ExternalLink";
+
+const styles: Styles<typeof theme, {}> = () => ({
   viewLink: {
     fontSize: 12,
     marginRight: theme.spacing(1),
@@ -17,7 +23,11 @@ const styles = () => ({
   },
 });
 
-const ConversionActions = function (props) {
+interface Props extends WithStyles<typeof styles> {
+  tx: any;
+}
+
+const ConversionActions = (props: Props) => {
   const { tx, classes } = props;
 
   const store = getStore();
@@ -27,20 +37,18 @@ const ConversionActions = function (props) {
     <React.Fragment>
       <div>
         {direction === "in" && tx.sourceTxHash && (
-          <a
+          <ExternalLink
             className={classes.viewLink}
-            target="_blank"
             href={`https://sochain.com/tx/BTC${
               tx.sourceNetworkVersion === "testnet" ? "TEST" : ""
             }/${tx.sourceTxHash}`}
           >
             View BTC TX
-          </a>
+          </ExternalLink>
         )}
         {direction === "in" && tx.destTxHash ? (
-          <a
+          <ExternalLink
             className={classes.viewLink}
-            target="_blank"
             href={
               "https://" +
               (tx.destNetworkVersion === "testnet" ? "kovan." : "") +
@@ -49,7 +57,7 @@ const ConversionActions = function (props) {
             }
           >
             View ETH TX
-          </a>
+          </ExternalLink>
         ) : null}
         {direction === "in" && tx.awaiting === "btc-init" && !tx.error && (
           <React.Fragment>
@@ -77,9 +85,8 @@ const ConversionActions = function (props) {
         )}
 
         {direction === "out" && tx.sourceTxHash ? (
-          <a
+          <ExternalLink
             className={classes.viewLink}
-            target="_blank"
             href={
               "https://" +
               (tx.sourceNetworkVersion === "testnet" ? "kovan." : "") +
@@ -88,18 +95,17 @@ const ConversionActions = function (props) {
             }
           >
             View ETH TX
-          </a>
+          </ExternalLink>
         ) : null}
         {direction === "out" && !tx.awaiting && tx.destAddress && (
-          <a
+          <ExternalLink
             className={classes.viewLink}
-            target="_blank"
             href={`https://sochain.com/address/BTC${
               tx.destNetworkVersion === "testnet" ? "TEST" : ""
             }/${tx.destAddress}`}
           >
             View BTC TX
-          </a>
+          </ExternalLink>
         )}
 
         {((tx.error && tx.awaiting === "eth-settle") ||

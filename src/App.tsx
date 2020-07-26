@@ -1,51 +1,39 @@
-import * as React from "react";
-import { createStore, withStore } from "@spyna/react-store";
-import { storeListener } from "./services/storeService";
 import * as queryString from "query-string";
-import Marquee from "react-smooth-marquee";
-
-import NavContainer from "./containers/NavContainer";
-import TransferContainer from "./containers/TransferContainer";
-import DepositModalContainer from "./containers/DepositModalContainer";
-import CancelModalContainer from "./containers/CancelModalContainer";
-import ViewGatewayContainer from "./containers/ViewGatewayContainer";
-import NetworkModalContainer from "./containers/NetworkModalContainer";
-import SwapRevertModalContainer from "./containers/SwapRevertModalContainer";
-import TransactionsTableContainer from "./containers/TransactionsTableContainer";
-
-import { initDataWeb3, setNetwork } from "./utils/walletUtils";
-import { updateRenVMFees } from "./utils/txUtils";
-
-import RenVM from "./assets/renvm-powered.svg";
-
-import { withStyles, ThemeProvider } from "@material-ui/styles";
-import theme from "./theme/theme";
+import * as React from "react";
 
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
+import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
+import { ThemeProvider, withStyles } from "@material-ui/styles";
+import { createStore, withStore } from "@spyna/react-store";
+import Marquee from "react-smooth-marquee";
 
-import firebase from "firebase/app";
-
+import RenVM from "./assets/renvm-powered.svg";
+import { ExternalLink } from "./components/ExternalLink";
+import CancelModalContainer from "./containers/CancelModalContainer";
+import DepositModalContainer from "./containers/DepositModalContainer";
+import NavContainer from "./containers/NavContainer";
+import NetworkModalContainer from "./containers/NetworkModalContainer";
+import SwapRevertModalContainer from "./containers/SwapRevertModalContainer";
+import TransactionsTableContainer from "./containers/TransactionsTableContainer";
+import TransferContainer from "./containers/TransferContainer";
+import ViewGatewayContainer from "./containers/ViewGatewayContainer";
+import { storeListener } from "./services/storeService";
+import { initialState } from "./store/store";
+import theme from "./theme/theme";
+import { updateRenVMFees } from "./utils/txUtils";
+import { initDataWeb3, setNetwork } from "./utils/walletUtils";
 import {
   ADAPTER_MAIN,
   ADAPTER_TEST,
-  CURVE_TEST,
   CURVE_MAIN,
+  CURVE_TEST,
 } from "./utils/web3Utils";
 
 require("dotenv").config();
 
-firebase.initializeApp({
-  apiKey: process.env.REACT_APP_FB_KEY,
-  authDomain: window.location.hostname,
-  projectId: "wbtc-portal",
-});
-
-require('firebase/firestore')
-// firebase.firestore().enablePersistence()
-
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   container: {
     maxWidth: 450,
   },
@@ -86,70 +74,6 @@ const styles = () => ({
   },
 });
 
-const initialState = {
-  // networking
-  wbtcAddress: "",
-  adapterAddress: "",
-  selectedNetwork: "",
-
-  // wallet & web3
-  dataWeb3: null,
-  localWeb3: null,
-  localWeb3Address: "",
-  localWeb3Network: "",
-  walletConnectError: false,
-  box: null,
-  space: null,
-  spaceError: false,
-  loadingBalances: true,
-  wbtcBalance: 0,
-  ethBalance: 0,
-  sdk: null,
-  fees: null,
-  queryParams: {},
-  db: firebase.firestore(),
-  fsUser: null,
-  fsSignature: null,
-  fsEnabled: false,
-  loadingTransactions: false,
-  disclosureAccepted: false,
-
-  // navigation
-  selectedTab: 1,
-  selectedAsset: "btc",
-
-  // modals
-  showNetworkMenu: false,
-  showDepositModal: false,
-  depositModalTx: null,
-  depositDisclosureChecked: false,
-  showCancelModal: false,
-  cancelModalTx: null,
-  showGatewayModal: false,
-  gatewayModalTx: null,
-  showAboutModal: false,
-  showSwapRevertModal: false,
-  swapRevertModalTx: null,
-  swapRevertModalExchangeRate: "",
-
-  // conversions
-  "convert.adapterAddress": ADAPTER_TEST,
-  "convert.adapterWbtcAllowance": "",
-  "convert.adapterWbtcAllowanceRequesting": "",
-  "convert.transactions": [],
-  "convert.pendingConvertToEthereum": [],
-  "convert.selectedFormat": "wbtc",
-  "convert.selectedDirection": 0,
-  "convert.amount": "",
-  "convert.destination": "",
-  "convert.destinationValid": false,
-  "convert.exchangeRate": "",
-  "convert.networkFee": "",
-  "convert.renVMFee": "",
-  "convert.conversionTotal": "",
-  "convert.maxSlippage": 0.01,
-};
-
 class AppWrapper extends React.Component<{ store: any; classes: any }> {
   constructor(props: any) {
     super(props);
@@ -162,10 +86,12 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
     store.set("queryParams", params);
 
     // default to mainnet
-    setNetwork(params.network === "testnet" ? "testnet" : "mainnet");
+    setNetwork(params.network === "testnet" ? "testnet" : "mainnet").catch(
+      console.error,
+    );
 
-    initDataWeb3();
-    updateRenVMFees();
+    initDataWeb3().catch(console.error);
+    updateRenVMFees().catch(console.error);
   }
 
   render() {
@@ -206,12 +132,15 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
         <Grid container className={classes.footerContainer}>
           <Container fixed maxWidth="lg">
             <Grid container alignItems="center" justify="flex-start">
-              <a target="_blank" href={"https://renproject.io"}>
-                <img className={classes.footerLogo} src={RenVM} />
-              </a>
+              <ExternalLink href={"https://renproject.io"}>
+                <img
+                  alt="Powered by RenVM"
+                  className={classes.footerLogo}
+                  src={RenVM}
+                />
+              </ExternalLink>
               <Typography className={classes.footerLinks} variant="caption">
-                <a
-                  target="_blank"
+                <ExternalLink
                   href={
                     "https://" +
                     (selectedNetwork === "testnet" ? "kovan." : "") +
@@ -222,9 +151,8 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
                   }
                 >
                   Contract
-                </a>{" "}
-                <a
-                  target="_blank"
+                </ExternalLink>{" "}
+                <ExternalLink
                   href={
                     "https://" +
                     (selectedNetwork === "testnet" ? "kovan." : "") +
@@ -233,10 +161,10 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
                   }
                 >
                   Liquidity Pool
-                </a>{" "}
-                <a target="_blank" href={"https://www.curve.fi/ren"}>
+                </ExternalLink>{" "}
+                <ExternalLink href={"https://www.curve.fi/ren"}>
                   Swap renBTC → WBTC
-                </a>
+                </ExternalLink>
               </Typography>
             </Grid>
           </Container>
@@ -249,10 +177,6 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
 const AppWrapperComponent = withStore(AppWrapper);
 
 class App extends React.Component<{ classes: any }> {
-  constructor(props: any) {
-    super(props);
-  }
-
   render() {
     const { classes } = this.props;
     return <AppWrapperComponent classes={classes} />;

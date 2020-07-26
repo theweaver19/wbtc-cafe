@@ -1,6 +1,5 @@
-import { createMuiTheme } from "@material-ui/core/styles";
-import blueGrey from "@material-ui/core/colors/blueGrey";
 import grey from "@material-ui/core/colors/grey";
+import { createMuiTheme } from "@material-ui/core/styles";
 
 export default createMuiTheme({
   typography: {
@@ -8,14 +7,14 @@ export default createMuiTheme({
       // 'Roboto Mono',
       "-apple-system",
       "BlinkMacSystemFont",
-      '"Segoe UI"',
+      `"Segoe UI"`,
       "Roboto",
-      '"Helvetica Neue"',
+      `"Helvetica Neue"`,
       "Arial",
       "sans-serif",
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
+      `"Apple Color Emoji"`,
+      `"Segoe UI Emoji"`,
+      `"Segoe UI Symbol"`,
     ].join(","),
   },
   palette: {
@@ -46,9 +45,9 @@ export default createMuiTheme({
         },
       },
     },
-    PrivateNotchedOutline: {
-      root: {},
-    },
+    // PrixvateNotchedOutline: {
+    //   root: {},
+    // },
     // '.MuiOutlinedInput-root:hover':{
     //     borderColor: '#EBEBEB !important'
     // },
@@ -73,6 +72,7 @@ export default createMuiTheme({
       },
     },
     MuiTextField: {},
+    // @ts-ignore: `MuiToggleButtonGroup` is not exist in type `Overrides` (TODO)
     MuiToggleButtonGroup: {
       root: {
         backgroundColor: "transparent",

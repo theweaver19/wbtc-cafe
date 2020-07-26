@@ -1,18 +1,21 @@
-import React from "react";
-import { withStore } from "@spyna/react-store";
-import { withStyles } from "@material-ui/styles";
-import classNames from "classnames";
-import Grid from "@material-ui/core/Grid";
-import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
-import Modal from "@material-ui/core/Modal";
+import { WithStyles } from "@material-ui/core";
 import Backdrop from "@material-ui/core/Backdrop";
+import Button from "@material-ui/core/Button";
 import Fade from "@material-ui/core/Fade";
+import Grid from "@material-ui/core/Grid";
+import Modal from "@material-ui/core/Modal";
+import { Styles } from "@material-ui/core/styles/withStyles";
+import Typography from "@material-ui/core/Typography";
+import { withStyles } from "@material-ui/styles";
+import { withStore } from "@spyna/react-store";
+import classNames from "classnames";
+import React from "react";
 
+import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 import { removeTx } from "../utils/txUtils";
 
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -62,12 +65,11 @@ const styles = () => ({
   },
 });
 
-class CancelModalContainer extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+interface Props extends WithStyles<typeof styles> {
+  store: StoreInterface;
+}
 
+class CancelModalContainer extends React.Component<Props> {
   cancelDeposit() {
     const { store } = this.props;
     const cancelModalTx = store.get("cancelModalTx");

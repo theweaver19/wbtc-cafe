@@ -1,21 +1,23 @@
-import React from "react";
-import { withStore } from "@spyna/react-store";
-import { withStyles } from "@material-ui/styles";
+import { WithStyles } from "@material-ui/core";
 import Grid from "@material-ui/core/Grid";
-import Typography from "@material-ui/core/Typography";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
+import Typography from "@material-ui/core/Typography";
+import { Styles, withStyles } from "@material-ui/styles";
+import { withStore } from "@spyna/react-store";
+import React from "react";
 
 import ActionLink from "../components/ActionLink";
 import ConversionActions from "../components/ConversionActions";
 import ConversionStatus from "../components/ConversionStatus";
+import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 import { initLocalWeb3 } from "../utils/walletUtils";
 
-const styles = () => ({
+const styles: Styles<typeof theme, {}> = () => ({
   container: {
     background: "#fff",
     border: "0.5px solid " + theme.palette.divider,
@@ -50,15 +52,11 @@ const styles = () => ({
   },
 });
 
-class TransactionsTableContainer extends React.Component {
-  constructor(props) {
-    super(props);
-  }
+interface Props extends WithStyles<typeof styles> {
+  store: StoreInterface;
+}
 
-  async componentDidMount() {}
-
-  cancel() {}
-
+class TransactionsTableContainer extends React.Component<Props> {
   render() {
     const { classes, store } = this.props;
 
@@ -66,11 +64,11 @@ class TransactionsTableContainer extends React.Component {
     const transactions = store
       .get("convert.transactions")
       .filter((t) => t.sourceNetworkVersion === selectedNetwork);
-    const localWeb3Address = store.get("localWeb3Address");
+    // const localWeb3Address = store.get("localWeb3Address");
     const fsSignature = store.get("fsSignature");
 
     const signedIn = fsSignature;
-    const hasTransactions = transactions.length > 0;
+    // const hasTransactions = transactions.length > 0;
     const loadingTransactions = store.get("loadingTransactions");
     const error = store.get("walletConnectError");
 
@@ -82,7 +80,7 @@ class TransactionsTableContainer extends React.Component {
         {/*<div className={classes.titleWrapper}>
             <Typography variant='subtitle1'><b>Conversions</b></Typography>
           </div>*/}
-        <Table className={classes.table}>
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell align="left">Transaction</TableCell>

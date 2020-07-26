@@ -1,27 +1,22 @@
-import Web3 from "web3";
 import RenSDK from "@renproject/ren";
-import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
+import Web3 from "web3";
+import { AbiItem } from "web3-utils";
+import Web3Modal from "web3modal";
 
 import BTC from "../assets/tokens/btc.png";
-import ETH from "../assets/tokens/eth.png";
-import ZEC from "../assets/tokens/zec.jpg";
 import DAI from "../assets/tokens/dai.png";
+import ETH from "../assets/tokens/eth.png";
 import USDC from "../assets/tokens/usdc.png";
 import WBTC from "../assets/tokens/wbtc.png";
-
-import { ADAPTER_MAIN, ADAPTER_TEST, WBTC_TEST, WBTC_MAIN } from "./web3Utils";
-
-import { initMonitoring, gatherFeeData, updateTx } from "./txUtils";
-import { getUser } from "./firebaseUtils";
-
+import ZEC from "../assets/tokens/zec.jpg";
 import { getStore } from "../services/storeService";
-
-import erc20ABI from "./erc20ABI.json";
+import erc20ABI from "./ABIs/erc20ABI.json";
+import { getUser } from "./firebase/firebaseUtils";
+import { gatherFeeData, initMonitoring } from "./txUtils";
+import { ADAPTER_MAIN, ADAPTER_TEST, WBTC_MAIN, WBTC_TEST } from "./web3Utils";
 
 let walletDataInterval: any = null;
-
-export const ASSETS = ["BTC", "WBTC"];
 
 export const NAME_MAP = {
   btc: "Bitcoin",
@@ -41,7 +36,7 @@ export const MINI_ICON_MAP = {
   wbtc: WBTC,
 };
 
-export const updateAllowance = async function () {
+const updateAllowance = async () => {
   const store = getStore();
 
   const web3 = store.get("localWeb3");
@@ -53,41 +48,41 @@ export const updateAllowance = async function () {
     return;
   }
 
-  const contract = new web3.eth.Contract(erc20ABI, wbtcAddress);
+  const contract = new web3.eth.Contract(erc20ABI as AbiItem[], wbtcAddress);
   const allowance = await contract.methods
     .allowance(walletAddress, adapterAddress)
     .call();
 
   store.set(
     "convert.adapterWbtcAllowance",
-    Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8)
+    Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8),
   );
 };
 
-export const setWbtcAllowance = async function () {
+export const setWbtcAllowance = async () => {
   const store = getStore();
   const walletAddress = store.get("localWeb3Address");
   const web3 = store.get("localWeb3");
   const adapterAddress = store.get("convert.adapterAddress");
   const wbtcAddress = store.get("wbtcAddress");
 
-  const contract = new web3.eth.Contract(erc20ABI, wbtcAddress);
+  const contract = new web3!.eth.Contract(erc20ABI as AbiItem[], wbtcAddress);
   store.set("convert.adapterWbtcAllowanceRequesting", true);
   try {
     await contract.methods
-      .approve(adapterAddress, web3.utils.toWei("1000000000000000000"))
+      .approve(adapterAddress, web3!.utils.toWei("1000000000000000000"))
       .send({
         from: walletAddress,
       });
-    updateAllowance();
+    updateAllowance().catch(console.error);
     store.set("convert.adapterWbtcAllowanceRequesting", false);
   } catch (e) {
-    // console.log(e)
+    // console.error(e)
     store.set("convert.adapterWbtcAllowanceRequesting", false);
   }
 };
 
-export const updateBalance = async function () {
+const updateBalance = async () => {
   const store = getStore();
 
   const web3 = store.get("localWeb3");
@@ -98,20 +93,19 @@ export const updateBalance = async function () {
     return;
   }
 
-  const contract = new web3.eth.Contract(erc20ABI, wbtcAddress);
+  const contract = new web3.eth.Contract(erc20ABI as AbiItem[], wbtcAddress);
   const balance = await contract.methods.balanceOf(walletAddress).call();
   const ethBal = await web3.eth.getBalance(walletAddress);
 
   store.set("ethBalance", Number(web3.utils.fromWei(ethBal)).toFixed(8));
   store.set(
     "wbtcBalance",
-    Number(parseInt(balance.toString()) / 10 ** 8).toFixed(8)
+    Number(parseInt(balance.toString()) / 10 ** 8).toFixed(8),
   );
-  store.set("loadingBalances", false);
 };
 
-export const watchWalletData = async function () {
-  const store = getStore();
+const watchWalletData = async () => {
+  // const store = getStore();
   if (walletDataInterval) {
     clearInterval(walletDataInterval);
   }
@@ -123,7 +117,7 @@ export const watchWalletData = async function () {
   }, 10 * 1000);
 };
 
-export const initDataWeb3 = async function () {
+export const initDataWeb3 = async () => {
   const store = getStore();
   const network = store.get("selectedNetwork");
   store.set(
@@ -131,12 +125,12 @@ export const initDataWeb3 = async function () {
     new Web3(
       `https://${
         network === "testnet" ? "kovan" : "mainnet"
-      }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`
-    )
+      }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`,
+    ),
   );
 };
 
-export const getSignatures = async function (address: string, key: string, web3: Web3) {
+const getSignatures = async (address: string, key: string, web3: Web3) => {
   const localSigMap = localStorage.getItem("sigMap");
   const addressLowerCase = address.toLowerCase();
   const localSigMapData = localSigMap ? JSON.parse(localSigMap) : {};
@@ -147,7 +141,8 @@ export const getSignatures = async function (address: string, key: string, web3:
     // get unique wallet signature for firebase backup
     const sig = await web3.eth.personal.sign(
       web3.utils.utf8ToHex("Signing in to WBTC Cafe"),
-      addressLowerCase, ''
+      addressLowerCase,
+      "",
     );
     signature = web3.utils.sha3(sig);
     localSigMapData[addressLowerCase] = signature;
@@ -156,11 +151,11 @@ export const getSignatures = async function (address: string, key: string, web3:
   return signature;
 };
 
-export const initLocalWeb3 = async function () {
+export const initLocalWeb3 = async () => {
   const store = getStore();
   const selectedNetwork = store.get("selectedNetwork");
   const db = store.get("db");
-  const fsUser = store.get("fsUser");
+  // const fsUser = store.get("fsUser");
   const disclosureAccepted = store.get("disclosureAccepted");
 
   const providerOptions = {
@@ -181,7 +176,7 @@ export const initLocalWeb3 = async function () {
   const provider = await web3Modal.connect();
   const web3 = new Web3(provider);
   const currentProvider: any = web3.currentProvider;
-  if (typeof(currentProvider) === 'string') return;
+  if (typeof currentProvider === "string") return;
   if (!currentProvider) return;
   const accounts = await web3.eth.getAccounts();
   const address = accounts[0];
@@ -216,17 +211,17 @@ export const initLocalWeb3 = async function () {
 
   const lsTransactions = lsData
     ? JSON.parse(lsData).filter(
-      (tx: any) => tx.localWeb3Address === addressLowerCase
+        (tx: any) => tx.localWeb3Address === addressLowerCase,
       )
     : [];
-  const lsIds = lsTransactions.map((t: any) => t.id);
+  // const lsIds = lsTransactions.map((t: any) => t.id);
 
   try {
     store.set("loadingTransactions", true);
 
     if (!disclosureAccepted) {
       const ok = window.confirm(
-        'Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.'
+        `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`,
       );
 
       store.set("disclosureAccepted", ok);
@@ -236,8 +231,10 @@ export const initLocalWeb3 = async function () {
       }
     }
 
-    let signature = await getSignatures(address, 'Login', web3);
-    if(!signature) throw('couldnt sign');
+    const signature = await getSignatures(address, "Login", web3);
+    if (!signature) {
+      throw new Error("couldn't sign");
+    }
 
     // get from local storage if user has signed in already
 
@@ -245,15 +242,17 @@ export const initLocalWeb3 = async function () {
 
     // auth with firestore
 
-    store.set("fsUser",
-              await getUser(addressLowerCase, "wbtc.cafe", signature));
+    store.set(
+      "fsUser",
+      await getUser(addressLowerCase, "wbtc.cafe", signature),
+    );
 
     const fsDataSnapshot = await db
       .collection("transactions")
       .where("walletSignature", "==", signature)
       .get();
 
-    let fsTransactions: any[] = [];
+    const fsTransactions: any[] = [];
     if (!fsDataSnapshot.empty) {
       fsDataSnapshot.forEach((doc) => {
         const tx = JSON.parse(doc.data().data);
@@ -263,7 +262,7 @@ export const initLocalWeb3 = async function () {
     const fsIds = fsTransactions.map((f) => f.id);
 
     const uniqueLsTransactions = lsTransactions.filter(
-      (ltx) => fsIds.indexOf(ltx.id) < 0
+      (ltx) => fsIds.indexOf(ltx.id) < 0,
     );
     const transactions = fsTransactions.concat(uniqueLsTransactions);
     store.set("convert.transactions", transactions);
@@ -271,8 +270,8 @@ export const initLocalWeb3 = async function () {
     store.set("fsEnabled", true);
     store.set("loadingTransactions", false);
 
-    watchWalletData();
-    gatherFeeData();
+    watchWalletData().catch(console.error);
+    gatherFeeData().catch(console.error);
     initMonitoring();
 
     if ((currentProvider as any)?.on) {
@@ -292,13 +291,13 @@ export const initLocalWeb3 = async function () {
   } catch (e) {
     store.set("loadingTransactions", false);
     store.set("walletConnectError", true);
-    console.log(e);
+    console.error(e);
   }
 
   return;
 };
 
-export const setAddresses = async function () {
+const setAddresses = async () => {
   const store = getStore();
   const network = store.get("selectedNetwork");
   if (network === "testnet") {
@@ -315,11 +314,8 @@ export const setNetwork = async function (network: string) {
   store.set("selectedNetwork", network);
   store.set("sdk", new RenSDK(network));
 
-  //@ts-ignore
-  setAddresses.bind(this as any)();
-};
-
-export default {
-  setNetwork,
-  updateBalance,
+  setAddresses
+    // @ts-ignore: `this` implicitly has type `any` (TODO)
+    .bind(this as any)()
+    .catch(console.error);
 };
