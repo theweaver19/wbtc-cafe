@@ -1,8 +1,9 @@
 import React from "react";
-import theme from "../theme/theme";
 // import classNames from 'classnames'
 import { withStyles } from "@material-ui/styles";
 import Typography from "@material-ui/core/Typography";
+
+import theme from "../theme/theme";
 
 const styles = () => ({});
 

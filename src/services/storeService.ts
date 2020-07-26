@@ -1,9 +1,9 @@
 let store = {};
 
-export const getStore = function () {
+export const getStore = function (): any {
   return store;
 };
 
-export const storeListener = function (newStore) {
+export const storeListener = function (newStore: any) {
   store = newStore;
 };

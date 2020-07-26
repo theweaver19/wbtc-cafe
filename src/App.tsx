@@ -25,7 +25,7 @@ import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 
-import * as firebase from "firebase/app";
+import firebase from "firebase/app";
 
 import {
   ADAPTER_MAIN,
@@ -42,6 +42,7 @@ firebase.initializeApp({
   projectId: "wbtc-portal",
 });
 
+require('firebase/firestore')
 // firebase.firestore().enablePersistence()
 
 const styles = () => ({
@@ -171,8 +172,6 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
     const classes = this.props.classes;
     storeListener(this.props.store);
     const selectedNetwork = this.props.store.get("selectedNetwork");
-
-    // console.log(this.props.store.getState())
 
     return (
       <ThemeProvider theme={theme}>
