@@ -69,6 +69,14 @@ const styles: Styles<typeof theme, {}> = () => ({
       paddingLeft: theme.spacing(2),
       paddingRight: theme.spacing(2),
       fontSize: 12,
+
+      "& div": {
+        border: "none",
+        paddingTop: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
     },
     // '& '
   },
