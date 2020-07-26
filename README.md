@@ -6,7 +6,7 @@ Acquire WBTC with real BTC.
 
 ## Local Development
 
-WBTC.Cafe uses Firebase to store deposit details. You need a firebase key:
+`☕ WBTC.Cafe` uses Firebase to store deposit details. You need a firebase key:
 
 ```sh
 export REACT_APP_FB_KEY="YOUR_KEY_HERE"
