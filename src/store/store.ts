@@ -56,7 +56,7 @@ export const initialState = {
   // conversions
   "convert.adapterAddress": ADAPTER_TEST,
   "convert.adapterWbtcAllowance": "",
-  "convert.adapterWbtcAllowanceRequesting": "" as boolean | "",
+  "convert.adapterWbtcAllowanceRequesting": false,
   "convert.transactions": [] as Transaction[],
   "convert.pendingConvertToEthereum": [] as Transaction[],
   "convert.selectedFormat": "wbtc",

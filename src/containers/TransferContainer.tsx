@@ -601,10 +601,11 @@ class TransferContainer extends React.Component<Props> {
                             {slippageOptions.map((r) => {
                               const label = `${r * 100}%`;
                               if (maxSlippage === r) {
-                                return <span>{label}</span>;
+                                return <span key={r}>{label}</span>;
                               } else {
                                 return (
                                   <ActionLink
+                                    key={r}
                                     onClick={() => {
                                       store.set("convert.maxSlippage", r);
                                     }}
@@ -691,7 +692,7 @@ class TransferContainer extends React.Component<Props> {
                       </Button>
                     ) : (
                       <Button
-                        disabled={allowanceRequesting as boolean}
+                        disabled={allowanceRequesting}
                         size="small"
                         variant={
                           !allowanceRequesting ? "outlined" : "contained"
