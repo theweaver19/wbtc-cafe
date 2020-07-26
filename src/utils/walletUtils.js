@@ -4,12 +4,12 @@ import Web3Modal from "web3modal";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import firebase from "firebase";
 
-import BTC from "../assets/btc.png";
-import ETH from "../assets/eth.png";
-import ZEC from "../assets/zec.jpg";
-import DAI from "../assets/dai.png";
-import USDC from "../assets/usdc.png";
-import WBTC from "../assets/wbtc.png";
+import BTC from "../assets/tokens/btc.png";
+import ETH from "../assets/tokens/eth.png";
+import ZEC from "../assets/tokens/zec.jpg";
+import DAI from "../assets/tokens/dai.png";
+import USDC from "../assets/tokens/usdc.png";
+import WBTC from "../assets/tokens/wbtc.png";
 
 import { ADAPTER_MAIN, ADAPTER_TEST, WBTC_TEST, WBTC_MAIN } from "./web3Utils";
 
@@ -150,7 +150,7 @@ export const initDataWeb3 = async function () {
     "dataWeb3",
     new Web3(
       `https://${
-        network === "testnet" ? "kovan" : "mainnet"
+      network === "testnet" ? "kovan" : "mainnet"
       }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`
     )
   );
@@ -213,8 +213,8 @@ export const initLocalWeb3 = async function () {
 
   const lsTransactions = lsData
     ? JSON.parse(lsData).filter(
-        (tx) => tx.localWeb3Address === addressLowerCase
-      )
+      (tx) => tx.localWeb3Address === addressLowerCase
+    )
     : [];
   const lsIds = lsTransactions.map((t) => t.id);
 
