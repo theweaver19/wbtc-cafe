@@ -26,7 +26,9 @@ const ConversionStatus = (props: Props) => {
           ) : null}
           {tx.awaiting === "btc-settle" ? (
             <span>
-              {`BTC transaction confirming (${tx.btcConfirmations}/${targetBtcConfs} complete)`}
+              {`BTC transaction confirming (${
+                tx.btcConfirmations < 0 ? "..." : tx.btcConfirmations
+              }/${targetBtcConfs} complete)`}
             </span>
           ) : null}
           {tx.awaiting === "ren-settle" ? (
@@ -49,7 +51,9 @@ const ConversionStatus = (props: Props) => {
               {tx.sourceTxHash
                 ? tx.error
                   ? `Transaction Failed`
-                  : `Transaction confirming (${tx.sourceTxConfs}/${targetEthConfs} complete)`
+                  : `Transaction confirming (${
+                      tx.sourceTxConfs < 0 ? "..." : tx.sourceTxConfs
+                    }/${targetEthConfs} complete)`
                 : `Submit to Ethereum`}
               {/*tx.error ? (tx.sourceTxHash ? `Transaction Failed` : `Submit to Ethereum`) : `Transaction confirming (${tx.sourceTxConfs}/${targetEthConfs} complete)`*/}
             </span>
