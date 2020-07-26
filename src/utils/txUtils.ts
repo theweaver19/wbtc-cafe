@@ -1,11 +1,12 @@
 import RenJS from "@renproject/ren";
-import adapterABI from "../utils/adapterCurveABI.json";
 import sha256 from "crypto-js/sha256";
 import Base64 from "crypto-js/enc-base64";
 import firebase from "firebase/app";
-import curveABI from "../utils/curveABI.json";
+
 import { getStore } from "../services/storeService";
-import { CURVE_TEST, CURVE_MAIN } from "./web3Utils";
+import adapterABI from "./adapterCurveABI.json";
+import curveABI from "./curveABI.json";
+import { CURVE_MAIN, CURVE_TEST } from "./web3Utils";
 
 // Changing TX State
 export const addTx = (tx) => {

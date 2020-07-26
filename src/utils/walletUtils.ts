@@ -150,7 +150,7 @@ export const initDataWeb3 = async function () {
     "dataWeb3",
     new Web3(
       `https://${
-      network === "testnet" ? "kovan" : "mainnet"
+        network === "testnet" ? "kovan" : "mainnet"
       }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`
     )
   );
@@ -213,8 +213,8 @@ export const initLocalWeb3 = async function () {
 
   const lsTransactions = lsData
     ? JSON.parse(lsData).filter(
-      (tx) => tx.localWeb3Address === addressLowerCase
-    )
+        (tx) => tx.localWeb3Address === addressLowerCase
+      )
     : [];
   const lsIds = lsTransactions.map((t) => t.id);
 

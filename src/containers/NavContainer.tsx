@@ -1,17 +1,15 @@
 import React from "react";
 import { withStore } from "@spyna/react-store";
 import { withStyles } from "@material-ui/styles";
-import theme from "../theme/theme";
 import classNames from "classnames";
-
-import { initLocalWeb3 } from "../utils/walletUtils";
-
-import CafeLogo from "../assets/cafe-logo.svg";
-
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
+
+import CafeLogo from "../assets/cafe-logo.svg";
+import theme from "../theme/theme";
+import { initLocalWeb3 } from "../utils/walletUtils";
 
 const styles = () => ({
   navContainer: {
@@ -100,7 +98,7 @@ class NavContainer extends React.Component {
 
   anchorRef = React.createRef();
 
-  async componentDidMount() { }
+  async componentDidMount() {}
 
   toggleNeworkMenu() {
     const { store } = this.props;
@@ -161,15 +159,15 @@ class NavContainer extends React.Component {
                       {<span>Connect Wallet</span>}
                     </Button>
                   ) : (
-                      <Typography
-                        variant="caption"
-                        className={classes.addressLabel}
-                      >
-                        {walletAddress.slice(0, 7) +
-                          "..." +
-                          walletAddress.slice(walletAddress.length - 5)}
-                      </Typography>
-                    )}
+                    <Typography
+                      variant="caption"
+                      className={classes.addressLabel}
+                    >
+                      {walletAddress.slice(0, 7) +
+                        "..." +
+                        walletAddress.slice(walletAddress.length - 5)}
+                    </Typography>
+                  )}
                 </Grid>
               </Grid>
             </Grid>

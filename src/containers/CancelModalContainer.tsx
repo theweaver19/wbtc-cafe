@@ -1,16 +1,16 @@
 import React from "react";
 import { withStore } from "@spyna/react-store";
 import { withStyles } from "@material-ui/styles";
-import theme from "../theme/theme";
 import classNames from "classnames";
-import { removeTx } from "../utils/txUtils";
-
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import Modal from "@material-ui/core/Modal";
 import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
+
+import theme from "../theme/theme";
+import { removeTx } from "../utils/txUtils";
 
 const styles = () => ({
   modal: {

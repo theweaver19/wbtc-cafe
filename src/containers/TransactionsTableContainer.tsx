@@ -1,13 +1,6 @@
 import React from "react";
 import { withStore } from "@spyna/react-store";
 import { withStyles } from "@material-ui/styles";
-import theme from "../theme/theme";
-
-import { initLocalWeb3 } from "../utils/walletUtils";
-import ConversionStatus from "../components/ConversionStatus";
-import ConversionActions from "../components/ConversionActions";
-import ActionLink from "../components/ActionLink";
-
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Table from "@material-ui/core/Table";
@@ -15,6 +8,12 @@ import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
+
+import ActionLink from "../components/ActionLink";
+import ConversionActions from "../components/ConversionActions";
+import ConversionStatus from "../components/ConversionStatus";
+import theme from "../theme/theme";
+import { initLocalWeb3 } from "../utils/walletUtils";
 
 const styles = () => ({
   container: {

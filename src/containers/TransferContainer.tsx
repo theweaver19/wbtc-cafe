@@ -1,32 +1,31 @@
 import React from "react";
 import { withStore } from "@spyna/react-store";
 import { withStyles } from "@material-ui/styles";
-import theme from "../theme/theme";
 import classNames from "classnames";
 import AddressValidator from "wallet-address-validator";
 import NumberFormat from "react-number-format";
-import {
-  addTx,
-  updateTx,
-  removeTx,
-  initConvertFromEthereum,
-  gatherFeeData,
-} from "../utils/txUtils";
-import {
-  MINI_ICON_MAP,
-  NAME_MAP,
-  initLocalWeb3,
-  setWbtcAllowance,
-} from "../utils/walletUtils";
-
 import Grid from "@material-ui/core/Grid";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 
-import CurrencyInput from "../components/CurrencyInput";
 import ActionLink from "../components/ActionLink";
+import CurrencyInput from "../components/CurrencyInput";
+import theme from "../theme/theme";
+import {
+  addTx,
+  gatherFeeData,
+  initConvertFromEthereum,
+  removeTx,
+  updateTx,
+} from "../utils/txUtils";
+import {
+  initLocalWeb3,
+  MINI_ICON_MAP,
+  NAME_MAP,
+  setWbtcAllowance,
+} from "../utils/walletUtils";
 
 const styles = () => ({
   container: {

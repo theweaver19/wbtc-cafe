@@ -1,12 +1,11 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   /* background: #040e13; */
-  background: #F8F9FA;
+  background: #f8f9fa;
   color: #333;
 }
 
@@ -15,7 +14,10 @@ code {
     monospace;
 }
 
-a, a:visited, a:hover, a:active {
+a,
+a:visited,
+a:hover,
+a:active {
   color: rgb(0, 0, 238);
 }
 
@@ -24,14 +26,15 @@ div {
 }
 
 /* charts */
-tspan, .recharts-legend-item-text {
+tspan,
+.recharts-legend-item-text {
   font-size: 12px;
 }
 
 .Marquee {
-    overflow-x: hidden;
-    display: block;
+  overflow-x: hidden;
+  display: block;
 }
 .MarqueeContent {
-    display: inline-block;
+  display: inline-block;
 }
