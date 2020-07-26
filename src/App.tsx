@@ -3,7 +3,7 @@ import * as React from "react";
 
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
-import { Styles } from "@material-ui/core/styles/withStyles";
+import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { ThemeProvider, withStyles } from "@material-ui/styles";
 import { createStore, withStore } from "@spyna/react-store";
@@ -20,7 +20,7 @@ import TransactionsTableContainer from "./containers/TransactionsTableContainer"
 import TransferContainer from "./containers/TransferContainer";
 import ViewGatewayContainer from "./containers/ViewGatewayContainer";
 import { storeListener } from "./services/storeService";
-import { initialState } from "./store/store";
+import { initialState, StoreInterface } from "./store/store";
 import theme from "./theme/theme";
 import { updateRenVMFees } from "./utils/txUtils";
 import { initDataWeb3, setNetwork } from "./utils/walletUtils";
@@ -74,12 +74,12 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-class AppWrapper extends React.Component<{ store: any; classes: any }> {
-  constructor(props: any) {
-    super(props);
-    this.state = {};
-  }
+interface WrapperProps {
+  classes: Record<string, string>;
+  store: StoreInterface;
+}
 
+class AppWrapper extends React.Component<WrapperProps> {
   async componentDidMount() {
     const store = this.props.store;
     const params = queryString.parse(window.location.search);
@@ -176,11 +176,10 @@ class AppWrapper extends React.Component<{ store: any; classes: any }> {
 
 const AppWrapperComponent = withStore(AppWrapper);
 
-class App extends React.Component<{ classes: any }> {
-  render() {
-    const { classes } = this.props;
-    return <AppWrapperComponent classes={classes} />;
-  }
-}
+interface Props extends WithStyles<typeof styles> {}
+
+const App: React.FC<Props> = ({ classes }) => (
+  <AppWrapperComponent classes={classes} />
+);
 
 export default createStore(withStyles(styles)(App), initialState);

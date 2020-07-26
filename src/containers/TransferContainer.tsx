@@ -194,19 +194,11 @@ class TransferContainer extends React.Component<Props> {
     this.ethAddressRef = React.createRef();
   }
 
-  componentDidMount() {
-    // // for debugging
-    // window.addTx = addTx.bind(this);
-    // window.updateTx = updateTx.bind(this);
-    // window.removeTx = removeTx.bind(this);
-    // window.store = this.props.store;
-  }
-
-  showDepositModal(tx: any) {
-    const { store } = this.props;
-    store.set("showDepositModal", true);
-    store.set("depositModalTx", tx);
-  }
+  // showDepositModal(tx: any) {
+  //   const { store } = this.props;
+  //   store.set("showDepositModal", true);
+  //   store.set("depositModalTx", tx);
+  // }
 
   fillWalletAddress() {
     const { store } = this.props;
@@ -432,10 +424,7 @@ class TransferContainer extends React.Component<Props> {
                         <Grid item xs={12}>
                           <CurrencyInput
                             onAmountChange={(value) => {
-                              let amount = value;
-                              if (value < 0) {
-                                amount = "";
-                              }
+                              let amount = value < 0 ? "" : value;
                               store.set("convert.amount", amount);
                               gatherFeeData().catch(console.error);
                             }}
@@ -490,10 +479,7 @@ class TransferContainer extends React.Component<Props> {
                               <CurrencyInput
                                 inputRef={this.wbtcAmountRef}
                                 onAmountChange={(value) => {
-                                  let amount = value;
-                                  if (value < 0) {
-                                    amount = "";
-                                  }
+                                  let amount = value < 0 ? "" : value;
                                   store.set("convert.amount", amount);
                                   gatherFeeData().catch(console.error);
                                 }}
@@ -565,7 +551,20 @@ class TransferContainer extends React.Component<Props> {
                           </span>
                         </Grid>
                         <Grid container justify="space-between">
-                          <span>{NAME_MAP[selectedAsset]} Fee</span>
+                          <span>
+                            {
+                              NAME_MAP[
+                                selectedAsset as
+                                  | "btc"
+                                  | "eth"
+                                  | "zec"
+                                  | "dai"
+                                  | "usdc"
+                                  | "wbtc"
+                              ]
+                            }{" "}
+                            Fee
+                          </span>
                           <span className={classes.amt}>
                             {fee && amount
                               ? `${Number(fee).toFixed(8)} BTC`

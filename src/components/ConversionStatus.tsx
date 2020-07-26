@@ -4,10 +4,12 @@ import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
 import React from "react";
 
+import { Transaction } from "../types/transaction";
+
 const styles: Styles<{}, {}> = () => ({});
 
 interface Props extends WithStyles<typeof styles> {
-  tx: any;
+  tx: Transaction;
 }
 
 const ConversionStatus = (props: Props) => {
@@ -27,7 +29,9 @@ const ConversionStatus = (props: Props) => {
           {tx.awaiting === "btc-settle" ? (
             <span>
               {`BTC transaction confirming (${
-                tx.btcConfirmations < 0 ? "..." : tx.btcConfirmations
+                tx.btcConfirmations === undefined || tx.btcConfirmations < 0
+                  ? "..."
+                  : tx.btcConfirmations
               }/${targetBtcConfs} complete)`}
             </span>
           ) : null}
@@ -52,7 +56,10 @@ const ConversionStatus = (props: Props) => {
                 ? tx.error
                   ? `Transaction Failed`
                   : `Transaction confirming (${
-                      tx.sourceTxConfs < 0 ? "..." : tx.sourceTxConfs
+                      tx.btcConfirmations === undefined ||
+                      tx.btcConfirmations < 0
+                        ? "..."
+                        : tx.sourceTxConfs
                     }/${targetEthConfs} complete)`
                 : `Submit to Ethereum`}
               {/*tx.error ? (tx.sourceTxHash ? `Transaction Failed` : `Submit to Ethereum`) : `Transaction confirming (${tx.sourceTxConfs}/${targetEthConfs} complete)`*/}

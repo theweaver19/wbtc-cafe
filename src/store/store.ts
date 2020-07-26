@@ -2,7 +2,6 @@ import { UnmarshalledFees } from "@renproject/interfaces";
 import RenJS from "@renproject/ren";
 import Web3 from "web3";
 
-import { RecordInstance } from "../types/store";
 import { Transaction } from "../types/transaction";
 import { initFirebase } from "../utils/firebase/firebase";
 import { ADAPTER_TEST } from "../utils/web3Utils";
@@ -28,7 +27,7 @@ export const initialState = {
   queryParams: {},
   db: initFirebase(),
   fsUser: null as {
-    uid: any;
+    uid: string;
   } | null,
   fsSignature: null as string | null,
   fsEnabled: false,
@@ -45,7 +44,7 @@ export const initialState = {
   depositModalTx: null as Transaction | null,
   depositDisclosureChecked: false,
   showCancelModal: false,
-  cancelModalTx: null,
+  cancelModalTx: null as Transaction | null,
   showGatewayModal: false,
   gatewayModalTx: null as Transaction | null,
   showSwapRevertModal: false,
@@ -58,7 +57,7 @@ export const initialState = {
   "convert.adapterWbtcAllowance": "",
   "convert.adapterWbtcAllowanceRequesting": false,
   "convert.transactions": [] as Transaction[],
-  "convert.pendingConvertToEthereum": [] as Transaction[],
+  "convert.pendingConvertToEthereum": [] as string[],
   "convert.selectedFormat": "wbtc",
   "convert.selectedDirection": 0,
   "convert.amount": "" as string | number,
@@ -71,6 +70,11 @@ export const initialState = {
   "convert.maxSlippage": 0.01,
 };
 
-export type StoreInterface = RecordInstance<typeof initialState> & {
+interface StoreGeneric<T> {
+  get<K extends keyof T, V extends T[K]>(key: K): V;
+  set<K extends keyof T, V extends T[K]>(key: K, value: V): this;
+
   getState: () => typeof initialState;
-};
+}
+
+export type StoreInterface = StoreGeneric<typeof initialState>;

@@ -51,10 +51,10 @@ const styles: Styles<typeof theme, {}> = () => ({
 });
 
 interface Props extends WithStyles<typeof styles> {
-  onCurrencyChange: any;
-  onAmountChange: any;
-  items: any;
-  inputRef?: any;
+  onCurrencyChange: (newCurrency: string) => void;
+  onAmountChange: (newAmount: number) => void;
+  items: string[];
+  inputRef?: React.RefObject<any>;
   disabled?: boolean;
 }
 
@@ -151,7 +151,7 @@ class CurrencyInput extends React.Component<Props, State> {
                   open={open}
                   onClose={this.handleClose.bind(this)}
                 >
-                  {items.map((i: any, index: number) => (
+                  {items.map((i: string, index: number) => (
                     <MenuItem
                       onClick={() => {
                         this.handleClose.bind(this)({

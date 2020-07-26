@@ -11,12 +11,13 @@ import USDC from "../assets/tokens/usdc.png";
 import WBTC from "../assets/tokens/wbtc.png";
 import ZEC from "../assets/tokens/zec.jpg";
 import { getStore } from "../services/storeService";
+import { Transaction } from "../types/transaction";
 import erc20ABI from "./ABIs/erc20ABI.json";
 import { getUser } from "./firebase/firebaseUtils";
 import { gatherFeeData, initMonitoring } from "./txUtils";
 import { ADAPTER_MAIN, ADAPTER_TEST, WBTC_MAIN, WBTC_TEST } from "./web3Utils";
 
-let walletDataInterval: any = null;
+let walletDataInterval: NodeJS.Timeout | null = null;
 
 export const NAME_MAP = {
   btc: "Bitcoin",
@@ -175,7 +176,7 @@ export const initLocalWeb3 = async () => {
 
   const provider = await web3Modal.connect();
   const web3 = new Web3(provider);
-  const currentProvider: any = web3.currentProvider;
+  const currentProvider = web3.currentProvider;
   if (typeof currentProvider === "string") return;
   if (!currentProvider) return;
   const accounts = await web3.eth.getAccounts();
@@ -211,7 +212,7 @@ export const initLocalWeb3 = async () => {
 
   const lsTransactions = lsData
     ? JSON.parse(lsData).filter(
-        (tx: any) => tx.localWeb3Address === addressLowerCase,
+        (tx: Transaction) => tx.localWeb3Address === addressLowerCase,
       )
     : [];
   // const lsIds = lsTransactions.map((t: any) => t.id);
@@ -252,17 +253,17 @@ export const initLocalWeb3 = async () => {
       .where("walletSignature", "==", signature)
       .get();
 
-    const fsTransactions: any[] = [];
+    const fsTransactions: Transaction[] = [];
     if (!fsDataSnapshot.empty) {
       fsDataSnapshot.forEach((doc) => {
-        const tx = JSON.parse(doc.data().data);
+        const tx: Transaction = JSON.parse(doc.data().data);
         fsTransactions.push(tx);
       });
     }
     const fsIds = fsTransactions.map((f) => f.id);
 
     const uniqueLsTransactions = lsTransactions.filter(
-      (ltx) => fsIds.indexOf(ltx.id) < 0,
+      (ltx: Transaction) => fsIds.indexOf(ltx.id) < 0,
     );
     const transactions = fsTransactions.concat(uniqueLsTransactions);
     store.set("convert.transactions", transactions);
@@ -276,15 +277,15 @@ export const initLocalWeb3 = async () => {
 
     if ((currentProvider as any)?.on) {
       // listen for changes
-      currentProvider.on("accountsChanged", async () => {
+      (currentProvider as any).on("accountsChanged", async () => {
         window.location.reload();
       });
 
-      currentProvider.on("chainChanged", async () => {
+      (currentProvider as any).on("chainChanged", async () => {
         window.location.reload();
       });
 
-      currentProvider.on("networkChanged", async () => {
+      (currentProvider as any).on("networkChanged", async () => {
         window.location.reload();
       });
     }
@@ -310,7 +311,7 @@ const setAddresses = async () => {
 };
 
 export const setNetwork = async function (network: string) {
-  const store: any = getStore();
+  const store = getStore();
   store.set("selectedNetwork", network);
   store.set("sdk", new RenSDK(network));
 

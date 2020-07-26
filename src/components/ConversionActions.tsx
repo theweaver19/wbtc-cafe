@@ -7,6 +7,7 @@ import React from "react";
 
 import { getStore } from "../services/storeService";
 import theme from "../theme/theme";
+import { Transaction } from "../types/transaction";
 import {
   completeConvertToEthereum,
   initConvertFromEthereum,
@@ -24,7 +25,7 @@ const styles: Styles<typeof theme, {}> = () => ({
 });
 
 interface Props extends WithStyles<typeof styles> {
-  tx: any;
+  tx: Transaction;
 }
 
 const ConversionActions = (props: Props) => {

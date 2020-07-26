@@ -2,14 +2,17 @@ import { EthArgs, UnmarshalledFees } from "@renproject/interfaces";
 import RenJS from "@renproject/ren";
 import firebase from "firebase/app";
 import { AbiItem } from "web3-utils";
+import { LockAndMint } from "@renproject/ren/build/main/lockAndMint";
+import { BurnAndRelease } from "@renproject/ren/build/main/burnAndRelease";
 
 import { getStore } from "../services/storeService";
+import { Transaction } from "../types/transaction";
 import adapterABI from "./ABIs/adapterCurveABI.json";
 import curveABI from "./ABIs/curveABI.json";
 import { CURVE_MAIN, CURVE_TEST } from "./web3Utils";
 
 // Changing TX State
-const addTx = (tx) => {
+const addTx = (tx: Transaction) => {
   // add timestamps
   const timestamp = firebase.firestore.Timestamp.fromDate(new Date(Date.now()));
   tx.created = timestamp;
@@ -49,7 +52,7 @@ const addTx = (tx) => {
   }
 };
 
-export const updateTx = (newTx) => {
+export const updateTx = (newTx: Transaction): Transaction => {
   // update timestamp
   newTx.updated = firebase.firestore.Timestamp.fromDate(new Date(Date.now()));
 
@@ -89,7 +92,7 @@ export const updateTx = (newTx) => {
   return newTx;
 };
 
-export const removeTx = (tx) => {
+export const removeTx = (tx: Transaction) => {
   const store = getStore();
   const db = store.get("db");
   const fsEnabled = store.get("fsEnabled");
@@ -113,13 +116,13 @@ export const removeTx = (tx) => {
   }
 };
 
-const getTx = (id) => {
+const getTx = (id: Transaction["id"]) => {
   return getStore()
     .get("convert.transactions")
     .filter((t) => t.id === id)[0];
 };
 
-const txExists = (tx) => {
+const txExists = (tx: Transaction) => {
   return (
     getStore()
       .get("convert.transactions")
@@ -152,7 +155,7 @@ export const updateRenVMFees = async () => {
   }
 };
 
-const getFinalDepositExchangeRate = async (tx) => {
+const getFinalDepositExchangeRate = async (tx: Transaction) => {
   const store = getStore();
   const dataWeb3 = store.get("dataWeb3");
   const selectedNetwork = store.get("selectedNetwork");
@@ -191,9 +194,12 @@ export const gatherFeeData = async () => {
   const fixedFeeKey = selectedDirection ? "release" : "lock";
   const dynamicFeeKey = selectedDirection ? "burn" : "mint";
 
-  const fixedFee = Number(fees![selectedAsset][fixedFeeKey] / 10 ** 8);
+  const fixedFee = Number(
+    fees![selectedAsset as "btc" | "zec" | "bch"][fixedFeeKey] / 10 ** 8,
+  );
   const dynamicFeeRate = Number(
-    fees![selectedAsset].ethereum[dynamicFeeKey] / 10000,
+    fees![selectedAsset as "btc" | "zec" | "bch"].ethereum[dynamicFeeKey] /
+      10000,
   );
 
   if (!amount || !dataWeb3 || !fees) return;
@@ -281,7 +287,7 @@ export const gatherFeeData = async () => {
 // };
 
 // BTC to WBTC
-const monitorMintTx = async (tx) => {
+const monitorMintTx = async (tx: Transaction) => {
   const store = getStore();
   const web3 = store.get("localWeb3");
 
@@ -291,7 +297,7 @@ const monitorMintTx = async (tx) => {
     // console.log('latestTx', latestTx)
 
     // Get transaction details
-    const txDetails = await web3!.eth.getTransaction(latestTx.destTxHash);
+    const txDetails = await web3!.eth.getTransaction(latestTx.destTxHash!);
     if (txDetails) {
       const currentBlock = await web3!.eth.getBlockNumber();
       const confs =
@@ -302,7 +308,7 @@ const monitorMintTx = async (tx) => {
       // Update confs
       if (confs > 0) {
         const receipt = await web3!.eth.getTransactionReceipt(
-          latestTx.destTxHash,
+          latestTx.destTxHash!,
         );
 
         // reverted because gas ran out
@@ -340,7 +346,7 @@ const monitorMintTx = async (tx) => {
 };
 
 export const completeConvertToEthereum = async (
-  transaction: any,
+  transaction: Transaction,
   approveSwappedAsset?: string,
 ) => {
   const store = getStore();
@@ -371,7 +377,7 @@ export const completeConvertToEthereum = async (
   const exchangeRate = await getFinalDepositExchangeRate(tx);
   updateTx(Object.assign(tx, { exchangeRateOnSubmit: exchangeRate }));
   // console.log(exchangeRate, minExchangeRate)
-  if (!approveSwappedAsset && exchangeRate! < minExchangeRate) {
+  if (!approveSwappedAsset && exchangeRate! < minExchangeRate!) {
     // console.log('showing modal')
     store.set("swapRevertModalTx", tx);
     store.set("swapRevertModalExchangeRate", exchangeRate!.toFixed(8));
@@ -407,7 +413,7 @@ export const completeConvertToEthereum = async (
         .send({
           from: localWeb3Address,
         })
-        .on("transactionHash", (hash) => {
+        .on("transactionHash", (hash: string) => {
           // console.log(hash)
           const newTx = updateTx(
             Object.assign(tx, {
@@ -431,7 +437,7 @@ export const completeConvertToEthereum = async (
   }
 };
 
-const initMint = (tx) => {
+const initMint = (tx: Transaction) => {
   const {
     type,
     amount,
@@ -456,7 +462,7 @@ const initMint = (tx) => {
         name: "_minExchangeRate",
         type: "uint256",
         value: RenJS.utils
-          .value(minExchangeRate, "btc")
+          .value(minExchangeRate!, "btc")
           .sats()
           .toNumber()
           .toFixed(0),
@@ -500,7 +506,7 @@ const initMint = (tx) => {
   return mint;
 };
 
-export const initConvertToEthereum = async function (tx) {
+export const initConvertToEthereum = async function (tx: Transaction) {
   const store = getStore();
   const {
     id,
@@ -549,7 +555,7 @@ export const initConvertToEthereum = async function (tx) {
 
     // wait for btc
     const targetConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
-    let deposit;
+    let deposit: LockAndMint;
     if (
       awaiting === "ren-settle" &&
       sourceTxHash &&
@@ -557,7 +563,8 @@ export const initConvertToEthereum = async function (tx) {
     ) {
       deposit = await mint.wait(targetConfs, {
         txHash: sourceTxHash,
-        vOut: sourceTxVOut,
+        // TODO: Can vOut be casted to number safely?
+        vOut: sourceTxVOut as number,
       });
     } else {
       // console.log('waiting for deposit')
@@ -567,7 +574,8 @@ export const initConvertToEthereum = async function (tx) {
           sourceTxHash && sourceTxVOut
             ? {
                 txHash: sourceTxHash,
-                vOut: sourceTxVOut,
+                // TODO: Can vOut be casted to number safely?
+                vOut: sourceTxVOut as number,
               }
             : // TODO: should be undefined?
               ((null as unknown) as undefined),
@@ -600,6 +608,7 @@ export const initConvertToEthereum = async function (tx) {
         });
     }
 
+    // @ts-ignore: (combination of !== and || is wrong) (TODO)
     if (awaiting !== "eth-init" || awaiting !== "eth-settle") {
       updateTx(Object.assign(tx, { awaiting: "ren-settle" }));
     }
@@ -608,6 +617,7 @@ export const initConvertToEthereum = async function (tx) {
       const signature = await deposit.submit();
       updateTx(
         Object.assign(tx, {
+          // @ts-ignore: `renVMResponse` is private (TODO)
           renResponse: signature.renVMResponse,
           renSignature: signature.signature,
         }),
@@ -622,13 +632,13 @@ export const initConvertToEthereum = async function (tx) {
 };
 
 // WBTC to BTC
-const monitorBurnTx = async (tx) => {
+const monitorBurnTx = async (tx: Transaction) => {
   const store = getStore();
   const sdk = store.get("sdk");
   const web3 = store.get("localWeb3");
   const targetConfs = tx.sourceNetworkVersion === "testnet" ? 13 : 30;
 
-  let burn;
+  let burn: BurnAndRelease;
   try {
     burn = await sdk!
       .burnAndRelease({
@@ -690,7 +700,7 @@ const monitorBurnTx = async (tx) => {
   }, 1000);
 };
 
-export const initConvertFromEthereum = async function (tx) {
+export const initConvertFromEthereum = async function (tx: Transaction) {
   const store = getStore();
   const web3 = store.get("localWeb3");
   const adapterAddress = store.get("convert.adapterAddress");
@@ -719,7 +729,7 @@ export const initConvertFromEthereum = async function (tx) {
         RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0),
       )
       .send({ from })
-      .on("transactionHash", (hash) => {
+      .on("transactionHash", (hash: string) => {
         // console.log(hash)
         updateTx(
           Object.assign(tx, {

@@ -158,7 +158,7 @@ class DepositModalContainer extends React.Component<Props> {
     const { store } = this.props;
     const depositModalTx = store.get("depositModalTx");
 
-    initConvertToEthereum.bind(this)(depositModalTx).catch(console.error);
+    initConvertToEthereum.bind(this)(depositModalTx!).catch(console.error);
 
     store.set("showDepositModal", false);
     store.set("depositDisclosureChecked", false);
@@ -296,7 +296,18 @@ class DepositModalContainer extends React.Component<Props> {
                           variant="body1"
                           className={classes.receiptTitle}
                         >
-                          {NAME_MAP[selectedAsset]} Network Fee
+                          {
+                            NAME_MAP[
+                              selectedAsset as
+                                | "btc"
+                                | "eth"
+                                | "zec"
+                                | "dai"
+                                | "usdc"
+                                | "wbtc"
+                            ]
+                          }{" "}
+                          Network Fee
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>

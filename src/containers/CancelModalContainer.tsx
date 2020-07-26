@@ -74,7 +74,7 @@ class CancelModalContainer extends React.Component<Props> {
     const { store } = this.props;
     const cancelModalTx = store.get("cancelModalTx");
 
-    removeTx(cancelModalTx);
+    removeTx(cancelModalTx!);
 
     store.set("showCancelModal", false);
     store.set("cancelModalTx", null);
