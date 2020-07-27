@@ -1,4 +1,4 @@
-import { WithStyles } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 import Backdrop from "@material-ui/core/Backdrop";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
@@ -8,18 +8,15 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Grid from "@material-ui/core/Grid";
 import Modal from "@material-ui/core/Modal";
 import SnackbarContent from "@material-ui/core/SnackbarContent";
-import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import { withStyles } from "@material-ui/styles";
 import classNames from "classnames";
 import React, { useState } from "react";
 
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 import { TransactionStore } from "../utils/txUtils";
 import { NAME_MAP } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -117,11 +114,12 @@ const styles: Styles<typeof theme, {}> = () => ({
     fontSize: 14,
     textAlign: "right",
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const DepositModalContainer: React.FC<Props> = ({ classes }) => {
+export const DepositModalContainer: React.FC<Props> = () => {
+  const classes = useStyles();
   const {
     depositModalTx,
     showDepositModal,
@@ -368,5 +366,3 @@ const DepositModalContainer: React.FC<Props> = ({ classes }) => {
     </Modal>
   );
 };
-
-export default withStyles(styles)(DepositModalContainer);

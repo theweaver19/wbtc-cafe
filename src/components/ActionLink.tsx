@@ -1,12 +1,10 @@
-import { WithStyles } from "@material-ui/core";
-import { Styles } from "@material-ui/core/styles/withStyles";
-import { withStyles } from "@material-ui/styles";
+import { makeStyles } from "@material-ui/core";
 import classNames from "classnames";
 import React from "react";
 
 import { AProps } from "../types/jsx";
 
-const styles: Styles<{}, {}> = () => ({
+const useStyles = makeStyles({
   link: {
     fontSize: 12,
     textDecoration: "underline",
@@ -14,16 +12,17 @@ const styles: Styles<{}, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, AProps {}
+interface Props extends AProps {}
 
-const ActionLink = (props: Props) => {
-  const { children, classes, className, ...restOfProps } = props;
-
+export const ActionLink: React.FC<Props> = ({
+  children,
+  className,
+  ...restOfProps
+}) => {
+  const classes = useStyles();
   return (
     <a className={classNames(classes.link, className)} {...restOfProps}>
       {children}
     </a>
   );
 };
-
-export default withStyles(styles)(ActionLink);

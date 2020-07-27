@@ -1,26 +1,24 @@
 import * as queryString from "query-string";
-import * as React from "react";
 
+import React from "react";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
-import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import { ThemeProvider, withStyles } from "@material-ui/styles";
 import Marquee from "react-smooth-marquee";
+import { makeStyles } from "@material-ui/core";
 
 import RenVM from "./assets/renvm-powered.svg";
 import { ExternalLink } from "./components/ExternalLink";
-import CancelModalContainer from "./containers/CancelModalContainer";
-import DepositModalContainer from "./containers/DepositModalContainer";
-import NavContainer from "./containers/NavContainer";
-import NetworkModalContainer from "./containers/NetworkModalContainer";
-import SwapRevertModalContainer from "./containers/SwapRevertModalContainer";
-import TransactionsTableContainer from "./containers/TransactionsTableContainer";
-import TransferContainer from "./containers/TransferContainer";
-import ViewGatewayContainer from "./containers/ViewGatewayContainer";
+import { CancelModalContainer } from "./containers/CancelModalContainer";
+import { DepositModalContainer } from "./containers/DepositModalContainer";
+import { NavContainer } from "./containers/NavContainer";
+import { NetworkModalContainer } from "./containers/NetworkModalContainer";
+import { SwapRevertModalContainer } from "./containers/SwapRevertModalContainer";
+import { TransactionsTableContainer } from "./containers/TransactionsTableContainer";
+import { TransferContainer } from "./containers/TransferContainer";
+import { ViewGatewayContainer } from "./containers/ViewGatewayContainer";
 import { Web3Store } from "./hooks/useWeb3";
 import { Store } from "./store/store";
-import theme from "./theme/theme";
 import { TransactionStore } from "./utils/txUtils";
 import {
   ADAPTER_MAIN,
@@ -31,7 +29,7 @@ import {
 
 require("dotenv").config();
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     maxWidth: 450,
   },
@@ -74,13 +72,14 @@ const styles: Styles<typeof theme, {}> = () => ({
       },
     },
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const App: React.FC<Props> = ({ classes }) => {
+export const App: React.FC<Props> = () => {
   const { updateRenVMFees } = TransactionStore.useContainer();
   const { initDataWeb3, setNetwork } = Web3Store.useContainer();
+  const classes = useStyles();
 
   React.useEffect(() => {
     const params = queryString.parse(window.location.search);
@@ -97,7 +96,7 @@ const App: React.FC<Props> = ({ classes }) => {
   const { selectedNetwork } = Store.useContainer();
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <DepositModalContainer />
       <CancelModalContainer />
       <ViewGatewayContainer />
@@ -136,7 +135,7 @@ const App: React.FC<Props> = ({ classes }) => {
                 src={RenVM}
               />
             </ExternalLink>
-            <Typography className={classes.footerLinks} variant="caption">
+            <Typography variant="caption">
               <ExternalLink
                 href={
                   "https://" +
@@ -164,8 +163,6 @@ const App: React.FC<Props> = ({ classes }) => {
           </Grid>
         </Container>
       </Grid>
-    </ThemeProvider>
+    </>
   );
 };
-
-export default withStyles(styles)(App);

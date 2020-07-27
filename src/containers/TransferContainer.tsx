@@ -1,24 +1,21 @@
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
-import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
-import { withStyles } from "@material-ui/styles";
-import classNames from "classnames";
 import React, { useRef } from "react";
 import NumberFormat from "react-number-format";
 import AddressValidator from "wallet-address-validator";
+import { makeStyles } from "@material-ui/core";
 
-import ActionLink from "../components/ActionLink";
-import CurrencyInput from "../components/CurrencyInput";
+import { ActionLink } from "../components/ActionLink";
+import { CurrencyInput } from "../components/CurrencyInput";
 import { Web3Store } from "../hooks/useWeb3";
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 import { TransactionStore } from "../utils/txUtils";
 import { MINI_ICON_MAP, NAME_MAP } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     background: "#fff",
     border: "0.5px solid " + theme.palette.divider,
@@ -147,11 +144,12 @@ const styles: Styles<typeof theme, {}> = () => ({
     paddingLeft: theme.spacing(1),
     paddingTop: theme.spacing(0.5),
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const TransferContainer: React.FC<Props> = ({ classes }) => {
+export const TransferContainer: React.FC<Props> = () => {
+  const classes = useStyles();
   const {
     convertAmount,
     convertDestination,
@@ -471,10 +469,10 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
 
               <Grid item xs={12}>
                 <Grid container direction="column" className={classes.fees}>
-                  <Grid item xs={12} className={classes.lineItem}>
+                  <Grid item xs={12}>
                     <Grid container justify="space-between">
                       <span>Exchange Rate</span>
-                      <span className={classes.amt}>
+                      <span>
                         {exchangeRate && amount
                           ? `1 ${sourceAsset} = ${Number(exchangeRate).toFixed(
                               4,
@@ -484,7 +482,7 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
                     </Grid>
                     <Grid container justify="space-between">
                       <span>RenVM Fee</span>
-                      <span className={classes.amt}>
+                      <span>
                         {renVMFee && amount
                           ? `${Number(renVMFee).toFixed(8)} BTC`
                           : "-"}
@@ -505,7 +503,7 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
                         }{" "}
                         Fee
                       </span>
-                      <span className={classes.amt}>
+                      <span>
                         {fee && amount ? `${Number(fee).toFixed(8)} BTC` : "-"}
                       </span>
                     </Grid>
@@ -515,7 +513,7 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
                       className={classes.total}
                     >
                       <span>You Will Receive</span>
-                      <span className={classes.amt}>
+                      <span>
                         {total && amount
                           ? `~${Number(total).toFixed(8)} ${destAsset}`
                           : "-"}
@@ -527,7 +525,7 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
 
               <Grid item xs={12}>
                 <Grid container direction="column" className={classes.slippage}>
-                  <Grid item xs={12} className={classes.lineItem}>
+                  <Grid item xs={12}>
                     <Grid container justify="space-between">
                       <span>Max. slippage</span>
                       <div className={classes.slippageRate}>
@@ -586,7 +584,6 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
                   disabled={!canConvertTo}
                   variant={canConvertTo ? "outlined" : "contained"}
                   size="small"
-                  className={classNames(classes.margin, classes.actionButton)}
                   onClick={newDeposit}
                 >
                   Get WBTC
@@ -607,7 +604,6 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
                     disabled={!canConvertFrom}
                     size="small"
                     variant={canConvertFrom ? "outlined" : "contained"}
-                    className={classNames(classes.margin, classes.actionButton)}
                     onClick={newWithdraw}
                   >
                     Get BTC
@@ -617,7 +613,6 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
                     disabled={allowanceRequesting}
                     size="small"
                     variant={!allowanceRequesting ? "outlined" : "contained"}
-                    className={classNames(classes.margin, classes.actionButton)}
                     onClick={setWbtcAllowance}
                   >
                     Allow WBTC
@@ -631,5 +626,3 @@ const TransferContainer: React.FC<Props> = ({ classes }) => {
     </div>
   );
 };
-
-export default withStyles(styles)(TransferContainer);

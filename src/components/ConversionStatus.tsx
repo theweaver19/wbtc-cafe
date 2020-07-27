@@ -1,20 +1,13 @@
-import { WithStyles } from "@material-ui/core";
-import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import { withStyles } from "@material-ui/styles";
 import React from "react";
 
 import { Transaction } from "../types/transaction";
 
-const styles: Styles<{}, {}> = () => ({});
-
-interface Props extends WithStyles<typeof styles> {
+interface Props {
   tx: Transaction;
 }
 
-const ConversionStatus = (props: Props) => {
-  const { tx } = props;
-
+export const ConversionStatus: React.FC<Props> = ({ tx }) => {
   const targetBtcConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
   const targetEthConfs = tx.sourceNetworkVersion === "testnet" ? 13 : 30;
 
@@ -72,5 +65,3 @@ const ConversionStatus = (props: Props) => {
     </React.Fragment>
   );
 };
-
-export default withStyles(styles)(ConversionStatus);

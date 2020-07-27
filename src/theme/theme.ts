@@ -1,7 +1,7 @@
 import grey from "@material-ui/core/colors/grey";
 import { createMuiTheme } from "@material-ui/core/styles";
 
-export default createMuiTheme({
+export const theme = createMuiTheme({
   typography: {
     fontFamily: [
       "-apple-system",

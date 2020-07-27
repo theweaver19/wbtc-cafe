@@ -1,17 +1,14 @@
-import { WithStyles } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
-import { Styles } from "@material-ui/core/styles/withStyles";
 import TextField from "@material-ui/core/TextField";
-import { withStyles } from "@material-ui/styles";
 import React, { useRef, useState } from "react";
 
-import theme from "../theme/theme";
 import { MINI_ICON_MAP } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   amountField: {
     width: "100%",
   },
@@ -45,9 +42,9 @@ const styles: Styles<typeof theme, {}> = () => ({
     height: 16,
     marginRight: theme.spacing(0.75),
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {
+interface Props {
   onCurrencyChange: (newCurrency: string) => void;
   onAmountChange: (newAmount: number) => void;
   items: string[];
@@ -55,14 +52,14 @@ interface Props extends WithStyles<typeof styles> {
   disabled?: boolean;
 }
 
-const CurrencyInput: React.FC<Props> = ({
+export const CurrencyInput: React.FC<Props> = ({
   onCurrencyChange,
   onAmountChange,
   items,
   inputRef,
   disabled,
-  classes,
 }) => {
+  const classes = useStyles();
   const anchorEl = useRef<any>(null);
   const defaultInputRef = useRef<any>(null);
 
@@ -201,5 +198,3 @@ const CurrencyInput: React.FC<Props> = ({
     />
   );
 };
-
-export default withStyles(styles)(CurrencyInput);

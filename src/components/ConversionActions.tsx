@@ -1,30 +1,28 @@
 // eslint-disable jsx-a11y/anchor-is-valid
 
-import { WithStyles } from "@material-ui/core";
-import { Styles } from "@material-ui/core/styles/withStyles";
-import { withStyles } from "@material-ui/styles";
+import { makeStyles } from "@material-ui/core";
 import React from "react";
 
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 import { Transaction } from "../types/transaction";
 import { TransactionStore } from "../utils/txUtils";
 import { ExternalLink } from "./ExternalLink";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   viewLink: {
     fontSize: 12,
     marginRight: theme.spacing(1),
     textDecoration: "underline",
     cursor: "pointer",
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {
+interface Props {
   tx: Transaction;
 }
 
-const ConversionActions: React.FC<Props> = ({ tx, classes }) => {
+export const ConversionActions: React.FC<Props> = ({ tx }) => {
+  const classes = useStyles();
   const {
     setShowGatewayModal,
     setGatewayModalTx,
@@ -167,5 +165,3 @@ const ConversionActions: React.FC<Props> = ({ tx, classes }) => {
     </React.Fragment>
   );
 };
-
-export default withStyles(styles)(ConversionActions);

@@ -1,18 +1,16 @@
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
-import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import { withStyles } from "@material-ui/styles";
 import classNames from "classnames";
 import React from "react";
+import { makeStyles } from "@material-ui/core";
 
 import CafeLogo from "../assets/cafe-logo.svg";
 import { Web3Store } from "../hooks/useWeb3";
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   navContainer: {
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),
@@ -80,11 +78,12 @@ const styles: Styles<typeof theme, {}> = () => ({
       justifyContent: "flex-start",
     },
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const NavContainer: React.FC<Props> = ({ classes }) => {
+export const NavContainer: React.FC<Props> = () => {
+  const classes = useStyles();
   const {
     localWeb3Address,
     walletConnectError,
@@ -161,5 +160,3 @@ const NavContainer: React.FC<Props> = ({ classes }) => {
     </Grid>
   );
 };
-
-export default withStyles(styles)(NavContainer);

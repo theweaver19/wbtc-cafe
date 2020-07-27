@@ -1,20 +1,17 @@
-import { WithStyles } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 import Backdrop from "@material-ui/core/Backdrop";
 import Button from "@material-ui/core/Button";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
 import Modal from "@material-ui/core/Modal";
-import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import { withStyles } from "@material-ui/styles";
 import classNames from "classnames";
 import React from "react";
 
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 import { TransactionStore } from "../utils/txUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -62,11 +59,12 @@ const styles: Styles<typeof theme, {}> = () => ({
   backButton: {
     marginTop: theme.spacing(1),
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const CancelModalContainer: React.FC<Props> = ({ classes }) => {
+export const CancelModalContainer: React.FC<Props> = () => {
+  const classes = useStyles();
   const {
     cancelModalTx,
     showCancelModal,
@@ -108,12 +106,7 @@ const CancelModalContainer: React.FC<Props> = ({ classes }) => {
     >
       <Fade in={showCancelModal}>
         <Grid container className={classes.modalContent}>
-          <Grid
-            className={classNames(classes.connectWalletPrompt)}
-            container
-            alignItems="center"
-            justify="center"
-          >
+          <Grid container alignItems="center" justify="center">
             <Grid item xs={12}>
               <Grid container>
                 {
@@ -122,7 +115,7 @@ const CancelModalContainer: React.FC<Props> = ({ classes }) => {
                   </Typography>
                 }
 
-                <Typography variant="body1" className={classes.content}>
+                <Typography variant="body1">
                   Bitcoin sent to this deposit address will be no longer be
                   accessible.
                 </Typography>
@@ -159,5 +152,3 @@ const CancelModalContainer: React.FC<Props> = ({ classes }) => {
     </Modal>
   );
 };
-
-export default withStyles(styles)(CancelModalContainer);

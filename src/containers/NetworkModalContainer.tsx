@@ -2,15 +2,13 @@ import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
 import Modal from "@material-ui/core/Modal";
-import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
-import { withStyles } from "@material-ui/styles";
 import React from "react";
+import { makeStyles } from "@material-ui/core";
 
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -41,11 +39,12 @@ const styles: Styles<typeof theme, {}> = () => ({
     fontSize: 14,
     width: "100%",
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const NetworkModalContainer: React.FC<Props> = ({ classes }) => {
+export const NetworkModalContainer: React.FC<Props> = () => {
+  const classes = useStyles();
   const {
     showNetworkModal,
     selectedNetwork,
@@ -81,5 +80,3 @@ const NetworkModalContainer: React.FC<Props> = ({ classes }) => {
     </Modal>
   );
 };
-
-export default withStyles(styles)(NetworkModalContainer);

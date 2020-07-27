@@ -1,4 +1,4 @@
-import { WithStyles } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
 import Grid from "@material-ui/core/Grid";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -6,17 +6,15 @@ import TableCell from "@material-ui/core/TableCell";
 import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography";
-import { Styles, withStyles } from "@material-ui/styles";
 import React from "react";
 
-import ActionLink from "../components/ActionLink";
-import ConversionActions from "../components/ConversionActions";
-import ConversionStatus from "../components/ConversionStatus";
+import { ActionLink } from "../components/ActionLink";
+import { ConversionActions } from "../components/ConversionActions";
+import { ConversionStatus } from "../components/ConversionStatus";
 import { Web3Store } from "../hooks/useWeb3";
 import { Store } from "../store/store";
-import theme from "../theme/theme";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const useStyles = makeStyles((theme) => ({
   container: {
     background: "#fff",
     border: "0.5px solid " + theme.palette.divider,
@@ -35,11 +33,12 @@ const styles: Styles<typeof theme, {}> = () => ({
     justifyContent: "center",
     height: "100%",
   },
-});
+}));
 
-interface Props extends WithStyles<typeof styles> {}
+interface Props {}
 
-const TransactionsTableContainer: React.FC<Props> = ({ classes }) => {
+export const TransactionsTableContainer: React.FC<Props> = () => {
+  const classes = useStyles();
   const {
     convertTransactions,
     selectedNetwork,
@@ -102,7 +101,7 @@ const TransactionsTableContainer: React.FC<Props> = ({ classes }) => {
             })}
         </TableBody>
       </Table>
-      <div className={classes.message}>
+      <div>
         {!showTransactions && (
           <div className={classes.emptyMessage}>
             {loadingTransactions ? (
@@ -133,5 +132,3 @@ const TransactionsTableContainer: React.FC<Props> = ({ classes }) => {
     </div>
   );
 };
-
-export default withStyles(styles)(TransactionsTableContainer);
