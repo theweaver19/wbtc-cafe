@@ -5,12 +5,15 @@ import Web3 from "web3";
 import { createContainer } from "unstated-next";
 
 import { Transaction } from "../types/transaction";
+import { Database } from "../utils/database/database";
+import { newDefaultDatabase } from "../utils/database/defaultDatabase";
 import { ADAPTER_TEST } from "../utils/environmentVariables";
-import { initFirebase } from "../utils/firebase/firebase";
 
 require("dotenv").config();
 
-const useStore = () => {
+const useStore = (database: Database | undefined) => {
+  const [db, setDb] = useState(database || newDefaultDatabase());
+
   // networking
   const [wbtcAddress, setWbtcAddress] = useState("");
   const [adapterAddress, setAdapterAddress] = useState("");
@@ -24,7 +27,6 @@ const useStore = () => {
   const [wbtcBalance, setWbtcBalance] = useState(0 as number | string);
   const [sdk, setSdk] = useState(null as RenJS | null);
   const [fees, setFees] = useState(null as UnmarshalledFees | null);
-  const [db, setDb] = useState(initFirebase());
   const [fsUser, setFsUser] = useState(
     null as {
       uid: string;

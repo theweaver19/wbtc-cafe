@@ -1,6 +1,5 @@
 import { EthArgs, UnmarshalledFees } from "@renproject/interfaces";
 import RenJS from "@renproject/ren";
-import firebase from "firebase/app";
 import { AbiItem } from "web3-utils";
 import { LockAndMint } from "@renproject/ren/build/main/lockAndMint";
 import { BurnAndRelease } from "@renproject/ren/build/main/burnAndRelease";
@@ -48,13 +47,6 @@ function useTransactionStore() {
 
   // Changing TX State
   const addTx = (tx: Transaction) => {
-    // add timestamps
-    const timestamp = firebase.firestore.Timestamp.fromDate(
-      new Date(Date.now()),
-    );
-    tx.created = timestamp;
-    tx.updated = timestamp;
-
     const storeString = "convert.transactions";
     const txs = convertTransactions;
     txs.push(tx);
@@ -65,16 +57,7 @@ function useTransactionStore() {
 
     if (fsEnabled) {
       try {
-        db.collection("transactions")
-          .doc(tx.id)
-          .set({
-            user: localWeb3Address.toLowerCase(),
-            walletSignature: fsSignature,
-            id: tx.id,
-            updated: timestamp,
-            data: JSON.stringify(tx),
-          })
-          .catch(console.error);
+        db.addTx(tx, localWeb3Address, fsSignature).catch(console.error);
       } catch (e) {
         console.error(e);
       }
@@ -82,9 +65,6 @@ function useTransactionStore() {
   };
 
   const updateTx = (newTx: Transaction): Transaction => {
-    // update timestamp
-    newTx.updated = firebase.firestore.Timestamp.fromDate(new Date(Date.now()));
-
     const storeString = "convert.transactions";
     const txs = convertTransactions.map((t) => {
       if (t.id === newTx.id) {
@@ -99,13 +79,7 @@ function useTransactionStore() {
 
     if (fsEnabled) {
       try {
-        db.collection("transactions")
-          .doc(newTx.id)
-          .update({
-            data: JSON.stringify(newTx),
-            updated: newTx.updated,
-          })
-          .catch(console.error);
+        db.updateTx(newTx).catch(console.error);
       } catch (e) {
         console.error(e);
       }
@@ -124,7 +98,7 @@ function useTransactionStore() {
 
     if (fsEnabled) {
       try {
-        db.collection("transactions").doc(tx.id).delete().catch(console.error);
+        db.deleteTx(tx).catch(console.error);
       } catch (e) {
         console.error(e);
       }
@@ -480,12 +454,10 @@ function useTransactionStore() {
 
     // ren already exposed a signature
     if (renResponse && renSignature) {
-      // @ts-ignore: 'this' implicitly has type 'any' (TODO)
-      completeConvertToEthereum.bind(this)(tx).catch(console.error);
+      completeConvertToEthereum(tx).catch(console.error);
     } else {
       // create or re-create shift in
-      // @ts-ignore: 'this' implicitly has type 'any' (TODO)
-      const mint = await initMint.bind(this)(tx);
+      const mint = await initMint(tx);
 
       if (!params) {
         addTx(
@@ -565,8 +537,7 @@ function useTransactionStore() {
           }),
         );
 
-        // @ts-ignore: 'this' implicitly has type 'any' (TODO)
-        completeConvertToEthereum.bind(this)(tx).catch(console.error);
+        completeConvertToEthereum(tx).catch(console.error);
       } catch (e) {
         console.error("renvm submit error", e);
       }
@@ -650,8 +621,7 @@ function useTransactionStore() {
       adapterAddress,
     );
 
-    // @ts-ignore: 'this' implicitly has type 'any' (TODO)
-    if (!txExists.bind(this)(tx)) {
+    if (!txExists(tx)) {
       addTx(tx);
     } else if (tx.error) {
       // clear error when re-attempting
@@ -699,8 +669,7 @@ function useTransactionStore() {
         if (tx.destTxHash) {
           monitorMintTx(tx).catch(console.error);
         } else {
-          // @ts-ignore: 'this' implicitly has type 'any' (TODO)
-          initConvertToEthereum.bind(this)(tx).catch(console.error);
+          initConvertToEthereum(tx).catch(console.error);
         }
       } else if (tx.sourceNetwork === "ethereum" && tx.awaiting && !tx.error) {
         monitorBurnTx(tx).catch(console.error);

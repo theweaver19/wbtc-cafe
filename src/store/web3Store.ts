@@ -4,16 +4,18 @@ import Web3 from "web3";
 import { AbiItem } from "web3-utils";
 import Web3Modal from "web3modal";
 import { createContainer } from "unstated-next";
+import { useCallback } from "react";
 
+import { useTaskSchedule } from "../hooks/useTaskScheduler";
 import { Transaction } from "../types/transaction";
 import erc20ABI from "../utils/ABIs/erc20ABI.json";
 import {
   ADAPTER_MAIN,
   ADAPTER_TEST,
+  INFURA_KEY,
   WBTC_MAIN,
   WBTC_TEST,
 } from "../utils/environmentVariables";
-import { getUser } from "../utils/firebase/firebaseUtils";
 import { Store } from "./store";
 import { TransactionStore } from "./transactionStore";
 
@@ -49,9 +51,7 @@ function useWeb3() {
 
   const { gatherFeeData, initMonitoring } = TransactionStore.useContainer();
 
-  let walletDataInterval: NodeJS.Timeout | null = null;
-
-  const updateAllowance = async () => {
+  const updateAllowance = useCallback(async () => {
     const web3 = localWeb3;
     const walletAddress = localWeb3Address;
     const adapterAddress = convertAdapterAddress;
@@ -68,9 +68,15 @@ function useWeb3() {
     setConvertAdapterWbtcAllowance(
       Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8),
     );
-  };
+  }, [
+    convertAdapterAddress,
+    localWeb3,
+    localWeb3Address,
+    setConvertAdapterWbtcAllowance,
+    wbtcAddress,
+  ]);
 
-  const setWbtcAllowance = async () => {
+  const setWbtcAllowance = useCallback(async () => {
     const walletAddress = localWeb3Address;
     const web3 = localWeb3;
     const adapterAddress = convertAdapterAddress;
@@ -89,9 +95,16 @@ function useWeb3() {
       console.error(e);
       setConvertAdapterWbtcAllowanceRequesting(false);
     }
-  };
+  }, [
+    convertAdapterAddress,
+    localWeb3,
+    localWeb3Address,
+    setConvertAdapterWbtcAllowanceRequesting,
+    updateAllowance,
+    wbtcAddress,
+  ]);
 
-  const updateBalance = async () => {
+  const updateBalance = useCallback(async () => {
     const web3 = localWeb3;
     const walletAddress = localWeb3Address;
 
@@ -103,32 +116,35 @@ function useWeb3() {
     const balance = await contract.methods.balanceOf(walletAddress).call();
 
     setWbtcBalance(Number(parseInt(balance.toString()) / 10 ** 8).toFixed(8));
-  };
+  }, [localWeb3, localWeb3Address, setWbtcBalance, wbtcAddress]);
 
-  const watchWalletData = async () => {
-    if (walletDataInterval) {
-      clearInterval(walletDataInterval);
-    }
-    await updateAllowance();
-    await updateBalance();
-    walletDataInterval = setInterval(async () => {
+  const watchWalletData = useCallback(async () => {
+    try {
       await updateAllowance();
       await updateBalance();
-    }, 10 * 1000);
-  };
+    } catch (error) {
+      console.error(error);
+    }
 
-  const initDataWeb3 = async (network: string) => {
-    const providedNetworkOrStore = network || selectedNetwork;
-    setDataWeb3(
-      new Web3(
-        `https://${
-          providedNetworkOrStore === "testnet" ? "kovan" : "mainnet"
-        }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`,
-      ),
-    );
-  };
+    return 10; // run every 10 seconds
+  }, [updateAllowance, updateBalance]);
+  useTaskSchedule(watchWalletData, [localWeb3, localWeb3Address]);
 
-  const getSignatures = async (address: string, web3: Web3) => {
+  const initDataWeb3 = useCallback(
+    async (network: string) => {
+      const providedNetworkOrStore = network || selectedNetwork;
+      setDataWeb3(
+        new Web3(
+          `https://${
+            providedNetworkOrStore === "testnet" ? "kovan" : "mainnet"
+          }.infura.io/v3/${INFURA_KEY}`,
+        ),
+      );
+    },
+    [selectedNetwork, setDataWeb3],
+  );
+
+  const getSignatures = useCallback(async (address: string, web3: Web3) => {
     const localSigMap = localStorage.getItem("sigMap");
     const addressLowerCase = address.toLowerCase();
     const localSigMapData = localSigMap ? JSON.parse(localSigMap) : {};
@@ -136,7 +152,7 @@ function useWeb3() {
     if (localSigMapData[addressLowerCase]) {
       signature = localSigMapData[addressLowerCase];
     } else {
-      // get unique wallet signature for firebase backup
+      // get unique wallet signature for database backup
       const sig = await web3.eth.personal.sign(
         web3.utils.utf8ToHex("Signing in to WBTC Cafe"),
         addressLowerCase,
@@ -147,14 +163,14 @@ function useWeb3() {
       localStorage.setItem("sigMap", JSON.stringify(localSigMapData));
     }
     return signature;
-  };
+  }, []);
 
-  const initLocalWeb3 = async () => {
+  const initLocalWeb3 = useCallback(async () => {
     const providerOptions = {
       walletconnect: {
         package: WalletConnectProvider, // required
         options: {
-          infuraId: "6de9092ee3284217bb744cc1a6daab94", // required
+          infuraId: INFURA_KEY, // required
         },
       },
     };
@@ -227,20 +243,9 @@ function useWeb3() {
 
       // auth with firestore
 
-      setFsUser(await getUser(addressLowerCase, "wbtc.cafe", signature));
+      setFsUser(await db.getUser(addressLowerCase, signature));
 
-      const fsDataSnapshot = await db
-        .collection("transactions")
-        .where("walletSignature", "==", signature)
-        .get();
-
-      const fsTransactions: Transaction[] = [];
-      if (!fsDataSnapshot.empty) {
-        fsDataSnapshot.forEach((doc) => {
-          const tx: Transaction = JSON.parse(doc.data().data);
-          fsTransactions.push(tx);
-        });
-      }
+      const fsTransactions = await db.getTxs(signature);
       const fsIds = fsTransactions.map((f) => f.id);
 
       const uniqueLsTransactions = lsTransactions.filter(
@@ -277,28 +282,48 @@ function useWeb3() {
     }
 
     return;
-  };
+  }, [
+    db,
+    disclosureAccepted,
+    gatherFeeData,
+    getSignatures,
+    initMonitoring,
+    selectedNetwork,
+    setConvertTransactions,
+    setDisclosureAccepted,
+    setFsEnabled,
+    setFsSignature,
+    setFsUser,
+    setLoadingTransactions,
+    setLocalWeb3,
+    setLocalWeb3Address,
+    setShowNetworkModal,
+    setWalletConnectError,
+    watchWalletData,
+  ]);
 
-  const setAddresses = async () => {
-    const network = selectedNetwork;
-    if (network === "testnet") {
-      setConvertAdapterAddress(ADAPTER_TEST);
-      setWbtcAddress(WBTC_TEST);
-    } else {
-      setConvertAdapterAddress(ADAPTER_MAIN);
-      setWbtcAddress(WBTC_MAIN);
-    }
-  };
+  const setAddresses = useCallback(
+    async (network: string) => {
+      if (network === "testnet") {
+        setConvertAdapterAddress(ADAPTER_TEST);
+        setWbtcAddress(WBTC_TEST);
+      } else {
+        setConvertAdapterAddress(ADAPTER_MAIN);
+        setWbtcAddress(WBTC_MAIN);
+      }
+    },
+    [setConvertAdapterAddress, setWbtcAddress],
+  );
 
-  const setNetwork = async function (network: string) {
-    setSelectedNetwork(network);
-    setSdk(new RenSDK(network));
+  const setNetwork = useCallback(
+    async function (network: string) {
+      setSelectedNetwork(network);
+      setSdk(new RenSDK(network));
 
-    setAddresses
-      // @ts-ignore: `this` implicitly has type `any` (TODO)
-      .bind(this as any)()
-      .catch(console.error);
-  };
+      setAddresses(network).catch(console.error);
+    },
+    [setAddresses, setSdk, setSelectedNetwork],
+  );
 
   return {
     setWbtcAllowance,

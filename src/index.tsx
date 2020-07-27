@@ -9,9 +9,12 @@ import { Store } from "./store/store";
 import { TransactionStore } from "./store/transactionStore";
 import { Web3Store } from "./store/web3Store";
 import { theme } from "./theme/theme";
+import { newDefaultDatabase } from "./utils/database/defaultDatabase";
+
+const database = newDefaultDatabase();
 
 ReactDOM.render(
-  <Store.Provider>
+  <Store.Provider initialState={database}>
     <TransactionStore.Provider>
       <Web3Store.Provider>
         <ThemeProvider theme={theme}>

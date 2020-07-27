@@ -59,7 +59,7 @@ const signInOrRegister = async (
 
 // Check if the user is currently authenticated for the correct address,
 // otherwise attempt to sign in or register for that address
-export const getUser = async (
+export const getFirebaseUser = async (
   address: string,
   host: string,
   signature: string,

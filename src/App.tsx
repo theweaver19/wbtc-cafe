@@ -3,12 +3,10 @@ import * as queryString from "query-string";
 import React from "react";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
-import Typography from "@material-ui/core/Typography";
 import Marquee from "react-smooth-marquee";
 import { makeStyles } from "@material-ui/core";
 
-import RenVM from "./assets/renvm-powered.svg";
-import { ExternalLink } from "./components/ExternalLink";
+import { Footer } from "./components/Footer";
 import { CancelModalContainer } from "./containers/CancelModalContainer";
 import { DepositModalContainer } from "./containers/DepositModalContainer";
 import { NavContainer } from "./containers/NavContainer";
@@ -17,15 +15,8 @@ import { SwapRevertModalContainer } from "./containers/SwapRevertModalContainer"
 import { TransactionsTableContainer } from "./containers/TransactionsTableContainer";
 import { TransferContainer } from "./containers/TransferContainer";
 import { ViewGatewayContainer } from "./containers/ViewGatewayContainer";
-import { Store } from "./store/store";
 import { TransactionStore } from "./store/transactionStore";
 import { Web3Store } from "./store/web3Store";
-import {
-  ADAPTER_MAIN,
-  ADAPTER_TEST,
-  CURVE_MAIN,
-  CURVE_TEST,
-} from "./utils/environmentVariables";
 
 require("dotenv").config();
 
@@ -35,20 +26,6 @@ const useStyles = makeStyles((theme) => ({
   },
   contentContainer: {
     paddingTop: theme.spacing(3),
-  },
-  footerContainer: {
-    paddingTop: theme.spacing(3),
-    paddingBottom: theme.spacing(3),
-    fontSize: 10,
-    "& a": {
-      color: "#333",
-      marginRight: theme.spacing(2),
-    },
-  },
-  footerLogo: {
-    height: 32,
-    width: "auto",
-    marginRight: theme.spacing(2),
   },
   transfersContainer: {
     padding: theme.spacing(3),
@@ -93,8 +70,6 @@ export const App: React.FC<Props> = () => {
     updateRenVMFees().catch(console.error);
   }, []); //eslint-disable-line react-hooks/exhaustive-deps
 
-  const { selectedNetwork } = Store.useContainer();
-
   return (
     <>
       <DepositModalContainer />
@@ -125,44 +100,7 @@ export const App: React.FC<Props> = () => {
           </Grid>
         </Grid>
       </Container>
-      <Grid container className={classes.footerContainer}>
-        <Container fixed maxWidth="lg">
-          <Grid container alignItems="center" justify="flex-start">
-            <ExternalLink href={"https://renproject.io"}>
-              <img
-                alt="Powered by RenVM"
-                className={classes.footerLogo}
-                src={RenVM}
-              />
-            </ExternalLink>
-            <Typography variant="caption">
-              <ExternalLink
-                href={
-                  "https://" +
-                  (selectedNetwork === "testnet" ? "kovan." : "") +
-                  "etherscan.io/address/" +
-                  (selectedNetwork === "testnet" ? ADAPTER_TEST : ADAPTER_MAIN)
-                }
-              >
-                Contract
-              </ExternalLink>{" "}
-              <ExternalLink
-                href={
-                  "https://" +
-                  (selectedNetwork === "testnet" ? "kovan." : "") +
-                  "etherscan.io/address/" +
-                  (selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN)
-                }
-              >
-                Liquidity Pool
-              </ExternalLink>{" "}
-              <ExternalLink href={"https://www.curve.fi/ren"}>
-                Swap renBTC → WBTC
-              </ExternalLink>
-            </Typography>
-          </Grid>
-        </Container>
-      </Grid>
+      <Footer />
     </>
   );
 };

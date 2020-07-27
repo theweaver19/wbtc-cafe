@@ -1,5 +1,3 @@
-import firebase from "firebase";
-
 export interface Transaction {
   id: string;
   type: string;
@@ -31,9 +29,11 @@ export interface Transaction {
   sourceTxConfs?: number;
   renBtcAddress?: string;
   btcConfirmations?: number;
-  created?: firebase.firestore.Timestamp;
-  updated?: firebase.firestore.Timestamp;
   renResponse?: any;
   renSignature?: any;
   params?: any;
+
+  // Database specific
+  created?: unknown;
+  updated?: unknown;
 }
