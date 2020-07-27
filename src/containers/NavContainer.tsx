@@ -9,7 +9,7 @@ import classNames from "classnames";
 import React from "react";
 
 import CafeLogo from "../assets/cafe-logo.svg";
-import { StoreInterface } from "../store/store";
+import { StoreProps } from "../store/store";
 import theme from "../theme/theme";
 import { initLocalWeb3 } from "../utils/walletUtils";
 
@@ -25,10 +25,6 @@ const styles: Styles<typeof theme, {}> = () => ({
     height: 22,
     width: "auto",
     marginRight: theme.spacing(1),
-    // [theme.breakpoints.down('xs')]: {
-    //     height: 17,
-    //     width: 20,
-    // }
   },
   cafe: {
     fontFamily: "Alex Brush",
@@ -56,20 +52,14 @@ const styles: Styles<typeof theme, {}> = () => ({
     },
   },
   title: {
-    // marginBottom: theme.spacing(0.5),
     fontSize: 16,
     textAlign: "center",
-    // [theme.breakpoints.down('xs')]: {
-    //     // fontSize: 16
-    //     display: 'none'
-    // }
   },
   faq: {
     marginRight: theme.spacing(2),
   },
   hideMobile: {
     [theme.breakpoints.down("xs")]: {
-      // fontSize: 16
       display: "none",
     },
   },
@@ -93,94 +83,75 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles> {
-  store: StoreInterface;
-}
+interface Props extends WithStyles<typeof styles>, StoreProps {}
 
-class NavContainer extends React.Component<Props> {
-  anchorRef = React.createRef();
+const NavContainer: React.FC<Props> = ({ store, classes }) => {
+  const walletAddress = store.get("localWeb3Address");
+  const walletConnectError = store.get("walletConnectError");
+  const fsUser = store.get("fsUser");
+  const validUser = fsUser && fsUser.uid;
 
-  toggleNeworkMenu() {
-    const { store } = this.props;
-    const showNetworkMenu = store.get("showNetworkMenu");
-    store.set("showNetworkMenu", !showNetworkMenu);
-  }
+  const isSignedIn =
+    walletAddress && walletAddress.length && !walletConnectError && validUser;
+  const balance = store.get("wbtcBalance");
 
-  render() {
-    const { classes, store } = this.props;
-
-    const walletAddress = store.get("localWeb3Address");
-    const walletConnectError = store.get("walletConnectError");
-    const fsUser = store.get("fsUser");
-    const validUser = fsUser && fsUser.uid;
-
-    const isSignedIn =
-      walletAddress && walletAddress.length && !walletConnectError && validUser;
-    const balance = store.get("wbtcBalance");
-
-    return (
-      <Grid item xs={12} className={classes.navContainer}>
-        {/* @ts-ignore: no property "size" (TODO) */}
-        <Container size="lg">
-          {
-            <Grid container alignItems="center">
-              <Grid item xs={12} sm={4}>
-                {/*<Grid container alignItems='center'>
-                          {<img className={classes.logo} src={WBTCIcon} />}
-                          <Typography className={classes.title}><b>WBTC</b> </Typography>
-                          <Typography className={classes.title}><span className={classes.cafe}>Cafe</span></Typography>
-                    </Grid>*/}
-                <Grid container alignItems="center">
-                  <div>
-                    <img
-                      alt="WBTC Cafe"
-                      className={classes.logo}
-                      src={CafeLogo}
-                    />
-                  </div>
-                </Grid>
-              </Grid>
-              <Grid item xs={12} sm={8}>
-                <Grid className={classes.actionsContainer} container>
-                  {isSignedIn && (
-                    <div className={classes.faq}>
-                      <Typography variant="caption">
-                        Balance: {balance} WBTC
-                      </Typography>
-                    </div>
-                  )}
-                  {!isSignedIn ? (
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        if (!isSignedIn) {
-                          initLocalWeb3().catch(console.error);
-                        }
-                      }}
-                      disableRipple={true}
-                      size="large"
-                      className={classNames(classes.accountButton)}
-                    >
-                      {<span>Connect Wallet</span>}
-                    </Button>
-                  ) : (
-                    <Typography
-                      variant="caption"
-                      className={classes.addressLabel}
-                    >
-                      {walletAddress.slice(0, 7) +
-                        "..." +
-                        walletAddress.slice(walletAddress.length - 5)}
-                    </Typography>
-                  )}
-                </Grid>
+  return (
+    <Grid item xs={12} className={classes.navContainer}>
+      {/* @ts-ignore: no property "size" (TODO) */}
+      <Container size="lg">
+        {
+          <Grid container alignItems="center">
+            <Grid item xs={12} sm={4}>
+              <Grid container alignItems="center">
+                <div>
+                  <img
+                    alt="WBTC Cafe"
+                    className={classes.logo}
+                    src={CafeLogo}
+                  />
+                </div>
               </Grid>
             </Grid>
-          }
-        </Container>
-      </Grid>
-    );
-  }
-}
+            <Grid item xs={12} sm={8}>
+              <Grid className={classes.actionsContainer} container>
+                {isSignedIn && (
+                  <div className={classes.faq}>
+                    <Typography variant="caption">
+                      Balance: {balance} WBTC
+                    </Typography>
+                  </div>
+                )}
+                {!isSignedIn ? (
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      if (!isSignedIn) {
+                        initLocalWeb3().catch(console.error);
+                      }
+                    }}
+                    disableRipple={true}
+                    size="large"
+                    className={classNames(classes.accountButton)}
+                  >
+                    {<span>Connect Wallet</span>}
+                  </Button>
+                ) : (
+                  <Typography
+                    variant="caption"
+                    className={classes.addressLabel}
+                  >
+                    {walletAddress.slice(0, 7) +
+                      "..." +
+                      walletAddress.slice(walletAddress.length - 5)}
+                  </Typography>
+                )}
+              </Grid>
+            </Grid>
+          </Grid>
+        }
+      </Container>
+    </Grid>
+  );
+};
 
 export default withStyles(styles)(withStore(NavContainer));

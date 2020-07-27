@@ -78,3 +78,7 @@ interface StoreGeneric<T> {
 }
 
 export type StoreInterface = StoreGeneric<typeof initialState>;
+
+export type StoreProps = {
+  store: StoreInterface;
+};

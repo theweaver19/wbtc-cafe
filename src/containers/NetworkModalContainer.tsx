@@ -8,7 +8,7 @@ import { withStyles } from "@material-ui/styles";
 import { withStore } from "@spyna/react-store";
 import React from "react";
 
-import { StoreInterface } from "../store/store";
+import { StoreProps } from "../store/store";
 import theme from "../theme/theme";
 
 const styles: Styles<typeof theme, {}> = () => ({
@@ -44,51 +44,40 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles> {
-  store: StoreInterface;
-}
+interface Props extends WithStyles<typeof styles>, StoreProps {}
 
-class NetworkModalContainer extends React.Component<Props> {
-  constructor(props: Props) {
-    super(props);
-    this.state = props.store.getState();
-  }
+const NetworkModalContainer: React.FC<Props> = ({ store, classes }) => {
+  const showNetworkModal = store.get("showNetworkModal");
+  const selectedNetwork = store.get("selectedNetwork");
 
-  render() {
-    const { classes, store } = this.props;
-
-    const showNetworkModal = store.get("showNetworkModal");
-    const selectedNetwork = store.get("selectedNetwork");
-
-    return (
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={showNetworkModal}
-        onClose={() => {
-          store.set("showNetworkModal", false);
-        }}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={showNetworkModal}>
-          <Grid container className={classes.modalContent}>
-            <Typography variant="subtitle1" className={classes.title}>
-              Switch Network
-            </Typography>
-            <Typography variant="body1" className={classes.content}>
-              Please connect wallet to the{" "}
-              {selectedNetwork === "testnet" ? "kovan" : "mainnet"} network.
-            </Typography>
-          </Grid>
-        </Fade>
-      </Modal>
-    );
-  }
-}
+  return (
+    <Modal
+      aria-labelledby="transition-modal-title"
+      aria-describedby="transition-modal-description"
+      className={classes.modal}
+      open={showNetworkModal}
+      onClose={() => {
+        store.set("showNetworkModal", false);
+      }}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        timeout: 500,
+      }}
+    >
+      <Fade in={showNetworkModal}>
+        <Grid container className={classes.modalContent}>
+          <Typography variant="subtitle1" className={classes.title}>
+            Switch Network
+          </Typography>
+          <Typography variant="body1" className={classes.content}>
+            Please connect wallet to the{" "}
+            {selectedNetwork === "testnet" ? "kovan" : "mainnet"} network.
+          </Typography>
+        </Grid>
+      </Fade>
+    </Modal>
+  );
+};
 
 export default withStyles(styles)(withStore(NetworkModalContainer));

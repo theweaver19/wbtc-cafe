@@ -11,7 +11,7 @@ import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React from "react";
 
-import { StoreInterface } from "../store/store";
+import { StoreProps } from "../store/store";
 import theme from "../theme/theme";
 import { removeTx } from "../utils/txUtils";
 
@@ -65,107 +65,96 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles> {
-  store: StoreInterface;
-}
+interface Props extends WithStyles<typeof styles>, StoreProps {}
 
-class CancelModalContainer extends React.Component<Props> {
-  cancelDeposit() {
-    const { store } = this.props;
+const CancelModalContainer: React.FC<Props> = ({ store, classes }) => {
+  const cancelDeposit = () => {
     const cancelModalTx = store.get("cancelModalTx");
 
     removeTx(cancelModalTx!);
 
     store.set("showCancelModal", false);
     store.set("cancelModalTx", null);
-  }
+  };
 
-  goBack() {
-    const { store } = this.props;
-
+  const goBack = () => {
     store.set("showCancelModal", false);
     store.set("cancelModalTx", null);
-  }
+  };
 
-  render() {
-    const { classes, store } = this.props;
+  const showCancelModal = store.get("showCancelModal");
+  const cancelModalTx = store.get("cancelModalTx");
 
-    const showCancelModal = store.get("showCancelModal");
-    const cancelModalTx = store.get("cancelModalTx");
+  if (!cancelModalTx) return null;
 
-    if (!cancelModalTx) return null;
-
-    // console.log(this.props, this.state)
-
-    return (
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={showCancelModal}
-        onClose={() => {
-          store.set("showCancelModal", false);
-          store.set("cancelModalTx", null);
-        }}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={showCancelModal}>
-          <Grid container className={classes.modalContent}>
-            <Grid
-              className={classNames(classes.connectWalletPrompt)}
-              container
-              alignItems="center"
-              justify="center"
-            >
-              <Grid item xs={12}>
-                <Grid container>
-                  {
-                    <Typography variant="subtitle1" className={classes.title}>
-                      Are you sure?
-                    </Typography>
-                  }
-
-                  <Typography variant="body1" className={classes.content}>
-                    Bitcoin sent to this deposit address will be no longer be
-                    accessible.
+  return (
+    <Modal
+      aria-labelledby="transition-modal-title"
+      aria-describedby="transition-modal-description"
+      className={classes.modal}
+      open={showCancelModal}
+      onClose={() => {
+        store.set("showCancelModal", false);
+        store.set("cancelModalTx", null);
+      }}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        timeout: 500,
+      }}
+    >
+      <Fade in={showCancelModal}>
+        <Grid container className={classes.modalContent}>
+          <Grid
+            className={classNames(classes.connectWalletPrompt)}
+            container
+            alignItems="center"
+            justify="center"
+          >
+            <Grid item xs={12}>
+              <Grid container>
+                {
+                  <Typography variant="subtitle1" className={classes.title}>
+                    Are you sure?
                   </Typography>
+                }
 
-                  {
-                    <Button
-                      variant="outlined"
-                      size="large"
-                      color="primary"
-                      fullWidth={true}
-                      className={classNames(classes.cancelButton)}
-                      onClick={this.cancelDeposit.bind(this)}
-                    >
-                      Cancel deposit
-                    </Button>
-                  }
+                <Typography variant="body1" className={classes.content}>
+                  Bitcoin sent to this deposit address will be no longer be
+                  accessible.
+                </Typography>
 
-                  {
-                    <Button
-                      size="large"
-                      color="primary"
-                      fullWidth={true}
-                      className={classNames(classes.backButton)}
-                      onClick={this.goBack.bind(this)}
-                    >
-                      Go back
-                    </Button>
-                  }
-                </Grid>
+                {
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    color="primary"
+                    fullWidth={true}
+                    className={classNames(classes.cancelButton)}
+                    onClick={cancelDeposit}
+                  >
+                    Cancel deposit
+                  </Button>
+                }
+
+                {
+                  <Button
+                    size="large"
+                    color="primary"
+                    fullWidth={true}
+                    className={classNames(classes.backButton)}
+                    onClick={goBack}
+                  >
+                    Go back
+                  </Button>
+                }
               </Grid>
             </Grid>
           </Grid>
-        </Fade>
-      </Modal>
-    );
-  }
-}
+        </Grid>
+      </Fade>
+    </Modal>
+  );
+};
 
 export default withStyles(styles)(withStore(CancelModalContainer));

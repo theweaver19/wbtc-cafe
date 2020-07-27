@@ -12,7 +12,7 @@ import QRCode from "qrcode.react";
 import React from "react";
 
 import ActionLink from "../components/ActionLink";
-import { StoreInterface } from "../store/store";
+import { StoreProps } from "../store/store";
 import theme from "../theme/theme";
 
 const styles: Styles<typeof theme, {}> = () => ({
@@ -92,136 +92,103 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles> {
-  store: StoreInterface;
-}
+interface Props extends WithStyles<typeof styles>, StoreProps {}
 
-interface State {
-  address: string;
-}
-
-class ViewGatewayContainer extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      address: "",
-    };
-  }
-
-  async componentDidUpdate() {
-    // const store = this.props.store
-    // const gatewayModalTx = store.get('gatewayModalTx')
-    // if (!gatewayModalTx) return
-  }
-
-  goBack() {
-    const { store } = this.props;
-
+const ViewGatewayContainer: React.FC<Props> = ({ classes, store }) => {
+  const goBack = () => {
     store.set("showGatewayModal", false);
     store.set("gatewayModalTx", null);
-  }
+  };
 
-  render() {
-    const { classes, store } = this.props;
+  const showGatewayModal = store.get("showGatewayModal");
+  const gatewayModalTx = store.get("gatewayModalTx");
 
-    const showGatewayModal = store.get("showGatewayModal");
-    const gatewayModalTx = store.get("gatewayModalTx");
+  if (!gatewayModalTx) return null;
 
-    if (!gatewayModalTx) return null;
+  // console.log(gatewayModalTx)
 
-    // console.log(gatewayModalTx)
-
-    return (
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={showGatewayModal}
-        onClose={() => {
-          this.goBack.bind(this)();
-        }}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={showGatewayModal}>
-          <Grid container className={classes.modalContent}>
-            <Grid
-              className={classNames(classes.connectWalletPrompt)}
-              container
-              alignItems="center"
-              justify="center"
-            >
-              <Grid item xs={12}>
-                <Grid container>
-                  {
-                    <Typography variant="subtitle1" className={classes.title}>
-                      Gateway Address
-                    </Typography>
-                  }
-
-                  <Typography variant="body1" className={classes.content}>
-                    Send {gatewayModalTx.amount} BTC to:
+  return (
+    <Modal
+      aria-labelledby="transition-modal-title"
+      aria-describedby="transition-modal-description"
+      className={classes.modal}
+      open={showGatewayModal}
+      onClose={goBack}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        timeout: 500,
+      }}
+    >
+      <Fade in={showGatewayModal}>
+        <Grid container className={classes.modalContent}>
+          <Grid
+            className={classNames(classes.connectWalletPrompt)}
+            container
+            alignItems="center"
+            justify="center"
+          >
+            <Grid item xs={12}>
+              <Grid container>
+                {
+                  <Typography variant="subtitle1" className={classes.title}>
+                    Gateway Address
                   </Typography>
+                }
 
-                  {/*<Typography variant='body1' className={classes.address}>
-                                  {gatewayModalTx.renBtcAddress || 'Loading...'}
-                              </Typography>*/}
+                <Typography variant="body1" className={classes.content}>
+                  Send {gatewayModalTx.amount} BTC to:
+                </Typography>
 
-                  <div className={classes.addressWrapper}>
-                    <input
-                      readOnly
-                      id="gatewayAddress"
-                      className={classes.address}
-                      value={gatewayModalTx.renBtcAddress || "Loading..."}
-                    />
-                  </div>
+                <div className={classes.addressWrapper}>
+                  <input
+                    readOnly
+                    id="gatewayAddress"
+                    className={classes.address}
+                    value={gatewayModalTx.renBtcAddress || "Loading..."}
+                  />
+                </div>
 
-                  <ActionLink
-                    className={classes.copyLink}
-                    onClick={() => {
-                      const copyText = document.getElementById(
-                        "gatewayAddress",
+                <ActionLink
+                  className={classes.copyLink}
+                  onClick={() => {
+                    const copyText = document.getElementById("gatewayAddress");
+                    if (copyText) {
+                      (copyText as any).select();
+                      (copyText as any).setSelectionRange(0, 99999);
+                      document.execCommand("copy");
+                      alert(
+                        "Address copied to clipboard: " +
+                          (copyText as any).value,
                       );
-                      if (copyText) {
-                        (copyText as any).select();
-                        (copyText as any).setSelectionRange(0, 99999);
-                        document.execCommand("copy");
-                        alert(
-                          "Address copied to clipboard: " +
-                            (copyText as any).value,
-                        );
-                      }
-                    }}
-                  >
-                    Copy Address
-                  </ActionLink>
+                    }
+                  }}
+                >
+                  Copy Address
+                </ActionLink>
 
-                  {gatewayModalTx.renBtcAddress && (
-                    <div className={classes.qrCode}>
-                      <QRCode size={116} value={gatewayModalTx.renBtcAddress} />
-                    </div>
-                  )}
+                {gatewayModalTx.renBtcAddress && (
+                  <div className={classes.qrCode}>
+                    <QRCode size={116} value={gatewayModalTx.renBtcAddress} />
+                  </div>
+                )}
 
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    fullWidth={true}
-                    className={classNames(classes.cancelButton)}
-                    onClick={this.goBack.bind(this)}
-                  >
-                    Close
-                  </Button>
-                </Grid>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  fullWidth={true}
+                  className={classNames(classes.cancelButton)}
+                  onClick={goBack}
+                >
+                  Close
+                </Button>
               </Grid>
             </Grid>
           </Grid>
-        </Fade>
-      </Modal>
-    );
-  }
-}
+        </Grid>
+      </Fade>
+    </Modal>
+  );
+};
 
 export default withStyles(styles)(withStore(ViewGatewayContainer));

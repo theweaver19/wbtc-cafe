@@ -20,7 +20,7 @@ import TransactionsTableContainer from "./containers/TransactionsTableContainer"
 import TransferContainer from "./containers/TransferContainer";
 import ViewGatewayContainer from "./containers/ViewGatewayContainer";
 import { storeListener } from "./services/storeService";
-import { initialState, StoreInterface } from "./store/store";
+import { initialState, StoreProps } from "./store/store";
 import theme from "./theme/theme";
 import { updateRenVMFees } from "./utils/txUtils";
 import { initDataWeb3, setNetwork } from "./utils/walletUtils";
@@ -69,19 +69,23 @@ const styles: Styles<typeof theme, {}> = () => ({
       paddingLeft: theme.spacing(2),
       paddingRight: theme.spacing(2),
       fontSize: 12,
+
+      "& div": {
+        border: "none",
+        paddingTop: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
     },
     // '& '
   },
 });
 
-interface WrapperProps {
-  classes: Record<string, string>;
-  store: StoreInterface;
-}
+interface Props extends WithStyles<typeof styles>, StoreProps {}
 
-class AppWrapper extends React.Component<WrapperProps> {
-  async componentDidMount() {
-    const store = this.props.store;
+const App: React.FC<Props> = ({ store, classes }) => {
+  React.useEffect(() => {
     const params = queryString.parse(window.location.search);
     store.set("queryParams", params);
 
@@ -92,94 +96,81 @@ class AppWrapper extends React.Component<WrapperProps> {
 
     initDataWeb3().catch(console.error);
     updateRenVMFees().catch(console.error);
-  }
+  }, []); //eslint-disable-line react-hooks/exhaustive-deps
 
-  render() {
-    const classes = this.props.classes;
-    storeListener(this.props.store);
-    const selectedNetwork = this.props.store.get("selectedNetwork");
+  storeListener(store);
+  const selectedNetwork = store.get("selectedNetwork");
 
-    return (
-      <ThemeProvider theme={theme}>
-        <DepositModalContainer />
-        <CancelModalContainer />
-        <ViewGatewayContainer />
-        <NetworkModalContainer />
-        <SwapRevertModalContainer />
-        <NavContainer />
+  return (
+    <ThemeProvider theme={theme}>
+      <DepositModalContainer />
+      <CancelModalContainer />
+      <ViewGatewayContainer />
+      <NetworkModalContainer />
+      <SwapRevertModalContainer />
+      <NavContainer />
+      <Container fixed maxWidth="lg">
+        <Grid container className={classes.contentContainer} spacing={2}>
+          <Grid item xs={12} className={classes.disclosure}>
+            <Marquee>
+              Welcome to the WBTC Cafe! This is a new project, so please use
+              caution.
+            </Marquee>
+          </Grid>
+          <Grid item xs={12} sm={12} md={4}>
+            <TransferContainer />
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            sm={12}
+            md={8}
+            className={classes.transfersContainer}
+          >
+            <TransactionsTableContainer />
+          </Grid>
+        </Grid>
+      </Container>
+      <Grid container className={classes.footerContainer}>
         <Container fixed maxWidth="lg">
-          <Grid container className={classes.contentContainer} spacing={2}>
-            <Grid item xs={12} className={classes.disclosure}>
-              <Marquee>
-                Welcome to the WBTC Cafe! This is a new project, so please use
-                caution.
-              </Marquee>
-            </Grid>
-            <Grid item xs={12} sm={12} md={4}>
-              <TransferContainer />
-            </Grid>
-            <Grid
-              item
-              xs={12}
-              sm={12}
-              md={8}
-              className={classes.transfersContainer}
-            >
-              <TransactionsTableContainer />
-            </Grid>
+          <Grid container alignItems="center" justify="flex-start">
+            <ExternalLink href={"https://renproject.io"}>
+              <img
+                alt="Powered by RenVM"
+                className={classes.footerLogo}
+                src={RenVM}
+              />
+            </ExternalLink>
+            <Typography className={classes.footerLinks} variant="caption">
+              <ExternalLink
+                href={
+                  "https://" +
+                  (selectedNetwork === "testnet" ? "kovan." : "") +
+                  "etherscan.io/address/" +
+                  (selectedNetwork === "testnet" ? ADAPTER_TEST : ADAPTER_MAIN)
+                }
+              >
+                Contract
+              </ExternalLink>{" "}
+              <ExternalLink
+                href={
+                  "https://" +
+                  (selectedNetwork === "testnet" ? "kovan." : "") +
+                  "etherscan.io/address/" +
+                  (selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN)
+                }
+              >
+                Liquidity Pool
+              </ExternalLink>{" "}
+              <ExternalLink href={"https://www.curve.fi/ren"}>
+                Swap renBTC → WBTC
+              </ExternalLink>
+            </Typography>
           </Grid>
         </Container>
-        <Grid container className={classes.footerContainer}>
-          <Container fixed maxWidth="lg">
-            <Grid container alignItems="center" justify="flex-start">
-              <ExternalLink href={"https://renproject.io"}>
-                <img
-                  alt="Powered by RenVM"
-                  className={classes.footerLogo}
-                  src={RenVM}
-                />
-              </ExternalLink>
-              <Typography className={classes.footerLinks} variant="caption">
-                <ExternalLink
-                  href={
-                    "https://" +
-                    (selectedNetwork === "testnet" ? "kovan." : "") +
-                    "etherscan.io/address/" +
-                    (selectedNetwork === "testnet"
-                      ? ADAPTER_TEST
-                      : ADAPTER_MAIN)
-                  }
-                >
-                  Contract
-                </ExternalLink>{" "}
-                <ExternalLink
-                  href={
-                    "https://" +
-                    (selectedNetwork === "testnet" ? "kovan." : "") +
-                    "etherscan.io/address/" +
-                    (selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN)
-                  }
-                >
-                  Liquidity Pool
-                </ExternalLink>{" "}
-                <ExternalLink href={"https://www.curve.fi/ren"}>
-                  Swap renBTC → WBTC
-                </ExternalLink>
-              </Typography>
-            </Grid>
-          </Container>
-        </Grid>
-      </ThemeProvider>
-    );
-  }
-}
+      </Grid>
+    </ThemeProvider>
+  );
+};
 
-const AppWrapperComponent = withStore(AppWrapper);
-
-interface Props extends WithStyles<typeof styles> {}
-
-const App: React.FC<Props> = ({ classes }) => (
-  <AppWrapperComponent classes={classes} />
-);
-
-export default createStore(withStyles(styles)(App), initialState);
+export default createStore(withStore(withStyles(styles)(App)), initialState);

@@ -10,7 +10,7 @@ import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React from "react";
 
-import { StoreInterface } from "../store/store";
+import { StoreProps } from "../store/store";
 import theme from "../theme/theme";
 import { completeConvertToEthereum, updateTx } from "../utils/txUtils";
 
@@ -71,232 +71,217 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles> {
-  store: StoreInterface;
-}
+interface Props extends WithStyles<typeof styles>, StoreProps {}
 
-class SwapRevertModalContainer extends React.Component<Props> {
-  constructor(props: Props) {
-    super(props);
-    this.state = props.store.getState();
-  }
+const SwapRevertModalContainer: React.FC<Props> = ({ classes, store }) => {
+  const showSwapRevertModal = store.get("showSwapRevertModal");
+  const swapRevertModalTx = store.get("swapRevertModalTx");
+  const swapRevertModalExchangeRate = store.get("swapRevertModalExchangeRate");
+  const fees = store.get("fees");
 
-  render() {
-    const { classes, store } = this.props;
+  if (!swapRevertModalTx || !fees) return <div />;
 
-    const showSwapRevertModal = store.get("showSwapRevertModal");
-    const swapRevertModalTx = store.get("swapRevertModalTx");
-    const swapRevertModalExchangeRate = store.get(
-      "swapRevertModalExchangeRate",
-    );
-    const fees = store.get("fees");
+  const amount = Number(swapRevertModalTx.sourceAmount).toFixed(8);
+  const fixedFee = Number(fees["btc"]["lock"] / 10 ** 8);
+  const dynamicFeeRate = Number(fees["btc"].ethereum["mint"] / 10000);
+  const renVMFee = (
+    Number(swapRevertModalTx.sourceAmount) * dynamicFeeRate
+  ).toFixed(8);
+  const networkFee = Number(fixedFee).toFixed(8);
+  const net =
+    Number(Number(amount) - Number(renVMFee) - fixedFee) > 0
+      ? Number(Number(amount) - Number(renVMFee) - fixedFee).toFixed(8)
+      : "0.00000000";
+  const total = Number(
+    Number(net) * Number(swapRevertModalExchangeRate),
+  ).toFixed(8);
+  const minRate = Number(Number(swapRevertModalTx.minExchangeRate).toFixed(8));
 
-    if (!swapRevertModalTx || !fees) return <div />;
+  return (
+    <Modal
+      aria-labelledby="transition-modal-title"
+      aria-describedby="transition-modal-description"
+      className={classes.modal}
+      open={showSwapRevertModal}
+      onClose={() => {
+        store.set("showSwapRevertModal", false);
+        store.set("swapRevertModalTx", null);
+        store.set("swapRevertModalExchangeRate", "");
+      }}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        timeout: 500,
+      }}
+    >
+      <Fade in={showSwapRevertModal}>
+        <Grid container className={classes.modalContent}>
+          <Typography variant="subtitle1" className={classes.title}>
+            Exchange Rate Change
+          </Typography>
 
-    const amount = Number(swapRevertModalTx.sourceAmount).toFixed(8);
-    const fixedFee = Number(fees["btc"]["lock"] / 10 ** 8);
-    const dynamicFeeRate = Number(fees["btc"].ethereum["mint"] / 10000);
-    const renVMFee = (
-      Number(swapRevertModalTx.sourceAmount) * dynamicFeeRate
-    ).toFixed(8);
-    const networkFee = Number(fixedFee).toFixed(8);
-    const net =
-      Number(Number(amount) - Number(renVMFee) - fixedFee) > 0
-        ? Number(Number(amount) - Number(renVMFee) - fixedFee).toFixed(8)
-        : "0.00000000";
-    const total = Number(
-      Number(net) * Number(swapRevertModalExchangeRate),
-    ).toFixed(8);
-    const minRate = Number(
-      Number(swapRevertModalTx.minExchangeRate).toFixed(8),
-    );
-
-    return (
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={showSwapRevertModal}
-        onClose={() => {
-          store.set("showSwapRevertModal", false);
-          store.set("swapRevertModalTx", null);
-          store.set("swapRevertModalExchangeRate", "");
-        }}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={showSwapRevertModal}>
-          <Grid container className={classes.modalContent}>
-            <Typography variant="subtitle1" className={classes.title}>
-              Exchange Rate Change
-            </Typography>
-
-            <Typography variant="body1" className={classes.content}>
-              The swap has increased in price since you intiated your
-              transaction. Would you like to complete the swap at the current
-              market&nbsp;rate?
-            </Typography>
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptTitle}>
-                    Initial Min. Rate
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptAmount}>
-                    {`${minRate} WBTC/renBTC`}
-                  </Typography>
-                </Grid>
+          <Typography variant="body1" className={classes.content}>
+            The swap has increased in price since you initiated your
+            transaction. Would you like to complete the swap at the current
+            market&nbsp;rate?
+          </Typography>
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptTitle}>
+                  Initial Min. Rate
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptAmount}>
+                  {`${minRate} WBTC/renBTC`}
+                </Typography>
               </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <Grid container className={classes.rates}>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptTitle}>
-                    Current Market Rate
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptAmount}>
-                    {`${swapRevertModalExchangeRate} WBTC/renBTC`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={12}>
-                  <Typography
-                    variant="body1"
-                    className={classNames(
-                      classes.receiptTitle,
-                      classes.total,
-                      classes.continueTitle,
-                    )}
-                  >
-                    Continuing With renBTC
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptTitle}>
-                    Bitcoin Sent
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptAmount}>
-                    {`${amount} BTC`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptTitle}>
-                    RenVM Fee
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptAmount}>
-                    {`${renVMFee} BTC`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptTitle}>
-                    Bitcoin Fee
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptAmount}>
-                    {`${networkFee} BTC`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptTitle}>
-                    Funds Swapped
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body1" className={classes.receiptAmount}>
-                    {`${net} renBTC`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Grid item xs={12}>
-              <Grid container>
-                <Grid item xs={6}>
-                  <Typography
-                    variant="body1"
-                    className={classNames(classes.receiptTitle, classes.total)}
-                  >
-                    You Will Receive
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography
-                    variant="body1"
-                    className={classNames(classes.receiptAmount, classes.total)}
-                  >
-                    {`~${total} WBTC`}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-            <Button
-              variant={"outlined"}
-              size="large"
-              color="primary"
-              fullWidth={true}
-              className={classNames(classes.button)}
-              onClick={() => {
-                completeConvertToEthereum(swapRevertModalTx, "wbtc").catch(
-                  console.error,
-                );
-                store.set("showSwapRevertModal", false);
-              }}
-            >
-              Continue Swap
-            </Button>
-            <Button
-              size="large"
-              color="primary"
-              fullWidth={true}
-              className={classNames(classes.button)}
-              onClick={() => {
-                const newTx = updateTx(
-                  Object.assign(swapRevertModalTx, {
-                    swapReverted: true,
-                  }),
-                );
-                completeConvertToEthereum(newTx, "renbtc").catch(console.error);
-                store.set("showSwapRevertModal", false);
-              }}
-            >
-              Get renBTC Instead
-            </Button>
           </Grid>
-        </Fade>
-      </Modal>
-    );
-  }
-}
+          <Grid item xs={12}>
+            <Grid container className={classes.rates}>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptTitle}>
+                  Current Market Rate
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptAmount}>
+                  {`${swapRevertModalExchangeRate} WBTC/renBTC`}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={12}>
+                <Typography
+                  variant="body1"
+                  className={classNames(
+                    classes.receiptTitle,
+                    classes.total,
+                    classes.continueTitle,
+                  )}
+                >
+                  Continuing With renBTC
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptTitle}>
+                  Bitcoin Sent
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptAmount}>
+                  {`${amount} BTC`}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptTitle}>
+                  RenVM Fee
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptAmount}>
+                  {`${renVMFee} BTC`}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptTitle}>
+                  Bitcoin Fee
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptAmount}>
+                  {`${networkFee} BTC`}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptTitle}>
+                  Funds Swapped
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body1" className={classes.receiptAmount}>
+                  {`${net} renBTC`}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container>
+              <Grid item xs={6}>
+                <Typography
+                  variant="body1"
+                  className={classNames(classes.receiptTitle, classes.total)}
+                >
+                  You Will Receive
+                </Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography
+                  variant="body1"
+                  className={classNames(classes.receiptAmount, classes.total)}
+                >
+                  {`~${total} WBTC`}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Button
+            variant={"outlined"}
+            size="large"
+            color="primary"
+            fullWidth={true}
+            className={classNames(classes.button)}
+            onClick={() => {
+              completeConvertToEthereum(swapRevertModalTx, "wbtc").catch(
+                console.error,
+              );
+              store.set("showSwapRevertModal", false);
+            }}
+          >
+            Continue Swap
+          </Button>
+          <Button
+            size="large"
+            color="primary"
+            fullWidth={true}
+            className={classNames(classes.button)}
+            onClick={() => {
+              const newTx = updateTx(
+                Object.assign(swapRevertModalTx, {
+                  swapReverted: true,
+                }),
+              );
+              completeConvertToEthereum(newTx, "renbtc").catch(console.error);
+              store.set("showSwapRevertModal", false);
+            }}
+          >
+            Get renBTC Instead
+          </Button>
+        </Grid>
+      </Fade>
+    </Modal>
+  );
+};
 
 export default withStyles(styles)(withStore(SwapRevertModalContainer));
