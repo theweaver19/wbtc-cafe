@@ -5,14 +5,10 @@ import { Styles } from "@material-ui/core/styles/withStyles";
 import { withStyles } from "@material-ui/styles";
 import React from "react";
 
-import { getStore } from "../services/storeService";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
 import { Transaction } from "../types/transaction";
-import {
-  completeConvertToEthereum,
-  initConvertFromEthereum,
-  removeTx,
-} from "../utils/txUtils";
+import { TransactionStore } from "../utils/txUtils";
 import { ExternalLink } from "./ExternalLink";
 
 const styles: Styles<typeof theme, {}> = () => ({
@@ -28,10 +24,19 @@ interface Props extends WithStyles<typeof styles> {
   tx: Transaction;
 }
 
-const ConversionActions = (props: Props) => {
-  const { tx, classes } = props;
+const ConversionActions: React.FC<Props> = ({ tx, classes }) => {
+  const {
+    setShowGatewayModal,
+    setGatewayModalTx,
+    setShowCancelModal,
+    setCancelModalTx,
+  } = Store.useContainer();
+  const {
+    completeConvertToEthereum,
+    initConvertFromEthereum,
+    removeTx,
+  } = TransactionStore.useContainer();
 
-  const store = getStore();
   const direction = tx.destNetwork === "ethereum" ? "in" : "out";
 
   return (
@@ -66,8 +71,8 @@ const ConversionActions = (props: Props) => {
               className={classes.viewLink}
               onClick={() => {
                 // view modal
-                store.set("showGatewayModal", true);
-                store.set("gatewayModalTx", tx);
+                setShowGatewayModal(true);
+                setGatewayModalTx(tx);
               }}
             >
               View Gateway Address
@@ -76,8 +81,8 @@ const ConversionActions = (props: Props) => {
               className={classes.viewLink}
               onClick={() => {
                 // are you sure modal
-                store.set("showCancelModal", true);
-                store.set("cancelModalTx", tx);
+                setShowCancelModal(true);
+                setCancelModalTx(tx);
               }}
             >
               Cancel

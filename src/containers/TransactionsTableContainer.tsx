@@ -7,15 +7,14 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import Typography from "@material-ui/core/Typography";
 import { Styles, withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import React from "react";
 
 import ActionLink from "../components/ActionLink";
 import ConversionActions from "../components/ConversionActions";
 import ConversionStatus from "../components/ConversionStatus";
-import { StoreProps } from "../store/store";
+import { Web3Store } from "../hooks/useWeb3";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
-import { initLocalWeb3 } from "../utils/walletUtils";
 
 const styles: Styles<typeof theme, {}> = () => ({
   container: {
@@ -38,18 +37,25 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const TransactionsTableContainer: React.FC<Props> = ({ store, classes }) => {
-  const selectedNetwork = store.get("selectedNetwork");
-  const transactions = store
-    .get("convert.transactions")
-    .filter((t) => t.sourceNetworkVersion === selectedNetwork);
-  const fsSignature = store.get("fsSignature");
+const TransactionsTableContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    convertTransactions,
+    selectedNetwork,
+    fsSignature,
+    loadingTransactions,
+    walletConnectError,
+  } = Store.useContainer();
+
+  const { initLocalWeb3 } = Web3Store.useContainer();
+
+  const transactions = convertTransactions.filter(
+    (t) => t.sourceNetworkVersion === selectedNetwork,
+  );
 
   const signedIn = fsSignature;
-  const loadingTransactions = store.get("loadingTransactions");
-  const error = store.get("walletConnectError");
+  const error = walletConnectError;
 
   const showTransactions =
     signedIn && !loadingTransactions && !error && transactions.length > 0;
@@ -128,4 +134,4 @@ const TransactionsTableContainer: React.FC<Props> = ({ store, classes }) => {
   );
 };
 
-export default withStyles(styles)(withStore(TransactionsTableContainer));
+export default withStyles(styles)(TransactionsTableContainer);

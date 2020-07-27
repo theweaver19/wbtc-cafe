@@ -7,13 +7,12 @@ import Modal from "@material-ui/core/Modal";
 import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React from "react";
 
-import { StoreProps } from "../store/store";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
-import { removeTx } from "../utils/txUtils";
+import { TransactionStore } from "../utils/txUtils";
 
 const styles: Styles<typeof theme, {}> = () => ({
   modal: {
@@ -65,25 +64,29 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const CancelModalContainer: React.FC<Props> = ({ store, classes }) => {
+const CancelModalContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    cancelModalTx,
+    showCancelModal,
+    setShowCancelModal,
+    setCancelModalTx,
+  } = Store.useContainer();
+
+  const { removeTx } = TransactionStore.useContainer();
+
   const cancelDeposit = () => {
-    const cancelModalTx = store.get("cancelModalTx");
-
     removeTx(cancelModalTx!);
 
-    store.set("showCancelModal", false);
-    store.set("cancelModalTx", null);
+    setShowCancelModal(false);
+    setCancelModalTx(null);
   };
 
   const goBack = () => {
-    store.set("showCancelModal", false);
-    store.set("cancelModalTx", null);
+    setShowCancelModal(false);
+    setCancelModalTx(null);
   };
-
-  const showCancelModal = store.get("showCancelModal");
-  const cancelModalTx = store.get("cancelModalTx");
 
   if (!cancelModalTx) return null;
 
@@ -94,8 +97,8 @@ const CancelModalContainer: React.FC<Props> = ({ store, classes }) => {
       className={classes.modal}
       open={showCancelModal}
       onClose={() => {
-        store.set("showCancelModal", false);
-        store.set("cancelModalTx", null);
+        setShowCancelModal(false);
+        setCancelModalTx(null);
       }}
       closeAfterTransition
       BackdropComponent={Backdrop}
@@ -157,4 +160,4 @@ const CancelModalContainer: React.FC<Props> = ({ store, classes }) => {
   );
 };
 
-export default withStyles(styles)(withStore(CancelModalContainer));
+export default withStyles(styles)(CancelModalContainer);

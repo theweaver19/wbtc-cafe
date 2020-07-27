@@ -6,13 +6,12 @@ import Modal from "@material-ui/core/Modal";
 import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import QRCode from "qrcode.react";
 import React from "react";
 
 import ActionLink from "../components/ActionLink";
-import { StoreProps } from "../store/store";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
 
 const styles: Styles<typeof theme, {}> = () => ({
@@ -92,16 +91,20 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const ViewGatewayContainer: React.FC<Props> = ({ classes, store }) => {
+const ViewGatewayContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    showGatewayModal,
+    gatewayModalTx,
+    setShowGatewayModal,
+    setGatewayModalTx,
+  } = Store.useContainer();
+
   const goBack = () => {
-    store.set("showGatewayModal", false);
-    store.set("gatewayModalTx", null);
+    setShowGatewayModal(false);
+    setGatewayModalTx(null);
   };
-
-  const showGatewayModal = store.get("showGatewayModal");
-  const gatewayModalTx = store.get("gatewayModalTx");
 
   if (!gatewayModalTx) return null;
 
@@ -189,4 +192,4 @@ const ViewGatewayContainer: React.FC<Props> = ({ classes, store }) => {
   );
 };
 
-export default withStyles(styles)(withStore(ViewGatewayContainer));
+export default withStyles(styles)(ViewGatewayContainer);

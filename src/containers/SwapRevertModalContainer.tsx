@@ -6,13 +6,12 @@ import Modal from "@material-ui/core/Modal";
 import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React from "react";
 
-import { StoreProps } from "../store/store";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
-import { completeConvertToEthereum, updateTx } from "../utils/txUtils";
+import { TransactionStore } from "../utils/txUtils";
 
 const styles: Styles<typeof theme, {}> = () => ({
   modal: {
@@ -71,15 +70,27 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const SwapRevertModalContainer: React.FC<Props> = ({ classes, store }) => {
-  const showSwapRevertModal = store.get("showSwapRevertModal");
-  const swapRevertModalTx = store.get("swapRevertModalTx");
-  const swapRevertModalExchangeRate = store.get("swapRevertModalExchangeRate");
-  const fees = store.get("fees");
+const SwapRevertModalContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    showSwapRevertModal,
+    swapRevertModalTx,
+    swapRevertModalExchangeRate,
+    fees,
+    setShowSwapRevertModal,
+    setSwapRevertModalTx,
+    setSwapRevertModalExchangeRate,
+  } = Store.useContainer();
 
-  if (!swapRevertModalTx || !fees) return <div />;
+  const {
+    completeConvertToEthereum,
+    updateTx,
+  } = TransactionStore.useContainer();
+
+  if (!swapRevertModalTx || !fees) {
+    return <div />;
+  }
 
   const amount = Number(swapRevertModalTx.sourceAmount).toFixed(8);
   const fixedFee = Number(fees["btc"]["lock"] / 10 ** 8);
@@ -104,9 +115,9 @@ const SwapRevertModalContainer: React.FC<Props> = ({ classes, store }) => {
       className={classes.modal}
       open={showSwapRevertModal}
       onClose={() => {
-        store.set("showSwapRevertModal", false);
-        store.set("swapRevertModalTx", null);
-        store.set("swapRevertModalExchangeRate", "");
+        setShowSwapRevertModal(false);
+        setSwapRevertModalTx(null);
+        setSwapRevertModalExchangeRate("");
       }}
       closeAfterTransition
       BackdropComponent={Backdrop}
@@ -256,7 +267,7 @@ const SwapRevertModalContainer: React.FC<Props> = ({ classes, store }) => {
               completeConvertToEthereum(swapRevertModalTx, "wbtc").catch(
                 console.error,
               );
-              store.set("showSwapRevertModal", false);
+              setShowSwapRevertModal(false);
             }}
           >
             Continue Swap
@@ -273,7 +284,7 @@ const SwapRevertModalContainer: React.FC<Props> = ({ classes, store }) => {
                 }),
               );
               completeConvertToEthereum(newTx, "renbtc").catch(console.error);
-              store.set("showSwapRevertModal", false);
+              setShowSwapRevertModal(false);
             }}
           >
             Get renBTC Instead
@@ -284,4 +295,4 @@ const SwapRevertModalContainer: React.FC<Props> = ({ classes, store }) => {
   );
 };
 
-export default withStyles(styles)(withStore(SwapRevertModalContainer));
+export default withStyles(styles)(SwapRevertModalContainer);

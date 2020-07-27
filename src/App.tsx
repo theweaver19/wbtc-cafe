@@ -6,7 +6,6 @@ import Grid from "@material-ui/core/Grid";
 import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { ThemeProvider, withStyles } from "@material-ui/styles";
-import { createStore, withStore } from "@spyna/react-store";
 import Marquee from "react-smooth-marquee";
 
 import RenVM from "./assets/renvm-powered.svg";
@@ -19,11 +18,10 @@ import SwapRevertModalContainer from "./containers/SwapRevertModalContainer";
 import TransactionsTableContainer from "./containers/TransactionsTableContainer";
 import TransferContainer from "./containers/TransferContainer";
 import ViewGatewayContainer from "./containers/ViewGatewayContainer";
-import { storeListener } from "./services/storeService";
-import { initialState, StoreProps } from "./store/store";
+import { Web3Store } from "./hooks/useWeb3";
+import { Store } from "./store/store";
 import theme from "./theme/theme";
-import { updateRenVMFees } from "./utils/txUtils";
-import { initDataWeb3, setNetwork } from "./utils/walletUtils";
+import { TransactionStore } from "./utils/txUtils";
 import {
   ADAPTER_MAIN,
   ADAPTER_TEST,
@@ -78,23 +76,25 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const App: React.FC<Props> = ({ store, classes }) => {
+const App: React.FC<Props> = ({ classes }) => {
+  const { updateRenVMFees } = TransactionStore.useContainer();
+  const { initDataWeb3, setNetwork } = Web3Store.useContainer();
+
   React.useEffect(() => {
     const params = queryString.parse(window.location.search);
 
-    // default to mainnet
-    setNetwork(params.network === "testnet" ? "testnet" : "mainnet").catch(
-      console.error,
-    );
+    const network = params.network === "testnet" ? "testnet" : "mainnet";
 
-    initDataWeb3().catch(console.error);
+    // default to mainnet
+    setNetwork(network).catch(console.error);
+
+    initDataWeb3(network).catch(console.error);
     updateRenVMFees().catch(console.error);
   }, []); //eslint-disable-line react-hooks/exhaustive-deps
 
-  storeListener(store);
-  const selectedNetwork = store.get("selectedNetwork");
+  const { selectedNetwork } = Store.useContainer();
 
   return (
     <ThemeProvider theme={theme}>
@@ -168,4 +168,4 @@ const App: React.FC<Props> = ({ store, classes }) => {
   );
 };
 
-export default createStore(withStore(withStyles(styles)(App)), initialState);
+export default withStyles(styles)(App);

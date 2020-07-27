@@ -4,14 +4,13 @@ import Grid from "@material-ui/core/Grid";
 import { Styles, WithStyles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React from "react";
 
 import CafeLogo from "../assets/cafe-logo.svg";
-import { StoreProps } from "../store/store";
+import { Web3Store } from "../hooks/useWeb3";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
-import { initLocalWeb3 } from "../utils/walletUtils";
 
 const styles: Styles<typeof theme, {}> = () => ({
   navContainer: {
@@ -83,17 +82,26 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const NavContainer: React.FC<Props> = ({ store, classes }) => {
-  const walletAddress = store.get("localWeb3Address");
-  const walletConnectError = store.get("walletConnectError");
-  const fsUser = store.get("fsUser");
+const NavContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    localWeb3Address,
+    walletConnectError,
+    fsUser,
+    wbtcBalance,
+  } = Store.useContainer();
+
+  const { initLocalWeb3 } = Web3Store.useContainer();
+
   const validUser = fsUser && fsUser.uid;
 
   const isSignedIn =
-    walletAddress && walletAddress.length && !walletConnectError && validUser;
-  const balance = store.get("wbtcBalance");
+    localWeb3Address &&
+    localWeb3Address.length &&
+    !walletConnectError &&
+    validUser;
+  const balance = wbtcBalance;
 
   return (
     <Grid item xs={12} className={classes.navContainer}>
@@ -140,9 +148,9 @@ const NavContainer: React.FC<Props> = ({ store, classes }) => {
                     variant="caption"
                     className={classes.addressLabel}
                   >
-                    {walletAddress.slice(0, 7) +
+                    {localWeb3Address.slice(0, 7) +
                       "..." +
-                      walletAddress.slice(walletAddress.length - 5)}
+                      localWeb3Address.slice(localWeb3Address.length - 5)}
                   </Typography>
                 )}
               </Grid>
@@ -154,4 +162,4 @@ const NavContainer: React.FC<Props> = ({ store, classes }) => {
   );
 };
 
-export default withStyles(styles)(withStore(NavContainer));
+export default withStyles(styles)(NavContainer);

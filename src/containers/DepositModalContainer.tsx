@@ -11,13 +11,12 @@ import SnackbarContent from "@material-ui/core/SnackbarContent";
 import { Styles } from "@material-ui/core/styles/withStyles";
 import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React, { useState } from "react";
 
-import { StoreProps } from "../store/store";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
-import { initConvertToEthereum } from "../utils/txUtils";
+import { TransactionStore } from "../utils/txUtils";
 import { NAME_MAP } from "../utils/walletUtils";
 
 const styles: Styles<typeof theme, {}> = () => ({
@@ -120,42 +119,54 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const DepositModalContainer: React.FC<Props> = ({ store, classes }) => {
+const DepositModalContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    depositModalTx,
+    showDepositModal,
+    selectedAsset,
+    convertRenVMFee,
+    convertNetworkFee,
+    convertAmount,
+    convertExchangeRate,
+    convertConversionTotal,
+
+    setShowDepositModal,
+    setDepositModalTx,
+    setShowGatewayModal,
+    setGatewayModalTx,
+  } = Store.useContainer();
+
+  const { initConvertToEthereum } = TransactionStore.useContainer();
+
   const [depositDisclosureChecked, setDepositDisclosureChecked] = useState(
     false,
   );
 
   const createDeposit = () => {
-    const depositModalTx = store.get("depositModalTx");
-
     initConvertToEthereum(depositModalTx!).catch(console.error);
 
-    store.set("showDepositModal", false);
+    setShowDepositModal(false);
     setDepositDisclosureChecked(false);
-    store.set("depositModalTx", null);
+    setDepositModalTx(null);
 
-    store.set("showGatewayModal", true);
-    store.set("gatewayModalTx", depositModalTx);
+    setShowGatewayModal(true);
+    setGatewayModalTx(depositModalTx);
   };
 
   const check = () => {
     setDepositDisclosureChecked(!depositDisclosureChecked);
   };
 
-  const showDepositModal = store.get("showDepositModal");
-  const depositModalTx = store.get("depositModalTx");
-  const selectedAsset = store.get("selectedAsset");
-
   if (!depositModalTx) return null;
 
-  const renFee = Number(store.get("convert.renVMFee")).toFixed(8);
-  const btcFee = Number(store.get("convert.networkFee")).toFixed(8);
+  const renFee = Number(convertRenVMFee).toFixed(8);
+  const btcFee = Number(convertNetworkFee).toFixed(8);
 
-  const amount = Number(store.get("convert.amount")).toFixed(8);
-  const exchangeRate = Number(store.get("convert.exchangeRate")).toFixed(6);
-  const total = Number(store.get("convert.conversionTotal")).toFixed(8);
+  const amount = Number(convertAmount).toFixed(8);
+  const exchangeRate = Number(convertExchangeRate).toFixed(6);
+  const total = Number(convertConversionTotal).toFixed(8);
 
   return (
     <Modal
@@ -164,8 +175,8 @@ const DepositModalContainer: React.FC<Props> = ({ store, classes }) => {
       className={classes.modal}
       open={showDepositModal}
       onClose={() => {
-        store.set("showDepositModal", false);
-        store.set("depositModalTx", null);
+        setShowDepositModal(false);
+        setDepositModalTx(null);
         setDepositDisclosureChecked(false);
       }}
       closeAfterTransition
@@ -358,4 +369,4 @@ const DepositModalContainer: React.FC<Props> = ({ store, classes }) => {
   );
 };
 
-export default withStyles(styles)(withStore(DepositModalContainer));
+export default withStyles(styles)(DepositModalContainer);

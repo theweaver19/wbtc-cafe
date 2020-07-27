@@ -5,7 +5,6 @@ import TextField from "@material-ui/core/TextField";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 import { withStyles } from "@material-ui/styles";
-import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
 import React, { useRef } from "react";
 import NumberFormat from "react-number-format";
@@ -13,15 +12,11 @@ import AddressValidator from "wallet-address-validator";
 
 import ActionLink from "../components/ActionLink";
 import CurrencyInput from "../components/CurrencyInput";
-import { StoreProps } from "../store/store";
+import { Web3Store } from "../hooks/useWeb3";
+import { Store } from "../store/store";
 import theme from "../theme/theme";
-import { gatherFeeData, initConvertFromEthereum } from "../utils/txUtils";
-import {
-  initLocalWeb3,
-  MINI_ICON_MAP,
-  NAME_MAP,
-  setWbtcAllowance,
-} from "../utils/walletUtils";
+import { TransactionStore } from "../utils/txUtils";
+import { MINI_ICON_MAP, NAME_MAP } from "../utils/walletUtils";
 
 const styles: Styles<typeof theme, {}> = () => ({
   container: {
@@ -154,37 +149,73 @@ const styles: Styles<typeof theme, {}> = () => ({
   },
 });
 
-interface Props extends WithStyles<typeof styles>, StoreProps {}
+interface Props extends WithStyles<typeof styles> {}
 
-const TransferContainer: React.FC<Props> = ({ store, classes }) => {
+const TransferContainer: React.FC<Props> = ({ classes }) => {
+  const {
+    convertAmount,
+    convertDestination,
+    convertMaxSlippage,
+    convertExchangeRate,
+    convertConversionTotal,
+    convertAdapterAddress,
+    convertSelectedDirection,
+    convertNetworkFee,
+    convertRenVMFee,
+    convertAdapterWbtcAllowance,
+    convertDestinationValid,
+    convertAdapterWbtcAllowanceRequesting,
+
+    localWeb3Address,
+    localWeb3,
+    selectedNetwork,
+    selectedAsset,
+    wbtcBalance,
+    walletConnectError,
+    fsUser,
+    loadingTransactions,
+
+    setConvertDestination,
+    setConvertSelectedDirection,
+    setConvertAmount,
+    setConvertMaxSlippage,
+    setConvertDestinationValid,
+
+    setDepositModalTx,
+    setShowDepositModal,
+  } = Store.useContainer();
+
+  const {
+    gatherFeeData,
+    initConvertFromEthereum,
+  } = TransactionStore.useContainer();
+
+  const { initLocalWeb3, setWbtcAllowance } = Web3Store.useContainer();
+
   const wbtcAmountRef = useRef<any>(null);
   const ethAddressRef = useRef<any>(null);
 
   const fillWalletAddress = () => {
-    const address = store.get("localWeb3Address");
+    const address = localWeb3Address;
     ethAddressRef.current.value = address;
-    store.set("convert.destination", address);
-    store.set(
-      "convert.destinationValid",
-      AddressValidator.validate(address, "ETH"),
-    );
+    setConvertDestination(address);
+    setConvertDestinationValid(AddressValidator.validate(address, "ETH"));
   };
 
   const newDeposit = async () => {
-    if (!store.get("localWeb3")) return initLocalWeb3();
+    if (!localWeb3) return initLocalWeb3();
 
-    const amount = store.get("convert.amount");
-    const destination = store.get("convert.destination");
-    const network = store.get("selectedNetwork");
+    const amount = convertAmount;
+    const destination = convertDestination;
+    const network = selectedNetwork;
     const asset = "wbtc";
-    const maxSlippage = store.get("convert.maxSlippage");
-    const exchangeRate = store.get("convert.exchangeRate");
-    const expectedTotal = store.get("convert.conversionTotal");
+    const maxSlippage = convertMaxSlippage;
+    const exchangeRate = convertExchangeRate;
+    const expectedTotal = convertConversionTotal;
     const minSwapProceeds = Number(
       (Number(expectedTotal) * Number(1 - maxSlippage)).toFixed(6),
     );
-    const adapterAddress = store.get("convert.adapterAddress");
-    const localWeb3Address = store.get("localWeb3Address");
+    const adapterAddress = convertAdapterAddress;
 
     const tx = {
       id: "tx-" + Math.floor(Math.random() * 10 ** 16),
@@ -212,23 +243,22 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
       localWeb3Address: localWeb3Address.toLowerCase(),
     };
 
-    store.set("depositModalTx", tx);
-    store.set("showDepositModal", true);
+    setDepositModalTx(tx);
+    setShowDepositModal(true);
   };
 
   const newWithdraw = async () => {
-    if (!store.get("localWeb3")) return initLocalWeb3();
+    if (!localWeb3) return initLocalWeb3();
 
-    const amount = store.get("convert.amount");
-    const destination = store.get("convert.destination");
-    const network = store.get("selectedNetwork");
+    const amount = convertAmount;
+    const destination = convertDestination;
+    const network = selectedNetwork;
     const asset = "wbtc";
-    const maxSlippage = store.get("convert.maxSlippage");
-    const exchangeRate = store.get("convert.exchangeRate");
+    const maxSlippage = convertMaxSlippage;
+    const exchangeRate = convertExchangeRate;
     const minSwapProceeds =
       Number(Number(amount) * Number(exchangeRate)) * Number(1 - maxSlippage);
-    const adapterAddress = store.get("convert.adapterAddress");
-    const localWeb3Address = store.get("localWeb3Address");
+    const adapterAddress = convertAdapterAddress;
 
     const tx = {
       id: "tx-" + Math.floor(Math.random() * 10 ** 16),
@@ -257,30 +287,20 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
     initConvertFromEthereum(tx).catch(console.error);
   };
 
-  const selectedNetwork = store.get("selectedNetwork");
-  const selectedAsset = store.get("selectedAsset");
+  const selectedDirection = convertSelectedDirection;
 
-  const selectedDirection = store.get("convert.selectedDirection");
+  const amount = convertAmount;
+  const exchangeRate = convertExchangeRate;
+  const fee = convertNetworkFee;
+  const renVMFee = convertRenVMFee;
+  const total = convertConversionTotal;
 
-  const wbtcBalance = store.get("wbtcBalance");
-
-  const amount = store.get("convert.amount");
-  const exchangeRate = store.get("convert.exchangeRate");
-  const fee = store.get("convert.networkFee");
-  const renVMFee = store.get("convert.renVMFee");
-  const total = store.get("convert.conversionTotal");
-
-  const allowance = store.get("convert.adapterWbtcAllowance");
+  const allowance = convertAdapterWbtcAllowance;
   const hasAllowance = Number(amount) <= Number(allowance);
-  const allowanceRequesting = store.get(
-    "convert.adapterWbtcAllowanceRequesting",
-  );
-  const walletConnectError = store.get("walletConnectError");
-  const fsUser = store.get("fsUser");
+  const allowanceRequesting = convertAdapterWbtcAllowanceRequesting;
   const validUser = fsUser && fsUser.uid;
-  const loadingTransactions = store.get("loadingTransactions");
 
-  const convertAddressValid = store.get("convert.destinationValid");
+  const convertAddressValid = convertDestinationValid;
   const canConvertTo =
     Number(amount) > 0.00010001 &&
     convertAddressValid &&
@@ -298,7 +318,7 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
   const sourceAsset = selectedDirection ? "WBTC" : "BTC";
   const destAsset = selectedDirection ? "BTC" : "WBTC";
 
-  const maxSlippage = store.get("convert.maxSlippage");
+  const maxSlippage = convertMaxSlippage;
   const slippageOptions = [0.005, 0.01, 0.05];
 
   return (
@@ -317,9 +337,9 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                     onChange={(_event, newValue) => {
                       if (newValue) {
                         const nv = Number(newValue);
-                        store.set("convert.selectedDirection", nv);
-                        store.set("convert.amount", "");
-                        store.set("convert.destination", "");
+                        setConvertSelectedDirection(nv);
+                        setConvertAmount("");
+                        setConvertDestination("");
                         gatherFeeData().catch(console.error);
                       }
                     }}
@@ -353,7 +373,7 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                       <CurrencyInput
                         onAmountChange={(value) => {
                           let amount = value < 0 ? "" : value;
-                          store.set("convert.amount", amount);
+                          setConvertAmount(amount);
                           gatherFeeData().catch(console.error);
                         }}
                         onCurrencyChange={() => {}}
@@ -370,12 +390,8 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                             margin="dense"
                             variant="outlined"
                             onChange={(event) => {
-                              store.set(
-                                "convert.destination",
-                                event.target.value,
-                              );
-                              store.set(
-                                "convert.destinationValid",
+                              setConvertDestination(event.target.value);
+                              setConvertDestinationValid(
                                 AddressValidator.validate(
                                   event.target.value,
                                   "ETH",
@@ -408,7 +424,7 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                             inputRef={wbtcAmountRef}
                             onAmountChange={(value) => {
                               let amount = value < 0 ? "" : value;
-                              store.set("convert.amount", amount);
+                              setConvertAmount(amount);
                               gatherFeeData().catch(console.error);
                             }}
                             onCurrencyChange={() => {}}
@@ -418,9 +434,9 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                         <ActionLink
                           className={classes.maxLink}
                           onClick={() => {
-                            const bal = store.get("wbtcBalance");
+                            const bal = wbtcBalance;
                             wbtcAmountRef.current.value = bal;
-                            store.set("convert.amount", bal);
+                            setConvertAmount(bal);
                             gatherFeeData().catch(console.error);
                           }}
                         >
@@ -436,9 +452,8 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                         margin="dense"
                         variant="outlined"
                         onChange={(event) => {
-                          store.set("convert.destination", event.target.value);
-                          store.set(
-                            "convert.destinationValid",
+                          setConvertDestination(event.target.value);
+                          setConvertDestinationValid(
                             AddressValidator.validate(
                               event.target.value,
                               selectedDirection ? "BTC" : "ETH",
@@ -525,7 +540,7 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                               <ActionLink
                                 key={r}
                                 onClick={() => {
-                                  store.set("convert.maxSlippage", r);
+                                  setConvertMaxSlippage(r);
                                 }}
                               >
                                 {label}
@@ -542,15 +557,11 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
                           onValueChange={(values) => {
                             const float = values.floatValue;
                             if (!float) {
-                              store.set(
-                                "convert.maxSlippage",
-                                slippageOptions[0],
-                              );
+                              setConvertMaxSlippage(slippageOptions[0]);
                             } else if (float > 100) {
-                              store.set("convert.maxSlippage", 1);
+                              setConvertMaxSlippage(1);
                             } else {
-                              store.set(
-                                "convert.maxSlippage",
+                              setConvertMaxSlippage(
                                 Number((float / 100).toFixed(4)),
                               );
                             }
@@ -621,4 +632,4 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
   );
 };
 
-export default withStyles(styles)(withStore(TransferContainer));
+export default withStyles(styles)(TransferContainer);
