@@ -150,8 +150,6 @@ const getSignatures = async (address: string, web3: Web3) => {
   return signature;
 };
 
-const [disclosureAccepted, setDisclosureAccepted] = useState(false);
-
 export const initLocalWeb3 = async () => {
   const store = getStore();
   const selectedNetwork = store.get("selectedNetwork");
@@ -210,12 +208,12 @@ export const initLocalWeb3 = async () => {
   try {
     store.set("loadingTransactions", true);
 
-    if (!disclosureAccepted) {
+    if (!store.get("disclosureAccepted")) {
       const ok = window.confirm(
         `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`,
       );
 
-      setDisclosureAccepted(ok);
+      store.set("disclosureAccepted", ok);
 
       if (!ok) {
         throw new Error("Disclosure declined");

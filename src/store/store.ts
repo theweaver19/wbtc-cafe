@@ -29,6 +29,7 @@ export const initialState = {
   fsSignature: null as string | null,
   fsEnabled: false,
   loadingTransactions: false,
+  disclosureAccepted: false,
 
   // navigation
   selectedAsset: "btc",
