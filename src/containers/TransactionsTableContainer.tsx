@@ -13,6 +13,7 @@ import { ConversionActions } from "../components/ConversionActions";
 import { ConversionStatus } from "../components/ConversionStatus";
 import { Store } from "../store/store";
 import { Web3Store } from "../store/web3Store";
+import { Asset } from "../types/enums";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -75,7 +76,7 @@ export const TransactionsTableContainer: React.FC<Props> = () => {
           {showTransactions &&
             transactions.map((tx, i) => {
               const destAsset = tx.swapReverted
-                ? "RENBTC"
+                ? Asset.renBTC
                 : tx.destAsset.toUpperCase();
               const sourceAsset = tx.sourceAsset.toUpperCase();
               return (

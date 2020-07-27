@@ -6,6 +6,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import TextField from "@material-ui/core/TextField";
 import React, { useRef, useState } from "react";
 
+import { Asset } from "../types/enums";
 import { MINI_ICON_MAP } from "../utils/walletUtils";
 
 const useStyles = makeStyles((theme) => ({
@@ -108,17 +109,7 @@ export const CurrencyInput: React.FC<Props> = ({
                 <img
                   alt=""
                   role="presentation"
-                  src={
-                    MINI_ICON_MAP[
-                      selected.toLowerCase() as
-                        | "btc"
-                        | "eth"
-                        | "zec"
-                        | "dai"
-                        | "usdc"
-                        | "wbtc"
-                    ]
-                  }
+                  src={MINI_ICON_MAP[selected.toLowerCase() as Asset]}
                   className={classes.icon}
                 />
                 <span>{selected}</span>
@@ -145,17 +136,7 @@ export const CurrencyInput: React.FC<Props> = ({
                     <img
                       alt=""
                       role="presentation"
-                      src={
-                        MINI_ICON_MAP[
-                          i.toLowerCase() as
-                            | "btc"
-                            | "eth"
-                            | "zec"
-                            | "dai"
-                            | "usdc"
-                            | "wbtc"
-                        ]
-                      }
+                      src={MINI_ICON_MAP[i.toLowerCase() as Asset]}
                       className={classes.icon}
                     />
                     <span>{i}</span>
@@ -171,17 +152,7 @@ export const CurrencyInput: React.FC<Props> = ({
                     <img
                       alt=""
                       role="presentation"
-                      src={
-                        MINI_ICON_MAP[
-                          items[0].toLowerCase() as
-                            | "btc"
-                            | "eth"
-                            | "zec"
-                            | "dai"
-                            | "usdc"
-                            | "wbtc"
-                        ]
-                      }
+                      src={MINI_ICON_MAP[items[0].toLowerCase() as Asset]}
                       className={classes.icon}
                     />
                   }

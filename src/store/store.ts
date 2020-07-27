@@ -38,9 +38,6 @@ const useStore = (database: Database<Transaction> | undefined) => {
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
 
-  // navigation
-  const [selectedAsset, setSelectedAsset] = useState("btc");
-
   // modals
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositModalTx, setDepositModalTx] = useState(
@@ -132,8 +129,6 @@ const useStore = (database: Database<Transaction> | undefined) => {
     setLoadingTransactions,
     disclosureAccepted,
     setDisclosureAccepted,
-    selectedAsset,
-    setSelectedAsset,
     showDepositModal,
     setShowDepositModal,
     depositModalTx,

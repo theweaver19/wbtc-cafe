@@ -14,6 +14,7 @@ import React, { useState } from "react";
 
 import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
+import { Asset } from "../types/enums";
 import { NAME_MAP } from "../utils/walletUtils";
 
 const useStyles = makeStyles((theme) => ({
@@ -123,7 +124,6 @@ export const DepositModalContainer: React.FC<Props> = () => {
   const {
     depositModalTx,
     showDepositModal,
-    selectedAsset,
     convertRenVMFee,
     convertNetworkFee,
     convertAmount,
@@ -269,18 +269,7 @@ export const DepositModalContainer: React.FC<Props> = () => {
                         variant="body1"
                         className={classes.receiptTitle}
                       >
-                        {
-                          NAME_MAP[
-                            selectedAsset as
-                              | "btc"
-                              | "eth"
-                              | "zec"
-                              | "dai"
-                              | "usdc"
-                              | "wbtc"
-                          ]
-                        }{" "}
-                        Network Fee
+                        {NAME_MAP[Asset.BTC]} Network Fee
                       </Typography>
                     </Grid>
                     <Grid item xs={6}>

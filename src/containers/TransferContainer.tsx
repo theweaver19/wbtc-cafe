@@ -13,6 +13,7 @@ import { CurrencyInput } from "../components/CurrencyInput";
 import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
 import { Web3Store } from "../store/web3Store";
+import { Asset } from "../types/enums";
 import { MINI_ICON_MAP, NAME_MAP } from "../utils/walletUtils";
 
 const useStyles = makeStyles((theme) => ({
@@ -167,7 +168,6 @@ export const TransferContainer: React.FC<Props> = () => {
     localWeb3Address,
     localWeb3,
     selectedNetwork,
-    selectedAsset,
     wbtcBalance,
     walletConnectError,
     fsUser,
@@ -206,7 +206,7 @@ export const TransferContainer: React.FC<Props> = () => {
     const amount = convertAmount;
     const destination = convertDestination;
     const network = selectedNetwork;
-    const asset = "wbtc";
+    const asset = Asset.WBTC;
     const maxSlippage = convertMaxSlippage;
     const exchangeRate = convertExchangeRate;
     const expectedTotal = convertConversionTotal;
@@ -220,7 +220,7 @@ export const TransferContainer: React.FC<Props> = () => {
       type: "convert",
       instant: false,
       awaiting: "btc-init",
-      sourceAsset: "btc",
+      sourceAsset: Asset.BTC,
       sourceAmount: "",
       sourceNetwork: "bitcoin",
       sourceNetworkVersion: network,
@@ -251,7 +251,7 @@ export const TransferContainer: React.FC<Props> = () => {
     const amount = convertAmount;
     const destination = convertDestination;
     const network = selectedNetwork;
-    const asset = "wbtc";
+    const asset = Asset.WBTC;
     const maxSlippage = convertMaxSlippage;
     const exchangeRate = convertExchangeRate;
     const minSwapProceeds =
@@ -272,7 +272,7 @@ export const TransferContainer: React.FC<Props> = () => {
       destAddress: destination,
       destNetwork: "bitcoin",
       destNetworkVersion: network,
-      destAsset: "btc",
+      destAsset: Asset.BTC,
       amount,
       error: false,
       minExchangeRate: exchangeRate,
@@ -346,7 +346,7 @@ export const TransferContainer: React.FC<Props> = () => {
                       <img
                         alt=""
                         role="presentation"
-                        src={MINI_ICON_MAP["wbtc"]}
+                        src={MINI_ICON_MAP[Asset.WBTC]}
                         className={classes.icon}
                       />{" "}
                       Get WBTC
@@ -355,7 +355,7 @@ export const TransferContainer: React.FC<Props> = () => {
                       <img
                         alt=""
                         role="presentation"
-                        src={MINI_ICON_MAP["btc"]}
+                        src={MINI_ICON_MAP[Asset.BTC]}
                         className={classes.icon}
                       />{" "}
                       Get BTC
@@ -489,20 +489,7 @@ export const TransferContainer: React.FC<Props> = () => {
                       </span>
                     </Grid>
                     <Grid container justify="space-between">
-                      <span>
-                        {
-                          NAME_MAP[
-                            selectedAsset as
-                              | "btc"
-                              | "eth"
-                              | "zec"
-                              | "dai"
-                              | "usdc"
-                              | "wbtc"
-                          ]
-                        }{" "}
-                        Fee
-                      </span>
+                      <span>{NAME_MAP[Asset.BTC]} Fee</span>
                       <span>
                         {fee && amount ? `${Number(fee).toFixed(8)} BTC` : "-"}
                       </span>

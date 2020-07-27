@@ -10,6 +10,7 @@ import { makeStyles } from "@material-ui/core";
 
 import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
+import { Asset } from "../types/enums";
 
 const useStyles = makeStyles((theme) => ({
   modal: {
@@ -92,8 +93,8 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
   }
 
   const amount = Number(swapRevertModalTx.sourceAmount).toFixed(8);
-  const fixedFee = Number(fees["btc"]["lock"] / 10 ** 8);
-  const dynamicFeeRate = Number(fees["btc"].ethereum["mint"] / 10000);
+  const fixedFee = Number(fees[Asset.BTC]["lock"] / 10 ** 8);
+  const dynamicFeeRate = Number(fees[Asset.BTC].ethereum["mint"] / 10000);
   const renVMFee = (
     Number(swapRevertModalTx.sourceAmount) * dynamicFeeRate
   ).toFixed(8);
@@ -231,7 +232,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="body1" className={classes.receiptAmount}>
-                  {`${net} renBTC`}
+                  {net} {Asset.renBTC}
                 </Typography>
               </Grid>
             </Grid>
@@ -263,7 +264,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
             fullWidth={true}
             className={classNames(classes.button)}
             onClick={() => {
-              completeConvertToEthereum(swapRevertModalTx, "wbtc").catch(
+              completeConvertToEthereum(swapRevertModalTx, Asset.WBTC).catch(
                 console.error,
               );
               setShowSwapRevertModal(false);
@@ -282,11 +283,13 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
                   swapReverted: true,
                 }),
               );
-              completeConvertToEthereum(newTx, "renbtc").catch(console.error);
+              completeConvertToEthereum(newTx, Asset.renBTC).catch(
+                console.error,
+              );
               setShowSwapRevertModal(false);
             }}
           >
-            Get renBTC Instead
+            Get {Asset.renBTC} Instead
           </Button>
         </Grid>
       </Fade>

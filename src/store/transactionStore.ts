@@ -5,6 +5,7 @@ import { LockAndMint } from "@renproject/ren/build/main/lockAndMint";
 import { BurnAndRelease } from "@renproject/ren/build/main/burnAndRelease";
 import { createContainer } from "unstated-next";
 
+import { Asset } from "../types/enums";
 import { Transaction } from "../types/transaction";
 import adapterABI from "../utils/ABIs/adapterCurveABI.json";
 import curveABI from "../utils/ABIs/curveABI.json";
@@ -20,7 +21,6 @@ function useTransactionStore() {
     dataWeb3,
     selectedNetwork,
     fees,
-    selectedAsset,
     localWeb3,
     sdk,
 
@@ -139,7 +139,7 @@ function useTransactionStore() {
     const { renResponse } = tx;
 
     const utxoAmountInSats = Number(renResponse.autogen.amount);
-    const dynamicFeeRate = Number(fees!["btc"].ethereum["mint"] / 10000);
+    const dynamicFeeRate = Number(fees![Asset.BTC].ethereum["mint"] / 10000);
     const finalAmount = Math.round(utxoAmountInSats * (1 - dynamicFeeRate));
 
     const curve = new dataWeb3!.eth.Contract(
@@ -160,12 +160,9 @@ function useTransactionStore() {
     const fixedFeeKey = selectedDirection ? "release" : "lock";
     const dynamicFeeKey = selectedDirection ? "burn" : "mint";
 
-    const fixedFee = Number(
-      fees![selectedAsset as "btc" | "zec" | "bch"][fixedFeeKey] / 10 ** 8,
-    );
+    const fixedFee = Number(fees![Asset.BTC][fixedFeeKey] / 10 ** 8);
     const dynamicFeeRate = Number(
-      fees![selectedAsset as "btc" | "zec" | "bch"].ethereum[dynamicFeeKey] /
-        10000,
+      fees![Asset.BTC].ethereum[dynamicFeeKey] / 10000,
     );
 
     if (!amount || !dataWeb3 || !fees) return;
@@ -175,7 +172,7 @@ function useTransactionStore() {
       let renVMFee: number;
       let total: number | string;
       const amountInSats = Math.round(
-        RenJS.utils.value(amount, "btc").sats().toNumber(),
+        RenJS.utils.value(amount, Asset.BTC).sats().toNumber(),
       );
       const curve = new dataWeb3.eth.Contract(
         curveABI as AbiItem[],
@@ -199,7 +196,7 @@ function useTransactionStore() {
             ? Number(Number(amount) - renVMFee - fixedFee)
             : 0;
         const amountAfterMintInSats = Math.round(
-          RenJS.utils.value(amountAfterMint, "btc").sats().toNumber(),
+          RenJS.utils.value(amountAfterMint, Asset.BTC).sats().toNumber(),
         );
 
         if (amountAfterMintInSats) {
@@ -317,9 +314,9 @@ function useTransactionStore() {
     }
 
     let newMinExchangeRate = params.contractCalls[0].contractParams[0].value;
-    if (approveSwappedAsset === "wbtc") {
+    if (approveSwappedAsset === Asset.WBTC) {
       const rateMinusOne =
-        RenJS.utils.value(exchangeRate!, "btc").sats().toNumber() - 1;
+        RenJS.utils.value(exchangeRate!, Asset.BTC).sats().toNumber() - 1;
       newMinExchangeRate = rateMinusOne.toFixed(0);
     }
 
@@ -385,7 +382,7 @@ function useTransactionStore() {
           name: "_minExchangeRate",
           type: "uint256",
           value: RenJS.utils
-            .value(minExchangeRate!, "btc")
+            .value(minExchangeRate!, Asset.BTC)
             .sats()
             .toNumber()
             .toFixed(0),
@@ -412,7 +409,7 @@ function useTransactionStore() {
     const data = {
       sendToken: RenJS.Tokens.BTC.Btc2Eth,
       suggestedAmount: RenJS.utils
-        .value(amount, "btc")
+        .value(amount, Asset.BTC)
         .sats()
         .toNumber()
         .toFixed(0),
@@ -632,9 +629,9 @@ function useTransactionStore() {
       await adapter.methods
         .swapThenBurn(
           RenJS.utils.BTC.addressToHex(destAddress), //_to
-          RenJS.utils.value(amount, "btc").sats().toNumber().toFixed(0), // _amount in Satoshis
+          RenJS.utils.value(amount, Asset.BTC).sats().toNumber().toFixed(0), // _amount in Satoshis
           RenJS.utils
-            .value(minSwapProceeds, "btc")
+            .value(minSwapProceeds, Asset.BTC)
             .sats()
             .toNumber()
             .toFixed(0),
