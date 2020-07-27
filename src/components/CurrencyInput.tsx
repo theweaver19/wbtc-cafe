@@ -74,7 +74,6 @@ const CurrencyInput: React.FC<Props> = ({
   };
 
   const handleClose = (event: any) => {
-    // console.log(event, event.target, event.target.value)
     const value = event.target.value;
     if (value) {
       onCurrencyChange(value);

@@ -45,11 +45,9 @@ const TransactionsTableContainer: React.FC<Props> = ({ store, classes }) => {
   const transactions = store
     .get("convert.transactions")
     .filter((t) => t.sourceNetworkVersion === selectedNetwork);
-  // const localWeb3Address = store.get("localWeb3Address");
   const fsSignature = store.get("fsSignature");
 
   const signedIn = fsSignature;
-  // const hasTransactions = transactions.length > 0;
   const loadingTransactions = store.get("loadingTransactions");
   const error = store.get("walletConnectError");
 
@@ -58,15 +56,11 @@ const TransactionsTableContainer: React.FC<Props> = ({ store, classes }) => {
 
   return (
     <div className={classes.container}>
-      {/*<div className={classes.titleWrapper}>
-            <Typography variant='subtitle1'><b>Conversions</b></Typography>
-          </div>*/}
       <Table>
         <TableHead>
           <TableRow>
             <TableCell align="left">Transaction</TableCell>
             <TableCell>Status</TableCell>
-            {/*<TableCell align="left">Date</TableCell>*/}
             <TableCell>
               <div className={classes.actionsCell}></div>
             </TableCell>

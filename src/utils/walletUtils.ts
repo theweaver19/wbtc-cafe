@@ -3,6 +3,7 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import Web3 from "web3";
 import { AbiItem } from "web3-utils";
 import Web3Modal from "web3modal";
+import { useState } from "react";
 
 import BTC from "../assets/tokens/btc.png";
 import DAI from "../assets/tokens/dai.png";
@@ -78,7 +79,7 @@ export const setWbtcAllowance = async () => {
     updateAllowance().catch(console.error);
     store.set("convert.adapterWbtcAllowanceRequesting", false);
   } catch (e) {
-    // console.error(e)
+    console.error(e);
     store.set("convert.adapterWbtcAllowanceRequesting", false);
   }
 };
@@ -96,9 +97,7 @@ const updateBalance = async () => {
 
   const contract = new web3.eth.Contract(erc20ABI as AbiItem[], wbtcAddress);
   const balance = await contract.methods.balanceOf(walletAddress).call();
-  const ethBal = await web3.eth.getBalance(walletAddress);
 
-  store.set("ethBalance", Number(web3.utils.fromWei(ethBal)).toFixed(8));
   store.set(
     "wbtcBalance",
     Number(parseInt(balance.toString()) / 10 ** 8).toFixed(8),
@@ -106,7 +105,6 @@ const updateBalance = async () => {
 };
 
 const watchWalletData = async () => {
-  // const store = getStore();
   if (walletDataInterval) {
     clearInterval(walletDataInterval);
   }
@@ -131,7 +129,7 @@ export const initDataWeb3 = async () => {
   );
 };
 
-const getSignatures = async (address: string, key: string, web3: Web3) => {
+const getSignatures = async (address: string, web3: Web3) => {
   const localSigMap = localStorage.getItem("sigMap");
   const addressLowerCase = address.toLowerCase();
   const localSigMapData = localSigMap ? JSON.parse(localSigMap) : {};
@@ -152,13 +150,12 @@ const getSignatures = async (address: string, key: string, web3: Web3) => {
   return signature;
 };
 
+const [disclosureAccepted, setDisclosureAccepted] = useState(false);
+
 export const initLocalWeb3 = async () => {
   const store = getStore();
   const selectedNetwork = store.get("selectedNetwork");
   const db = store.get("db");
-  // const fsUser = store.get("fsUser");
-  const disclosureAccepted = store.get("disclosureAccepted");
-
   const providerOptions = {
     walletconnect: {
       package: WalletConnectProvider, // required
@@ -185,13 +182,8 @@ export const initLocalWeb3 = async () => {
 
   store.set("walletConnectError", false);
 
-  console.log(currentProvider);
-
   let network = "";
   const netId = await web3.eth.net.getId();
-  // const netId = Number(
-  //   currentProvider.networkVersion || currentProvider.networkId
-  // );
   if (netId === 1) {
     network = "mainnet";
   } else if (netId === 42) {
@@ -205,7 +197,6 @@ export const initLocalWeb3 = async () => {
 
   store.set("localWeb3", web3);
   store.set("localWeb3Address", address);
-  store.set("localWeb3Network", network);
 
   // recover from localStorage
   const lsData = localStorage.getItem("convert.transactions");
@@ -215,7 +206,6 @@ export const initLocalWeb3 = async () => {
         (tx: Transaction) => tx.localWeb3Address === addressLowerCase,
       )
     : [];
-  // const lsIds = lsTransactions.map((t: any) => t.id);
 
   try {
     store.set("loadingTransactions", true);
@@ -225,14 +215,14 @@ export const initLocalWeb3 = async () => {
         `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`,
       );
 
-      store.set("disclosureAccepted", ok);
+      setDisclosureAccepted(ok);
 
       if (!ok) {
         throw new Error("Disclosure declined");
       }
     }
 
-    const signature = await getSignatures(address, "Login", web3);
+    const signature = await getSignatures(address, web3);
     if (!signature) {
       throw new Error("couldn't sign");
     }

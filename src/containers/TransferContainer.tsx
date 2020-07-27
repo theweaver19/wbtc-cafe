@@ -176,7 +176,7 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
     const amount = store.get("convert.amount");
     const destination = store.get("convert.destination");
     const network = store.get("selectedNetwork");
-    const asset = store.get("convert.selectedFormat");
+    const asset = "wbtc";
     const maxSlippage = store.get("convert.maxSlippage");
     const exchangeRate = store.get("convert.exchangeRate");
     const expectedTotal = store.get("convert.conversionTotal");
@@ -212,8 +212,6 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
       localWeb3Address: localWeb3Address.toLowerCase(),
     };
 
-    // initConvertToEthereum(tx)
-
     store.set("depositModalTx", tx);
     store.set("showDepositModal", true);
   };
@@ -224,7 +222,7 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
     const amount = store.get("convert.amount");
     const destination = store.get("convert.destination");
     const network = store.get("selectedNetwork");
-    const asset = store.get("convert.selectedFormat");
+    const asset = "wbtc";
     const maxSlippage = store.get("convert.maxSlippage");
     const exchangeRate = store.get("convert.exchangeRate");
     const minSwapProceeds =
@@ -254,15 +252,12 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
       minSwapProceeds,
       adapterAddress,
       localWeb3Address: localWeb3Address.toLowerCase(),
-      // minSwapProceeds: 100
-      // txHash: ''
     };
 
     initConvertFromEthereum(tx).catch(console.error);
   };
 
   const selectedNetwork = store.get("selectedNetwork");
-  const selectedTab = store.get("selectedTab");
   const selectedAsset = store.get("selectedAsset");
 
   const selectedDirection = store.get("convert.selectedDirection");
@@ -308,337 +303,320 @@ const TransferContainer: React.FC<Props> = ({ store, classes }) => {
 
   return (
     <div className={classes.container}>
-      {selectedTab === 1 && (
-        <div className={classes.actionsContainer}>
-          <Grid className={classes.actions}>
-            <Grid container justify="center">
-              <Grid item xs={12}>
-                {
-                  <Grid container className={classes.transferActionTabs}>
-                    <ToggleButtonGroup
-                      size="small"
-                      className={classes.toggle}
-                      value={String(selectedDirection)}
-                      exclusive
-                      onChange={(_event, newValue) => {
-                        if (newValue) {
-                          const nv = Number(newValue);
-                          store.set("convert.selectedDirection", nv);
-                          store.set("convert.amount", "");
-                          store.set("convert.destination", "");
-                          gatherFeeData().catch(console.error);
-                        }
-                      }}
-                    >
-                      <ToggleButton key={0} value={"0"}>
-                        <img
-                          alt=""
-                          role="presentation"
-                          src={MINI_ICON_MAP["wbtc"]}
-                          className={classes.icon}
-                        />{" "}
-                        Get WBTC
-                      </ToggleButton>
-                      <ToggleButton key={1} value={"1"}>
-                        <img
-                          alt=""
-                          role="presentation"
-                          src={MINI_ICON_MAP["btc"]}
-                          className={classes.icon}
-                        />{" "}
-                        Get BTC
-                      </ToggleButton>
-                    </ToggleButtonGroup>
-                  </Grid>
-                }
+      <div className={classes.actionsContainer}>
+        <Grid className={classes.actions}>
+          <Grid container justify="center">
+            <Grid item xs={12}>
+              {
+                <Grid container className={classes.transferActionTabs}>
+                  <ToggleButtonGroup
+                    size="small"
+                    className={classes.toggle}
+                    value={String(selectedDirection)}
+                    exclusive
+                    onChange={(_event, newValue) => {
+                      if (newValue) {
+                        const nv = Number(newValue);
+                        store.set("convert.selectedDirection", nv);
+                        store.set("convert.amount", "");
+                        store.set("convert.destination", "");
+                        gatherFeeData().catch(console.error);
+                      }
+                    }}
+                  >
+                    <ToggleButton key={0} value={"0"}>
+                      <img
+                        alt=""
+                        role="presentation"
+                        src={MINI_ICON_MAP["wbtc"]}
+                        className={classes.icon}
+                      />{" "}
+                      Get WBTC
+                    </ToggleButton>
+                    <ToggleButton key={1} value={"1"}>
+                      <img
+                        alt=""
+                        role="presentation"
+                        src={MINI_ICON_MAP["btc"]}
+                        className={classes.icon}
+                      />{" "}
+                      Get BTC
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Grid>
+              }
 
-                {selectedDirection === 0 && (
-                  <React.Fragment>
-                    <Grid alignItems="center" container>
-                      <Grid item xs={12}>
-                        <CurrencyInput
-                          onAmountChange={(value) => {
-                            let amount = value < 0 ? "" : value;
-                            store.set("convert.amount", amount);
-                            gatherFeeData().catch(console.error);
-                          }}
-                          onCurrencyChange={() => {}}
-                          items={["BTC"]}
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Grid container direction="row" alignItems="center">
-                          <Grid item className={classes.amountContainer}>
-                            <TextField
-                              inputRef={ethAddressRef}
-                              placeholder="Ethereum Destination Address"
-                              className={classes.depositAddress}
-                              margin="dense"
-                              variant="outlined"
-                              onChange={(event) => {
-                                store.set(
-                                  "convert.destination",
+              {selectedDirection === 0 && (
+                <React.Fragment>
+                  <Grid alignItems="center" container>
+                    <Grid item xs={12}>
+                      <CurrencyInput
+                        onAmountChange={(value) => {
+                          let amount = value < 0 ? "" : value;
+                          store.set("convert.amount", amount);
+                          gatherFeeData().catch(console.error);
+                        }}
+                        onCurrencyChange={() => {}}
+                        items={["BTC"]}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Grid container direction="row" alignItems="center">
+                        <Grid item className={classes.amountContainer}>
+                          <TextField
+                            inputRef={ethAddressRef}
+                            placeholder="Ethereum Destination Address"
+                            className={classes.depositAddress}
+                            margin="dense"
+                            variant="outlined"
+                            onChange={(event) => {
+                              store.set(
+                                "convert.destination",
+                                event.target.value,
+                              );
+                              store.set(
+                                "convert.destinationValid",
+                                AddressValidator.validate(
                                   event.target.value,
-                                );
-                                store.set(
-                                  "convert.destinationValid",
-                                  AddressValidator.validate(
-                                    event.target.value,
-                                    "ETH",
-                                  ),
-                                );
-                              }}
-                            />
-                          </Grid>
-                          <ActionLink
-                            className={classes.maxLink}
-                            onClick={() => {
-                              fillWalletAddress();
+                                  "ETH",
+                                ),
+                              );
                             }}
-                          >
-                            Wallet
-                          </ActionLink>
+                          />
                         </Grid>
+                        <ActionLink
+                          className={classes.maxLink}
+                          onClick={() => {
+                            fillWalletAddress();
+                          }}
+                        >
+                          Wallet
+                        </ActionLink>
                       </Grid>
                     </Grid>
-                  </React.Fragment>
-                )}
+                  </Grid>
+                </React.Fragment>
+              )}
 
-                {selectedDirection === 1 && (
-                  <React.Fragment>
-                    <Grid alignItems="center" container>
-                      <Grid item xs={12}>
-                        <Grid container direction="row" alignItems="center">
-                          <Grid item className={classes.amountContainer}>
-                            <CurrencyInput
-                              inputRef={wbtcAmountRef}
-                              onAmountChange={(value) => {
-                                let amount = value < 0 ? "" : value;
-                                store.set("convert.amount", amount);
-                                gatherFeeData().catch(console.error);
-                              }}
-                              onCurrencyChange={() => {}}
-                              items={["WBTC"]}
-                            />
-                          </Grid>
-                          <ActionLink
-                            className={classes.maxLink}
-                            onClick={() => {
-                              const bal = store.get("wbtcBalance");
-                              wbtcAmountRef.current.value = bal;
-                              store.set("convert.amount", bal);
+              {selectedDirection === 1 && (
+                <React.Fragment>
+                  <Grid alignItems="center" container>
+                    <Grid item xs={12}>
+                      <Grid container direction="row" alignItems="center">
+                        <Grid item className={classes.amountContainer}>
+                          <CurrencyInput
+                            inputRef={wbtcAmountRef}
+                            onAmountChange={(value) => {
+                              let amount = value < 0 ? "" : value;
+                              store.set("convert.amount", amount);
                               gatherFeeData().catch(console.error);
                             }}
-                          >
-                            Max
-                          </ActionLink>
+                            onCurrencyChange={() => {}}
+                            items={["WBTC"]}
+                          />
                         </Grid>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          id="standard-read-only-input"
-                          placeholder="Bitcoin Destination Address"
-                          className={classes.depositAddress}
-                          margin="dense"
-                          variant="outlined"
-                          onChange={(event) => {
-                            store.set(
-                              "convert.destination",
-                              event.target.value,
-                            );
-                            store.set(
-                              "convert.destinationValid",
-                              AddressValidator.validate(
-                                event.target.value,
-                                selectedDirection ? "BTC" : "ETH",
-                                selectedNetwork === "testnet"
-                                  ? "testnet"
-                                  : "prod",
-                              ),
-                            );
+                        <ActionLink
+                          className={classes.maxLink}
+                          onClick={() => {
+                            const bal = store.get("wbtcBalance");
+                            wbtcAmountRef.current.value = bal;
+                            store.set("convert.amount", bal);
+                            gatherFeeData().catch(console.error);
                           }}
-                        />
+                        >
+                          Max
+                        </ActionLink>
                       </Grid>
                     </Grid>
-                  </React.Fragment>
-                )}
+                    <Grid item xs={12}>
+                      <TextField
+                        id="standard-read-only-input"
+                        placeholder="Bitcoin Destination Address"
+                        className={classes.depositAddress}
+                        margin="dense"
+                        variant="outlined"
+                        onChange={(event) => {
+                          store.set("convert.destination", event.target.value);
+                          store.set(
+                            "convert.destinationValid",
+                            AddressValidator.validate(
+                              event.target.value,
+                              selectedDirection ? "BTC" : "ETH",
+                              selectedNetwork === "testnet"
+                                ? "testnet"
+                                : "prod",
+                            ),
+                          );
+                        }}
+                      />
+                    </Grid>
+                  </Grid>
+                </React.Fragment>
+              )}
 
-                <Grid item xs={12}>
-                  <Grid container direction="column" className={classes.fees}>
-                    <Grid item xs={12} className={classes.lineItem}>
-                      <Grid container justify="space-between">
-                        <span>Exchange Rate</span>
-                        <span className={classes.amt}>
-                          {exchangeRate && amount
-                            ? `1 ${sourceAsset} = ${Number(
-                                exchangeRate,
-                              ).toFixed(4)} ${destAsset}`
-                            : "-"}{" "}
-                        </span>
-                      </Grid>
-                      <Grid container justify="space-between">
-                        <span>RenVM Fee</span>
-                        <span className={classes.amt}>
-                          {renVMFee && amount
-                            ? `${Number(renVMFee).toFixed(8)} BTC`
-                            : "-"}
-                        </span>
-                      </Grid>
-                      <Grid container justify="space-between">
-                        <span>
-                          {
-                            NAME_MAP[
-                              selectedAsset as
-                                | "btc"
-                                | "eth"
-                                | "zec"
-                                | "dai"
-                                | "usdc"
-                                | "wbtc"
-                            ]
-                          }{" "}
-                          Fee
-                        </span>
-                        <span className={classes.amt}>
-                          {fee && amount
-                            ? `${Number(fee).toFixed(8)} BTC`
-                            : "-"}
-                        </span>
-                      </Grid>
-                      <Grid
-                        container
-                        justify="space-between"
-                        className={classes.total}
-                      >
-                        <span>You Will Receive</span>
-                        <span className={classes.amt}>
-                          {total && amount
-                            ? `~${Number(total).toFixed(8)} ${destAsset}`
-                            : "-"}
-                        </span>
-                      </Grid>
+              <Grid item xs={12}>
+                <Grid container direction="column" className={classes.fees}>
+                  <Grid item xs={12} className={classes.lineItem}>
+                    <Grid container justify="space-between">
+                      <span>Exchange Rate</span>
+                      <span className={classes.amt}>
+                        {exchangeRate && amount
+                          ? `1 ${sourceAsset} = ${Number(exchangeRate).toFixed(
+                              4,
+                            )} ${destAsset}`
+                          : "-"}{" "}
+                      </span>
+                    </Grid>
+                    <Grid container justify="space-between">
+                      <span>RenVM Fee</span>
+                      <span className={classes.amt}>
+                        {renVMFee && amount
+                          ? `${Number(renVMFee).toFixed(8)} BTC`
+                          : "-"}
+                      </span>
+                    </Grid>
+                    <Grid container justify="space-between">
+                      <span>
+                        {
+                          NAME_MAP[
+                            selectedAsset as
+                              | "btc"
+                              | "eth"
+                              | "zec"
+                              | "dai"
+                              | "usdc"
+                              | "wbtc"
+                          ]
+                        }{" "}
+                        Fee
+                      </span>
+                      <span className={classes.amt}>
+                        {fee && amount ? `${Number(fee).toFixed(8)} BTC` : "-"}
+                      </span>
+                    </Grid>
+                    <Grid
+                      container
+                      justify="space-between"
+                      className={classes.total}
+                    >
+                      <span>You Will Receive</span>
+                      <span className={classes.amt}>
+                        {total && amount
+                          ? `~${Number(total).toFixed(8)} ${destAsset}`
+                          : "-"}
+                      </span>
                     </Grid>
                   </Grid>
                 </Grid>
+              </Grid>
 
-                <Grid item xs={12}>
-                  <Grid
-                    container
-                    direction="column"
-                    className={classes.slippage}
-                  >
-                    <Grid item xs={12} className={classes.lineItem}>
-                      <Grid container justify="space-between">
-                        <span>Max. slippage</span>
-                        <div className={classes.slippageRate}>
-                          {slippageOptions.map((r) => {
-                            const label = `${r * 100}%`;
-                            if (maxSlippage === r) {
-                              return <span key={r}>{label}</span>;
+              <Grid item xs={12}>
+                <Grid container direction="column" className={classes.slippage}>
+                  <Grid item xs={12} className={classes.lineItem}>
+                    <Grid container justify="space-between">
+                      <span>Max. slippage</span>
+                      <div className={classes.slippageRate}>
+                        {slippageOptions.map((r) => {
+                          const label = `${r * 100}%`;
+                          if (maxSlippage === r) {
+                            return <span key={r}>{label}</span>;
+                          } else {
+                            return (
+                              <ActionLink
+                                key={r}
+                                onClick={() => {
+                                  store.set("convert.maxSlippage", r);
+                                }}
+                              >
+                                {label}
+                              </ActionLink>
+                            );
+                          }
+                        })}
+                        <NumberFormat
+                          className={classes.customSlippage}
+                          decimalScale={2}
+                          suffix={"%"}
+                          allowLeadingZeros={true}
+                          allowNegative={false}
+                          onValueChange={(values) => {
+                            const float = values.floatValue;
+                            if (!float) {
+                              store.set(
+                                "convert.maxSlippage",
+                                slippageOptions[0],
+                              );
+                            } else if (float > 100) {
+                              store.set("convert.maxSlippage", 1);
                             } else {
-                              return (
-                                <ActionLink
-                                  key={r}
-                                  onClick={() => {
-                                    store.set("convert.maxSlippage", r);
-                                  }}
-                                >
-                                  {label}
-                                </ActionLink>
+                              store.set(
+                                "convert.maxSlippage",
+                                Number((float / 100).toFixed(4)),
                               );
                             }
-                          })}
-                          <NumberFormat
-                            className={classes.customSlippage}
-                            decimalScale={2}
-                            suffix={"%"}
-                            allowLeadingZeros={true}
-                            allowNegative={false}
-                            onValueChange={(values) => {
-                              const float = values.floatValue;
-                              if (!float) {
-                                store.set(
-                                  "convert.maxSlippage",
-                                  slippageOptions[0],
-                                );
-                              } else if (float > 100) {
-                                store.set("convert.maxSlippage", 1);
-                              } else {
-                                store.set(
-                                  "convert.maxSlippage",
-                                  Number((float / 100).toFixed(4)),
-                                );
-                              }
-                            }}
-                          />
-                        </div>
-                      </Grid>
+                          }}
+                        />
+                      </div>
                     </Grid>
                   </Grid>
                 </Grid>
               </Grid>
             </Grid>
-
-            {selectedDirection === 0 && (
-              <Grid
-                container
-                justify="center"
-                className={classes.actionButtonContainer}
-              >
-                <Grid item xs={12}>
-                  <Button
-                    disabled={!canConvertTo}
-                    variant={canConvertTo ? "outlined" : "contained"}
-                    size="small"
-                    className={classNames(classes.margin, classes.actionButton)}
-                    onClick={newDeposit}
-                  >
-                    Get WBTC
-                  </Button>
-                </Grid>
-              </Grid>
-            )}
-
-            {selectedDirection === 1 && (
-              <Grid
-                container
-                justify="center"
-                className={classes.actionButtonContainer}
-              >
-                <Grid item xs={12}>
-                  {hasAllowance ? (
-                    <Button
-                      disabled={!canConvertFrom}
-                      size="small"
-                      variant={canConvertFrom ? "outlined" : "contained"}
-                      className={classNames(
-                        classes.margin,
-                        classes.actionButton,
-                      )}
-                      onClick={newWithdraw}
-                    >
-                      Get BTC
-                    </Button>
-                  ) : (
-                    <Button
-                      disabled={allowanceRequesting}
-                      size="small"
-                      variant={!allowanceRequesting ? "outlined" : "contained"}
-                      className={classNames(
-                        classes.margin,
-                        classes.actionButton,
-                      )}
-                      onClick={setWbtcAllowance}
-                    >
-                      Allow WBTC
-                    </Button>
-                  )}
-                </Grid>
-              </Grid>
-            )}
           </Grid>
-        </div>
-      )}
+
+          {selectedDirection === 0 && (
+            <Grid
+              container
+              justify="center"
+              className={classes.actionButtonContainer}
+            >
+              <Grid item xs={12}>
+                <Button
+                  disabled={!canConvertTo}
+                  variant={canConvertTo ? "outlined" : "contained"}
+                  size="small"
+                  className={classNames(classes.margin, classes.actionButton)}
+                  onClick={newDeposit}
+                >
+                  Get WBTC
+                </Button>
+              </Grid>
+            </Grid>
+          )}
+
+          {selectedDirection === 1 && (
+            <Grid
+              container
+              justify="center"
+              className={classes.actionButtonContainer}
+            >
+              <Grid item xs={12}>
+                {hasAllowance ? (
+                  <Button
+                    disabled={!canConvertFrom}
+                    size="small"
+                    variant={canConvertFrom ? "outlined" : "contained"}
+                    className={classNames(classes.margin, classes.actionButton)}
+                    onClick={newWithdraw}
+                  >
+                    Get BTC
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={allowanceRequesting}
+                    size="small"
+                    variant={!allowanceRequesting ? "outlined" : "contained"}
+                    className={classNames(classes.margin, classes.actionButton)}
+                    onClick={setWbtcAllowance}
+                  >
+                    Allow WBTC
+                  </Button>
+                )}
+              </Grid>
+            </Grid>
+          )}
+        </Grid>
+      </div>
     </div>
   );
 };

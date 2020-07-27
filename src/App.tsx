@@ -53,8 +53,6 @@ const styles: Styles<typeof theme, {}> = () => ({
     height: 32,
     width: "auto",
     marginRight: theme.spacing(2),
-    // border: '1px solid ' + theme.palette.divider,
-    // borderRadius: 4
   },
   transfersContainer: {
     padding: theme.spacing(3),
@@ -63,7 +61,6 @@ const styles: Styles<typeof theme, {}> = () => ({
     "& div": {
       border: "0.5px solid " + theme.palette.divider,
       background: "#fff",
-      // height: '100%',
       paddingTop: theme.spacing(1.5),
       paddingBottom: theme.spacing(1),
       paddingLeft: theme.spacing(2),
@@ -78,7 +75,6 @@ const styles: Styles<typeof theme, {}> = () => ({
         paddingRight: 0,
       },
     },
-    // '& '
   },
 });
 
@@ -87,7 +83,6 @@ interface Props extends WithStyles<typeof styles>, StoreProps {}
 const App: React.FC<Props> = ({ store, classes }) => {
   React.useEffect(() => {
     const params = queryString.parse(window.location.search);
-    store.set("queryParams", params);
 
     // default to mainnet
     setNetwork(params.network === "testnet" ? "testnet" : "mainnet").catch(

@@ -105,8 +105,6 @@ const ViewGatewayContainer: React.FC<Props> = ({ classes, store }) => {
 
   if (!gatewayModalTx) return null;
 
-  // console.log(gatewayModalTx)
-
   return (
     <Modal
       aria-labelledby="transition-modal-title"

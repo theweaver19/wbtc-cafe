@@ -9,11 +9,6 @@ body {
   color: #333;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
-
 a,
 a:visited,
 a:hover,
@@ -23,12 +18,6 @@ a:active {
 
 div {
   outline: none;
-}
-
-/* charts */
-tspan,
-.recharts-legend-item-text {
-  font-size: 12px;
 }
 
 .Marquee {

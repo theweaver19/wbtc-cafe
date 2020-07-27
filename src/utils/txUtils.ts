@@ -31,9 +31,6 @@ const addTx = (tx: Transaction) => {
   // use localStorage
   localStorage.setItem(storeString, JSON.stringify(txs));
 
-  // for debugging
-  // window.txs = txs;
-
   if (fsEnabled) {
     try {
       db.collection("transactions")
@@ -62,7 +59,6 @@ export const updateTx = (newTx: Transaction): Transaction => {
   const storeString = "convert.transactions";
   const txs = store.get(storeString).map((t) => {
     if (t.id === newTx.id) {
-      // const newTx = Object.assign(t, props)
       return newTx;
     }
     return t;
@@ -71,9 +67,6 @@ export const updateTx = (newTx: Transaction): Transaction => {
 
   // use localStorage
   localStorage.setItem(storeString, JSON.stringify(txs));
-
-  // for debugging
-  // window.txs = txs;
 
   if (fsEnabled) {
     try {
@@ -98,14 +91,10 @@ export const removeTx = (tx: Transaction) => {
   const fsEnabled = store.get("fsEnabled");
   const storeString = "convert.transactions";
   const txs = store.get(storeString).filter((t) => t.id !== tx.id);
-  // console.log(txs)
   store.set(storeString, txs);
 
-  // use localStorage
+  // Use localStorage
   localStorage.setItem(storeString, JSON.stringify(txs));
-
-  // for debugging
-  // window.txs = txs;
 
   if (fsEnabled) {
     try {
@@ -147,8 +136,6 @@ export const updateRenVMFees = async () => {
       }),
     });
     const data: UnmarshalledFees = (await fees.json()).result;
-    // console.log(data)
-    // console.log('renvm fees', await fees.json())
     store.set("fees", data);
   } catch (e) {
     console.error(e);
@@ -162,14 +149,9 @@ const getFinalDepositExchangeRate = async (tx: Transaction) => {
   const fees = store.get("fees");
   const { renResponse } = tx;
 
-  // const utxoAmount = renResponse.autogen.amount / (10 ** 8)
-
-  // console.log('tx', tx)
-
   const utxoAmountInSats = Number(renResponse.autogen.amount);
   const dynamicFeeRate = Number(fees!["btc"].ethereum["mint"] / 10000);
   const finalAmount = Math.round(utxoAmountInSats * (1 - dynamicFeeRate));
-  // console.log(finalAmount, dynamicFeeRate)
 
   const curve = new dataWeb3!.eth.Contract(
     curveABI as AbiItem[],
@@ -236,8 +218,6 @@ export const gatherFeeData = async () => {
         RenJS.utils.value(amountAfterMint, "btc").sats().toNumber(),
       );
 
-      // console.log(amountAfterMintInSats, renVMFee, fixedFee)
-
       if (amountAfterMintInSats) {
         const swapResult =
           (await curve.methods.get_dy(0, 1, amountAfterMintInSats).call()) /
@@ -259,33 +239,6 @@ export const gatherFeeData = async () => {
   }
 };
 
-// export const getTaggedTxs = async () => {
-//   const store = getStore();
-//   const localWeb3Address = store.get("localWeb3Address");
-//   try {
-//     const res = await fetch("https://lightnode-testnet.herokuapp.com", {
-//       method: "POST", // or 'PUT'
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({
-//         id: 67,
-//         jsonrpc: "2.0",
-//         method: "ren_queryTxs",
-//         params: {
-//           tags: [Base64.stringify(sha256(localWeb3Address))],
-//         },
-//       }),
-//     });
-//     // const data = await res.json();
-//     // console.log(data)
-//     // console.log('renvm fees', await fees.json())
-//     // store.set('fees', data)
-//   } catch (e) {
-//     console.error(e);
-//   }
-// };
-
 // BTC to WBTC
 const monitorMintTx = async (tx: Transaction) => {
   const store = getStore();
@@ -294,7 +247,6 @@ const monitorMintTx = async (tx: Transaction) => {
   const interval = setInterval(async () => {
     // Get latest tx state every iteration
     const latestTx = getTx(tx.id);
-    // console.log('latestTx', latestTx)
 
     // Get transaction details
     const txDetails = await web3!.eth.getTransaction(latestTx.destTxHash!);
@@ -376,9 +328,7 @@ export const completeConvertToEthereum = async (
   // if swap will revert to renBTC, let the user know before proceeding
   const exchangeRate = await getFinalDepositExchangeRate(tx);
   updateTx(Object.assign(tx, { exchangeRateOnSubmit: exchangeRate }));
-  // console.log(exchangeRate, minExchangeRate)
   if (!approveSwappedAsset && exchangeRate! < minExchangeRate!) {
-    // console.log('showing modal')
     store.set("swapRevertModalTx", tx);
     store.set("swapRevertModalExchangeRate", exchangeRate!.toFixed(8));
     store.set("showSwapRevertModal", true);
@@ -414,7 +364,6 @@ export const completeConvertToEthereum = async (
           from: localWeb3Address,
         })
         .on("transactionHash", (hash: string) => {
-          // console.log(hash)
           const newTx = updateTx(
             Object.assign(tx, {
               destTxHash: hash,
@@ -443,7 +392,6 @@ const initMint = (tx: Transaction) => {
     amount,
     params,
     destAddress,
-    // minSwapProceeds,
     minExchangeRate,
     maxSlippage,
   } = tx;
@@ -497,10 +445,8 @@ const initMint = (tx: Transaction) => {
     contractFn,
     contractParams,
     nonce: params && params.nonce ? params.nonce : RenJS.utils.randomNonce(),
-    // tags: [Base64.stringify(sha256(localWeb3Address))]
   };
 
-  // console.log('init mint', data, tx)
   const mint = sdk!.lockAndMint(data);
 
   return mint;
@@ -541,8 +487,6 @@ export const initConvertToEthereum = async function (tx: Transaction) {
     // @ts-ignore: 'this' implicitly has type 'any' (TODO)
     const mint = await initMint.bind(this)(tx);
 
-    // console.log('initConvertToEthereum mint', mint, tx)
-
     if (!params) {
       addTx(
         Object.assign(tx, {
@@ -567,7 +511,6 @@ export const initConvertToEthereum = async function (tx: Transaction) {
         vOut: sourceTxVOut as number,
       });
     } else {
-      // console.log('waiting for deposit')
       deposit = await mint
         .wait(
           targetConfs,
@@ -581,7 +524,6 @@ export const initConvertToEthereum = async function (tx: Transaction) {
               ((null as unknown) as undefined),
         )
         .on("deposit", (dep) => {
-          // console.log('on deposit', dep)
           if (dep.utxo) {
             if (awaiting === "btc-init") {
               store.set("showGatewayModal", false);
@@ -626,7 +568,7 @@ export const initConvertToEthereum = async function (tx: Transaction) {
       // @ts-ignore: 'this' implicitly has type 'any' (TODO)
       completeConvertToEthereum.bind(this)(tx).catch(console.error);
     } catch (e) {
-      console.log("renvm submit error", e);
+      console.error("renvm submit error", e);
     }
   }
 };
@@ -656,7 +598,6 @@ const monitorBurnTx = async (tx: Transaction) => {
   const interval = setInterval(async () => {
     // Get latest tx state every iteration
     const latestTx = getTx(tx.id);
-    console.log("latestTx", latestTx, burn);
 
     // Get transaction details
     const txDetails = await web3!.eth.getTransaction(latestTx.sourceTxHash!);
@@ -683,7 +624,6 @@ const monitorBurnTx = async (tx: Transaction) => {
 
       try {
         const renVMTx = await burn.queryTx();
-        // console.log('renVMTx', renVMTx)
         if (renVMTx.txStatus === "done") {
           updateTx(
             Object.assign(latestTx, {
@@ -730,7 +670,6 @@ export const initConvertFromEthereum = async function (tx: Transaction) {
       )
       .send({ from })
       .on("transactionHash", (hash: string) => {
-        // console.log(hash)
         updateTx(
           Object.assign(tx, {
             awaiting: "eth-settle",
@@ -741,7 +680,7 @@ export const initConvertFromEthereum = async function (tx: Transaction) {
         monitorBurnTx(getTx(tx.id)).catch(console.error);
       });
   } catch (e) {
-    console.log("eth burn error", e);
+    console.error("eth burn error", e);
     updateTx(Object.assign(tx, { error: true }));
     return;
   }

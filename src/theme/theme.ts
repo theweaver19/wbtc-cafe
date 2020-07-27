@@ -4,7 +4,6 @@ import { createMuiTheme } from "@material-ui/core/styles";
 export default createMuiTheme({
   typography: {
     fontFamily: [
-      // 'Roboto Mono',
       "-apple-system",
       "BlinkMacSystemFont",
       `"Segoe UI"`,
@@ -25,7 +24,6 @@ export default createMuiTheme({
       dark: "#000",
       contrastText: "#fff",
     },
-    // primary: blueGrey,
     secondary: grey,
   },
   overrides: {
@@ -33,9 +31,7 @@ export default createMuiTheme({
       root: {
         textTransform: "none",
         "&.MuiButton-outlined": {
-          // border: '1px solid #eee',
           "&.Mui-disabled": {
-            // backgroundColor: 'rgba(255, 255, 255, 0.1) !important',
             border: "1px solid transparent",
           },
         },
@@ -45,12 +41,6 @@ export default createMuiTheme({
         },
       },
     },
-    // PrixvateNotchedOutline: {
-    //   root: {},
-    // },
-    // '.MuiOutlinedInput-root:hover':{
-    //     borderColor: '#EBEBEB !important'
-    // },
     MuiOutlinedInput: {
       root: {
         fontSize: 14,
@@ -62,7 +52,6 @@ export default createMuiTheme({
         },
       },
       notchedOutline: {
-        // borderColor: 'rgba(255, 255, 255, 0.23) !important',
         borderWidth: "1px !important",
       },
       inputMarginDense: {
@@ -85,27 +74,16 @@ export default createMuiTheme({
         borderRadius: 0,
       },
       grouped: {
-        "&:not(:first-child)": {
-          // borderLeft: '1px solid rgba(255, 255, 255, 0.23)'
-        },
+        "&:not(:first-child)": {},
       },
     },
-    MuiTableCell: {
-      root: {
-        // borderBottom: '0.5px solid rgba(255, 255, 255, 0.12)',
-      },
-    },
-    // .MuiToggleButtonGroup-grouped:not(:first-child)
     MuiToggleButton: {
       root: {
-        // border: '1px solid rgba(255, 255, 255, 0.23)',
         backgroundColor: "transparent !important",
         "& img": {
           opacity: 0.75,
         },
-        // backgroundColor: '#fff',
         "&.Mui-selected": {
-          // back
           backgroundColor: "rgba(255, 255, 255, 0.1) !important",
           color: "#000",
           fontWeight: "500",

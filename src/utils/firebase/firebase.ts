@@ -11,6 +11,5 @@ firebase.initializeApp({
 });
 
 require("firebase/firestore");
-// firebase.firestore().enablePersistence()
 
 export const initFirebase = () => firebase.firestore();

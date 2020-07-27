@@ -18,13 +18,10 @@ export const initialState = {
   dataWeb3: null as Web3 | null,
   localWeb3: null as Web3 | null,
   localWeb3Address: "",
-  localWeb3Network: "",
   walletConnectError: false,
   wbtcBalance: 0 as number | string,
-  ethBalance: 0 as number | string,
   sdk: null as RenJS | null,
   fees: null as UnmarshalledFees | null,
-  queryParams: {},
   db: initFirebase(),
   fsUser: null as {
     uid: string;
@@ -32,17 +29,13 @@ export const initialState = {
   fsSignature: null as string | null,
   fsEnabled: false,
   loadingTransactions: false,
-  disclosureAccepted: false,
 
   // navigation
-  selectedTab: 1,
   selectedAsset: "btc",
 
   // modals
-  showNetworkMenu: false,
   showDepositModal: false,
   depositModalTx: null as Transaction | null,
-  depositDisclosureChecked: false,
   showCancelModal: false,
   cancelModalTx: null as Transaction | null,
   showGatewayModal: false,
@@ -58,7 +51,6 @@ export const initialState = {
   "convert.adapterWbtcAllowanceRequesting": false,
   "convert.transactions": [] as Transaction[],
   "convert.pendingConvertToEthereum": [] as string[],
-  "convert.selectedFormat": "wbtc",
   "convert.selectedDirection": 0,
   "convert.amount": "" as string | number,
   "convert.destination": "",

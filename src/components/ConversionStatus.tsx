@@ -15,7 +15,6 @@ interface Props extends WithStyles<typeof styles> {
 const ConversionStatus = (props: Props) => {
   const { tx } = props;
 
-  // const direction = tx.destNetwork === "ethereum" ? "in" : "out";
   const targetBtcConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
   const targetEthConfs = tx.sourceNetworkVersion === "testnet" ? 13 : 30;
 
@@ -62,7 +61,6 @@ const ConversionStatus = (props: Props) => {
                         : tx.sourceTxConfs
                     }/${targetEthConfs} complete)`
                 : `Submit to Ethereum`}
-              {/*tx.error ? (tx.sourceTxHash ? `Transaction Failed` : `Submit to Ethereum`) : `Transaction confirming (${tx.sourceTxConfs}/${targetEthConfs} complete)`*/}
             </span>
           ) : null}
           {tx.awaiting === "ren-settle" ? (

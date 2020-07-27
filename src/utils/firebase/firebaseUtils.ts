@@ -39,7 +39,6 @@ const signInOrRegister = async (
   id: string,
   signature: string,
 ): Promise<firebase.User | null> => {
-  console.log(id, signature);
   try {
     const { user } = await firebase
       .auth()

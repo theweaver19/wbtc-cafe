@@ -13,7 +13,7 @@ import Typography from "@material-ui/core/Typography";
 import { withStyles } from "@material-ui/styles";
 import { withStore } from "@spyna/react-store";
 import classNames from "classnames";
-import React from "react";
+import React, { useState } from "react";
 
 import { StoreProps } from "../store/store";
 import theme from "../theme/theme";
@@ -123,13 +123,17 @@ const styles: Styles<typeof theme, {}> = () => ({
 interface Props extends WithStyles<typeof styles>, StoreProps {}
 
 const DepositModalContainer: React.FC<Props> = ({ store, classes }) => {
+  const [depositDisclosureChecked, setDepositDisclosureChecked] = useState(
+    false,
+  );
+
   const createDeposit = () => {
     const depositModalTx = store.get("depositModalTx");
 
     initConvertToEthereum(depositModalTx!).catch(console.error);
 
     store.set("showDepositModal", false);
-    store.set("depositDisclosureChecked", false);
+    setDepositDisclosureChecked(false);
     store.set("depositModalTx", null);
 
     store.set("showGatewayModal", true);
@@ -137,13 +141,11 @@ const DepositModalContainer: React.FC<Props> = ({ store, classes }) => {
   };
 
   const check = () => {
-    const depositDisclosureChecked = store.get("depositDisclosureChecked");
-    store.set("depositDisclosureChecked", !depositDisclosureChecked);
+    setDepositDisclosureChecked(!depositDisclosureChecked);
   };
 
   const showDepositModal = store.get("showDepositModal");
   const depositModalTx = store.get("depositModalTx");
-  const depositDisclosureChecked = store.get("depositDisclosureChecked");
   const selectedAsset = store.get("selectedAsset");
 
   if (!depositModalTx) return null;
@@ -164,7 +166,7 @@ const DepositModalContainer: React.FC<Props> = ({ store, classes }) => {
       onClose={() => {
         store.set("showDepositModal", false);
         store.set("depositModalTx", null);
-        store.set("depositDisclosureChecked", false);
+        setDepositDisclosureChecked(false);
       }}
       closeAfterTransition
       BackdropComponent={Backdrop}
