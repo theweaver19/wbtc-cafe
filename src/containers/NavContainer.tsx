@@ -7,8 +7,8 @@ import React from "react";
 import { makeStyles } from "@material-ui/core";
 
 import CafeLogo from "../assets/cafe-logo.svg";
-import { Web3Store } from "../hooks/useWeb3";
 import { Store } from "../store/store";
+import { Web3Store } from "../store/web3Store";
 
 const useStyles = makeStyles((theme) => ({
   navContainer: {

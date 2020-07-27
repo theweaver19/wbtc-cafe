@@ -10,9 +10,9 @@ import { makeStyles } from "@material-ui/core";
 
 import { ActionLink } from "../components/ActionLink";
 import { CurrencyInput } from "../components/CurrencyInput";
-import { Web3Store } from "../hooks/useWeb3";
 import { Store } from "../store/store";
-import { TransactionStore } from "../utils/txUtils";
+import { TransactionStore } from "../store/transactionStore";
+import { Web3Store } from "../store/web3Store";
 import { MINI_ICON_MAP, NAME_MAP } from "../utils/walletUtils";
 
 const useStyles = makeStyles((theme) => ({

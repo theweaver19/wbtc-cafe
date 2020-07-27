@@ -3,12 +3,12 @@ import ReactDOM from "react-dom";
 import { ThemeProvider } from "@material-ui/core";
 
 import { App } from "./App";
-import { Web3Store } from "./hooks/useWeb3";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
 import { Store } from "./store/store";
+import { TransactionStore } from "./store/transactionStore";
+import { Web3Store } from "./store/web3Store";
 import { theme } from "./theme/theme";
-import { TransactionStore } from "./utils/txUtils";
 
 ReactDOM.render(
   <Store.Provider>

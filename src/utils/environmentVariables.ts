@@ -4,3 +4,5 @@ export const CURVE_MAIN = "0x93054188d876f558f4a66B2EF1d97d16eDf0895B";
 export const CURVE_TEST = "0x62869F49ea8b6c3EEdEcA8b8b1c6731090aD7A3D";
 export const WBTC_TEST = "0x8cc301a58c03ff01b83116fca618560414ec2a97";
 export const WBTC_MAIN = "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599";
+
+export const FB_KEY = process.env.REACT_APP_FB_KEY;

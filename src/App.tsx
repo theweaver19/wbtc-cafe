@@ -17,15 +17,15 @@ import { SwapRevertModalContainer } from "./containers/SwapRevertModalContainer"
 import { TransactionsTableContainer } from "./containers/TransactionsTableContainer";
 import { TransferContainer } from "./containers/TransferContainer";
 import { ViewGatewayContainer } from "./containers/ViewGatewayContainer";
-import { Web3Store } from "./hooks/useWeb3";
 import { Store } from "./store/store";
-import { TransactionStore } from "./utils/txUtils";
+import { TransactionStore } from "./store/transactionStore";
+import { Web3Store } from "./store/web3Store";
 import {
   ADAPTER_MAIN,
   ADAPTER_TEST,
   CURVE_MAIN,
   CURVE_TEST,
-} from "./utils/web3Utils";
+} from "./utils/environmentVariables";
 
 require("dotenv").config();
 

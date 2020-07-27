@@ -9,7 +9,7 @@ import classNames from "classnames";
 import React from "react";
 
 import { Store } from "../store/store";
-import { TransactionStore } from "../utils/txUtils";
+import { TransactionStore } from "../store/transactionStore";
 
 const useStyles = makeStyles((theme) => ({
   modal: {

@@ -5,17 +5,17 @@ import { AbiItem } from "web3-utils";
 import Web3Modal from "web3modal";
 import { createContainer } from "unstated-next";
 
-import { Store } from "../store/store";
 import { Transaction } from "../types/transaction";
 import erc20ABI from "../utils/ABIs/erc20ABI.json";
-import { getUser } from "../utils/firebase/firebaseUtils";
-import { TransactionStore } from "../utils/txUtils";
 import {
   ADAPTER_MAIN,
   ADAPTER_TEST,
   WBTC_MAIN,
   WBTC_TEST,
-} from "../utils/web3Utils";
+} from "../utils/environmentVariables";
+import { getUser } from "../utils/firebase/firebaseUtils";
+import { Store } from "./store";
+import { TransactionStore } from "./transactionStore";
 
 function useWeb3() {
   const {

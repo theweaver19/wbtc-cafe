@@ -11,8 +11,8 @@ import React from "react";
 import { ActionLink } from "../components/ActionLink";
 import { ConversionActions } from "../components/ConversionActions";
 import { ConversionStatus } from "../components/ConversionStatus";
-import { Web3Store } from "../hooks/useWeb3";
 import { Store } from "../store/store";
+import { Web3Store } from "../store/web3Store";
 
 const useStyles = makeStyles((theme) => ({
   container: {

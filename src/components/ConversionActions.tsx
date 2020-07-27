@@ -4,8 +4,8 @@ import { makeStyles } from "@material-ui/core";
 import React from "react";
 
 import { Store } from "../store/store";
+import { TransactionStore } from "../store/transactionStore";
 import { Transaction } from "../types/transaction";
-import { TransactionStore } from "../utils/txUtils";
 import { ExternalLink } from "./ExternalLink";
 
 const useStyles = makeStyles((theme) => ({

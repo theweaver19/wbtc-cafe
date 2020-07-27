@@ -13,7 +13,7 @@ import classNames from "classnames";
 import React, { useState } from "react";
 
 import { Store } from "../store/store";
-import { TransactionStore } from "../utils/txUtils";
+import { TransactionStore } from "../store/transactionStore";
 import { NAME_MAP } from "../utils/walletUtils";
 
 const useStyles = makeStyles((theme) => ({

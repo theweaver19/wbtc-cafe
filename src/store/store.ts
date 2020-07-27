@@ -5,8 +5,8 @@ import Web3 from "web3";
 import { createContainer } from "unstated-next";
 
 import { Transaction } from "../types/transaction";
+import { ADAPTER_TEST } from "../utils/environmentVariables";
 import { initFirebase } from "../utils/firebase/firebase";
-import { ADAPTER_TEST } from "../utils/web3Utils";
 
 require("dotenv").config();
 

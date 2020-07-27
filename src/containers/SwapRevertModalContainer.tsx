@@ -9,7 +9,7 @@ import React from "react";
 import { makeStyles } from "@material-ui/core";
 
 import { Store } from "../store/store";
-import { TransactionStore } from "../utils/txUtils";
+import { TransactionStore } from "../store/transactionStore";
 
 const useStyles = makeStyles((theme) => ({
   modal: {

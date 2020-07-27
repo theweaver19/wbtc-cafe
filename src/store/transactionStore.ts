@@ -6,11 +6,11 @@ import { LockAndMint } from "@renproject/ren/build/main/lockAndMint";
 import { BurnAndRelease } from "@renproject/ren/build/main/burnAndRelease";
 import { createContainer } from "unstated-next";
 
-import { Store } from "../store/store";
 import { Transaction } from "../types/transaction";
-import adapterABI from "./ABIs/adapterCurveABI.json";
-import curveABI from "./ABIs/curveABI.json";
-import { CURVE_MAIN, CURVE_TEST } from "./web3Utils";
+import adapterABI from "../utils/ABIs/adapterCurveABI.json";
+import curveABI from "../utils/ABIs/curveABI.json";
+import { CURVE_MAIN, CURVE_TEST } from "../utils/environmentVariables";
+import { Store } from "./store";
 
 function useTransactionStore() {
   const {
