@@ -17,7 +17,8 @@ firebase.initializeApp({
 
 require("firebase/firestore");
 
-export class FireBase implements Database {
+export class FireBase<Transaction extends { id: string }>
+  implements Database<Transaction> {
   private db: firebase.firestore.Firestore;
 
   constructor() {

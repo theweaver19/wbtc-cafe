@@ -11,8 +11,8 @@ import { ADAPTER_TEST } from "../utils/environmentVariables";
 
 require("dotenv").config();
 
-const useStore = (database: Database | undefined) => {
-  const [db, setDb] = useState(database || newDefaultDatabase());
+const useStore = (database: Database<Transaction> | undefined) => {
+  const [db, setDb] = useState(database || newDefaultDatabase<Transaction>());
 
   // networking
   const [wbtcAddress, setWbtcAddress] = useState("");

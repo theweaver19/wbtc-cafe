@@ -1,3 +1,4 @@
 import { FireBase } from "./firebase/firebase";
 
-export const newDefaultDatabase = () => new FireBase();
+export const newDefaultDatabase = <Transaction extends { id: string }>() =>
+  new FireBase<Transaction>();
