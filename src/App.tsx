@@ -33,7 +33,7 @@ import {
 
 require("dotenv").config();
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   container: {
     maxWidth: 450,
   },
@@ -184,7 +184,7 @@ class AppWrapper extends React.Component<WrapperProps> {
 
 const AppWrapperComponent = withStore(AppWrapper);
 
-interface Props extends WithStyles<typeof styles> {}
+type Props = WithStyles<typeof styles>
 
 const App: React.FC<Props> = ({ classes }) => (
   <AppWrapperComponent classes={classes} />

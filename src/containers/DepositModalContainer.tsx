@@ -20,7 +20,7 @@ import theme from "../theme/theme";
 import { initConvertToEthereum } from "../utils/txUtils";
 import { NAME_MAP } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",

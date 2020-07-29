@@ -6,7 +6,7 @@ import React from "react";
 
 import { Transaction } from "../types/transaction";
 
-const styles: Styles<{}, {}> = () => ({});
+const styles: Styles<any, any> = () => ({});
 
 interface Props extends WithStyles<typeof styles> {
   tx: Transaction;

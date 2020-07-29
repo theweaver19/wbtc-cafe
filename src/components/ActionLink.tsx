@@ -6,7 +6,7 @@ import React from "react";
 
 import { AProps } from "../types/jsx";
 
-const styles: Styles<{}, {}> = () => ({
+const styles: Styles<any, any> = () => ({
   link: {
     fontSize: 12,
     textDecoration: "underline",

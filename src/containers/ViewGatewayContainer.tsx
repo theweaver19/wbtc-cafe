@@ -15,7 +15,7 @@ import ActionLink from "../components/ActionLink";
 import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",

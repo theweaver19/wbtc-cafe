@@ -15,7 +15,7 @@ import {
 } from "../utils/txUtils";
 import { ExternalLink } from "./ExternalLink";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   viewLink: {
     fontSize: 12,
     marginRight: theme.spacing(1),

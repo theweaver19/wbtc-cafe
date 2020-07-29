@@ -11,7 +11,7 @@ import React from "react";
 import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",

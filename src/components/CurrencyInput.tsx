@@ -11,7 +11,7 @@ import React from "react";
 import theme from "../theme/theme";
 import { MINI_ICON_MAP } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   amountField: {
     width: "100%",
     // marginBottom: theme.spacing(2)

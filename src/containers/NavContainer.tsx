@@ -13,7 +13,7 @@ import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 import { initLocalWeb3 } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any> = () => ({
   navContainer: {
     paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(4),

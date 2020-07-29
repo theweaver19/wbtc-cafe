@@ -23,7 +23,7 @@ import {
   setWbtcAllowance,
 } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, {}> = () => ({
+const styles: Styles<typeof theme, any>= () => ({
   container: {
     background: "#fff",
     border: "0.5px solid " + theme.palette.divider,
@@ -424,7 +424,7 @@ class TransferContainer extends React.Component<Props> {
                         <Grid item xs={12}>
                           <CurrencyInput
                             onAmountChange={(value) => {
-                              let amount = value < 0 ? "" : value;
+                              const amount = value < 0 ? "" : value;
                               store.set("convert.amount", amount);
                               gatherFeeData().catch(console.error);
                             }}
@@ -479,7 +479,7 @@ class TransferContainer extends React.Component<Props> {
                               <CurrencyInput
                                 inputRef={this.wbtcAmountRef}
                                 onAmountChange={(value) => {
-                                  let amount = value < 0 ? "" : value;
+                                  const amount = value < 0 ? "" : value;
                                   store.set("convert.amount", amount);
                                   gatherFeeData().catch(console.error);
                                 }}
