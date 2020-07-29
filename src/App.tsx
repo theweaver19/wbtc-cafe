@@ -95,7 +95,7 @@ class AppWrapper extends React.Component<WrapperProps> {
 
     // default to mainnet
     setNetwork(params.network === "testnet" ? "testnet" : "mainnet").catch(
-      console.error,
+      console.error
     );
 
     initDataWeb3().catch(console.error);
@@ -184,7 +184,7 @@ class AppWrapper extends React.Component<WrapperProps> {
 
 const AppWrapperComponent = withStore(AppWrapper);
 
-type Props = WithStyles<typeof styles>
+type Props = WithStyles<typeof styles>;
 
 const App: React.FC<Props> = ({ classes }) => (
   <AppWrapperComponent classes={classes} />

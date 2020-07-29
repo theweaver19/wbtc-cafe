@@ -2,7 +2,7 @@ import React from "react";
 
 import { AProps } from "../types/jsx";
 
-type Props = AProps
+type Props = AProps;
 
 export const ExternalLink: React.FC<Props> = ({
   children,

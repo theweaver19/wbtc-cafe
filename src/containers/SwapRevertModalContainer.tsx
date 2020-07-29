@@ -14,7 +14,7 @@ import { StoreInterface } from "../store/store";
 import theme from "../theme/theme";
 import { completeConvertToEthereum, updateTx } from "../utils/txUtils";
 
-const styles: Styles<typeof theme, any>= () => ({
+const styles: Styles<typeof theme, any> = () => ({
   modal: {
     display: "flex",
     alignItems: "center",
@@ -87,7 +87,7 @@ class SwapRevertModalContainer extends React.Component<Props> {
     const showSwapRevertModal = store.get("showSwapRevertModal");
     const swapRevertModalTx = store.get("swapRevertModalTx");
     const swapRevertModalExchangeRate = store.get(
-      "swapRevertModalExchangeRate",
+      "swapRevertModalExchangeRate"
     );
     const fees = store.get("fees");
 
@@ -105,10 +105,10 @@ class SwapRevertModalContainer extends React.Component<Props> {
         ? Number(Number(amount) - Number(renVMFee) - fixedFee).toFixed(8)
         : "0.00000000";
     const total = Number(
-      Number(net) * Number(swapRevertModalExchangeRate),
+      Number(net) * Number(swapRevertModalExchangeRate)
     ).toFixed(8);
     const minRate = Number(
-      Number(swapRevertModalTx.minExchangeRate).toFixed(8),
+      Number(swapRevertModalTx.minExchangeRate).toFixed(8)
     );
 
     return (
@@ -176,7 +176,7 @@ class SwapRevertModalContainer extends React.Component<Props> {
                     className={classNames(
                       classes.receiptTitle,
                       classes.total,
-                      classes.continueTitle,
+                      classes.continueTitle
                     )}
                   >
                     Continuing With renBTC
@@ -268,7 +268,7 @@ class SwapRevertModalContainer extends React.Component<Props> {
               className={classNames(classes.button)}
               onClick={() => {
                 completeConvertToEthereum(swapRevertModalTx, "wbtc").catch(
-                  console.error,
+                  console.error
                 );
                 store.set("showSwapRevertModal", false);
               }}
@@ -284,7 +284,7 @@ class SwapRevertModalContainer extends React.Component<Props> {
                 const newTx = updateTx(
                   Object.assign(swapRevertModalTx, {
                     swapReverted: true,
-                  }),
+                  })
                 );
                 completeConvertToEthereum(newTx, "renbtc").catch(console.error);
                 store.set("showSwapRevertModal", false);

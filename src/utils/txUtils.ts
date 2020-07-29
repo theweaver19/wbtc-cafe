@@ -173,7 +173,7 @@ const getFinalDepositExchangeRate = async (tx: Transaction) => {
 
   const curve = new dataWeb3!.eth.Contract(
     curveABI as AbiItem[],
-    selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN,
+    selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN
   );
   try {
     const swapResult = await curve.methods.get_dy(0, 1, finalAmount).call();
@@ -195,11 +195,11 @@ export const gatherFeeData = async () => {
   const dynamicFeeKey = selectedDirection ? "burn" : "mint";
 
   const fixedFee = Number(
-    fees![selectedAsset as "btc" | "zec" | "bch"][fixedFeeKey] / 10 ** 8,
+    fees![selectedAsset as "btc" | "zec" | "bch"][fixedFeeKey] / 10 ** 8
   );
   const dynamicFeeRate = Number(
     fees![selectedAsset as "btc" | "zec" | "bch"].ethereum[dynamicFeeKey] /
-      10000,
+      10000
   );
 
   if (!amount || !dataWeb3 || !fees) return;
@@ -209,11 +209,11 @@ export const gatherFeeData = async () => {
     let renVMFee: number;
     let total: number | string;
     const amountInSats = Math.round(
-      RenJS.utils.value(amount, "btc").sats().toNumber(),
+      RenJS.utils.value(amount, "btc").sats().toNumber()
     );
     const curve = new dataWeb3.eth.Contract(
       curveABI as AbiItem[],
-      selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN,
+      selectedNetwork === "testnet" ? CURVE_TEST : CURVE_MAIN
     );
 
     // withdraw
@@ -233,7 +233,7 @@ export const gatherFeeData = async () => {
           ? Number(Number(amount) - renVMFee - fixedFee)
           : 0;
       const amountAfterMintInSats = Math.round(
-        RenJS.utils.value(amountAfterMint, "btc").sats().toNumber(),
+        RenJS.utils.value(amountAfterMint, "btc").sats().toNumber()
       );
 
       // console.log(amountAfterMintInSats, renVMFee, fixedFee)
@@ -308,7 +308,7 @@ const monitorMintTx = async (tx: Transaction) => {
       // Update confs
       if (confs > 0) {
         const receipt = await web3!.eth.getTransactionReceipt(
-          latestTx.destTxHash!,
+          latestTx.destTxHash!
         );
 
         // reverted because gas ran out
@@ -320,7 +320,7 @@ const monitorMintTx = async (tx: Transaction) => {
             Object.assign(latestTx, {
               error: true,
               destTxHash: "",
-            }),
+            })
           );
         } else {
           updateTx(
@@ -328,7 +328,7 @@ const monitorMintTx = async (tx: Transaction) => {
               destTxConfs: confs,
               awaiting: "",
               error: false,
-            }),
+            })
           );
         }
 
@@ -338,7 +338,7 @@ const monitorMintTx = async (tx: Transaction) => {
       updateTx(
         Object.assign(latestTx, {
           error: true,
-        }),
+        })
       );
       clearInterval(interval);
     }
@@ -347,7 +347,7 @@ const monitorMintTx = async (tx: Transaction) => {
 
 export const completeConvertToEthereum = async (
   transaction: Transaction,
-  approveSwappedAsset?: string,
+  approveSwappedAsset?: string
 ) => {
   const store = getStore();
   const localWeb3 = store.get("localWeb3");
@@ -357,20 +357,20 @@ export const completeConvertToEthereum = async (
 
   // amount user sent
   const userBtcTxAmount = Number(
-    (renResponse.in.utxo.amount / 10 ** 8).toFixed(8),
+    (renResponse.in.utxo.amount / 10 ** 8).toFixed(8)
   );
   // amount in renvm after fixed fee
   const utxoAmountSats = renResponse.autogen.amount;
 
   // update amount to the actual amount sent
   const tx = updateTx(
-    Object.assign(transaction, { sourceAmount: userBtcTxAmount }),
+    Object.assign(transaction, { sourceAmount: userBtcTxAmount })
   );
 
   const { id, params, renSignature, minExchangeRate } = tx;
   const adapterContract = new localWeb3!.eth.Contract(
     adapterABI as AbiItem[],
-    store.get("convert.adapterAddress"),
+    store.get("convert.adapterAddress")
   );
 
   // if swap will revert to renBTC, let the user know before proceeding
@@ -397,7 +397,7 @@ export const completeConvertToEthereum = async (
     updateTx(
       Object.assign(tx, {
         awaiting: "eth-settle",
-      }),
+      })
     );
     try {
       await adapterContract.methods
@@ -408,7 +408,7 @@ export const completeConvertToEthereum = async (
           params.contractCalls[0].contractParams[2].value,
           utxoAmountSats,
           renResponse.autogen.nhash,
-          renSignature,
+          renSignature
         )
         .send({
           from: localWeb3Address,
@@ -419,14 +419,14 @@ export const completeConvertToEthereum = async (
             Object.assign(tx, {
               destTxHash: hash,
               error: false,
-            }),
+            })
           );
           monitorMintTx(newTx).catch(console.error);
         });
 
       store.set(
         "convert.pendingConvertToEthereum",
-        pending.filter((p) => p !== id),
+        pending.filter((p) => p !== id)
       );
     } catch (e) {
       console.error(e);
@@ -549,7 +549,7 @@ export const initConvertToEthereum = async function (tx: Transaction) {
           // @ts-ignore: property 'params' is private (TODO)
           params: mint.params,
           renBtcAddress: await mint.gatewayAddress(),
-        }),
+        })
       );
     }
 
@@ -578,7 +578,7 @@ export const initConvertToEthereum = async function (tx: Transaction) {
                 vOut: sourceTxVOut as number,
               }
             : // TODO: should be undefined?
-              ((null as unknown) as undefined),
+              ((null as unknown) as undefined)
         )
         .on("deposit", (dep) => {
           // console.log('on deposit', dep)
@@ -593,7 +593,7 @@ export const initConvertToEthereum = async function (tx: Transaction) {
                   btcConfirmations: dep.utxo.confirmations,
                   sourceTxHash: dep.utxo.txHash,
                   sourceTxVOut: dep.utxo.vOut,
-                }),
+                })
               );
             } else {
               updateTx(
@@ -601,7 +601,7 @@ export const initConvertToEthereum = async function (tx: Transaction) {
                   btcConfirmations: dep.utxo.confirmations,
                   sourceTxHash: dep.utxo.txHash,
                   sourceTxVOut: dep.utxo.vOut,
-                }),
+                })
               );
             }
           }
@@ -620,7 +620,7 @@ export const initConvertToEthereum = async function (tx: Transaction) {
           // @ts-ignore: `renVMResponse` is private (TODO)
           renResponse: signature.renVMResponse,
           renSignature: signature.signature,
-        }),
+        })
       );
 
       // @ts-ignore: 'this' implicitly has type 'any' (TODO)
@@ -677,7 +677,7 @@ const monitorBurnTx = async (tx: Transaction) => {
         updateTx(
           Object.assign(latestTx, {
             awaiting: "ren-settle",
-          }),
+          })
         );
       }
 
@@ -689,7 +689,7 @@ const monitorBurnTx = async (tx: Transaction) => {
             Object.assign(latestTx, {
               awaiting: "",
               error: false,
-            }),
+            })
           );
           clearInterval(interval);
         }
@@ -710,7 +710,7 @@ export const initConvertFromEthereum = async function (tx: Transaction) {
   const from = walletAddress;
   const adapter = new web3!.eth.Contract(
     adapterABI as AbiItem[],
-    adapterAddress,
+    adapterAddress
   );
 
   // @ts-ignore: 'this' implicitly has type 'any' (TODO)
@@ -726,7 +726,7 @@ export const initConvertFromEthereum = async function (tx: Transaction) {
       .swapThenBurn(
         RenJS.utils.BTC.addressToHex(destAddress), //_to
         RenJS.utils.value(amount, "btc").sats().toNumber().toFixed(0), // _amount in Satoshis
-        RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0),
+        RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0)
       )
       .send({ from })
       .on("transactionHash", (hash: string) => {
@@ -736,7 +736,7 @@ export const initConvertFromEthereum = async function (tx: Transaction) {
             awaiting: "eth-settle",
             sourceTxHash: hash,
             error: false,
-          }),
+          })
         );
         monitorBurnTx(getTx(tx.id)).catch(console.error);
       });

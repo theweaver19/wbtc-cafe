@@ -56,7 +56,7 @@ const updateAllowance = async () => {
 
   store.set(
     "convert.adapterWbtcAllowance",
-    Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8),
+    Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8)
   );
 };
 
@@ -101,7 +101,7 @@ const updateBalance = async () => {
   store.set("ethBalance", Number(web3.utils.fromWei(ethBal)).toFixed(8));
   store.set(
     "wbtcBalance",
-    Number(parseInt(balance.toString()) / 10 ** 8).toFixed(8),
+    Number(parseInt(balance.toString()) / 10 ** 8).toFixed(8)
   );
 };
 
@@ -126,8 +126,8 @@ export const initDataWeb3 = async () => {
     new Web3(
       `https://${
         network === "testnet" ? "kovan" : "mainnet"
-      }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`,
-    ),
+      }.infura.io/v3/6de9092ee3284217bb744cc1a6daab94`
+    )
   );
 };
 
@@ -143,7 +143,7 @@ const getSignatures = async (address: string, key: string, web3: Web3) => {
     const sig = await web3.eth.personal.sign(
       web3.utils.utf8ToHex("Signing in to WBTC Cafe"),
       addressLowerCase,
-      "",
+      ""
     );
     signature = web3.utils.sha3(sig);
     localSigMapData[addressLowerCase] = signature;
@@ -212,7 +212,7 @@ export const initLocalWeb3 = async () => {
 
   const lsTransactions = lsData
     ? JSON.parse(lsData).filter(
-        (tx: Transaction) => tx.localWeb3Address === addressLowerCase,
+        (tx: Transaction) => tx.localWeb3Address === addressLowerCase
       )
     : [];
   // const lsIds = lsTransactions.map((t: any) => t.id);
@@ -222,7 +222,7 @@ export const initLocalWeb3 = async () => {
 
     if (!disclosureAccepted) {
       const ok = window.confirm(
-        `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`,
+        `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`
       );
 
       store.set("disclosureAccepted", ok);
@@ -245,7 +245,7 @@ export const initLocalWeb3 = async () => {
 
     store.set(
       "fsUser",
-      await getUser(addressLowerCase, "wbtc.cafe", signature),
+      await getUser(addressLowerCase, "wbtc.cafe", signature)
     );
 
     const fsDataSnapshot = await db
@@ -263,7 +263,7 @@ export const initLocalWeb3 = async () => {
     const fsIds = fsTransactions.map((f) => f.id);
 
     const uniqueLsTransactions = lsTransactions.filter(
-      (ltx: Transaction) => fsIds.indexOf(ltx.id) < 0,
+      (ltx: Transaction) => fsIds.indexOf(ltx.id) < 0
     );
     const transactions = fsTransactions.concat(uniqueLsTransactions);
     store.set("convert.transactions", transactions);

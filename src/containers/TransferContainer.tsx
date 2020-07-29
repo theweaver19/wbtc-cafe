@@ -23,7 +23,7 @@ import {
   setWbtcAllowance,
 } from "../utils/walletUtils";
 
-const styles: Styles<typeof theme, any>= () => ({
+const styles: Styles<typeof theme, any> = () => ({
   container: {
     background: "#fff",
     border: "0.5px solid " + theme.palette.divider,
@@ -207,7 +207,7 @@ class TransferContainer extends React.Component<Props> {
     store.set("convert.destination", address);
     store.set(
       "convert.destinationValid",
-      AddressValidator.validate(address, "ETH"),
+      AddressValidator.validate(address, "ETH")
     );
   }
 
@@ -223,7 +223,7 @@ class TransferContainer extends React.Component<Props> {
     const exchangeRate = store.get("convert.exchangeRate");
     const expectedTotal = store.get("convert.conversionTotal");
     const minSwapProceeds = Number(
-      (Number(expectedTotal) * Number(1 - maxSlippage)).toFixed(6),
+      (Number(expectedTotal) * Number(1 - maxSlippage)).toFixed(6)
     );
     const adapterAddress = store.get("convert.adapterAddress");
     const localWeb3Address = store.get("localWeb3Address");
@@ -340,7 +340,7 @@ class TransferContainer extends React.Component<Props> {
     const allowance = store.get("convert.adapterWbtcAllowance");
     const hasAllowance = Number(amount) <= Number(allowance);
     const allowanceRequesting = store.get(
-      "convert.adapterWbtcAllowanceRequesting",
+      "convert.adapterWbtcAllowanceRequesting"
     );
     const walletConnectError = store.get("walletConnectError");
     const fsUser = store.get("fsUser");
@@ -444,14 +444,14 @@ class TransferContainer extends React.Component<Props> {
                                 onChange={(event) => {
                                   store.set(
                                     "convert.destination",
-                                    event.target.value,
+                                    event.target.value
                                   );
                                   store.set(
                                     "convert.destinationValid",
                                     AddressValidator.validate(
                                       event.target.value,
-                                      "ETH",
-                                    ),
+                                      "ETH"
+                                    )
                                   );
                                 }}
                               />
@@ -510,7 +510,7 @@ class TransferContainer extends React.Component<Props> {
                             onChange={(event) => {
                               store.set(
                                 "convert.destination",
-                                event.target.value,
+                                event.target.value
                               );
                               store.set(
                                 "convert.destinationValid",
@@ -519,8 +519,8 @@ class TransferContainer extends React.Component<Props> {
                                   selectedDirection ? "BTC" : "ETH",
                                   selectedNetwork === "testnet"
                                     ? "testnet"
-                                    : "prod",
-                                ),
+                                    : "prod"
+                                )
                               );
                             }}
                           />
@@ -537,7 +537,7 @@ class TransferContainer extends React.Component<Props> {
                           <span className={classes.amt}>
                             {exchangeRate && amount
                               ? `1 ${sourceAsset} = ${Number(
-                                  exchangeRate,
+                                  exchangeRate
                                 ).toFixed(4)} ${destAsset}`
                               : "-"}{" "}
                           </span>
@@ -625,14 +625,14 @@ class TransferContainer extends React.Component<Props> {
                                 if (!float) {
                                   store.set(
                                     "convert.maxSlippage",
-                                    slippageOptions[0],
+                                    slippageOptions[0]
                                   );
                                 } else if (float > 100) {
                                   store.set("convert.maxSlippage", 1);
                                 } else {
                                   store.set(
                                     "convert.maxSlippage",
-                                    Number((float / 100).toFixed(4)),
+                                    Number((float / 100).toFixed(4))
                                   );
                                 }
                               }}
@@ -658,7 +658,7 @@ class TransferContainer extends React.Component<Props> {
                       size="small"
                       className={classNames(
                         classes.margin,
-                        classes.actionButton,
+                        classes.actionButton
                       )}
                       onClick={this.newDeposit.bind(this)}
                     >
@@ -682,7 +682,7 @@ class TransferContainer extends React.Component<Props> {
                         variant={canConvertFrom ? "outlined" : "contained"}
                         className={classNames(
                           classes.margin,
-                          classes.actionButton,
+                          classes.actionButton
                         )}
                         onClick={this.newWithdraw.bind(this)}
                       >
@@ -698,7 +698,7 @@ class TransferContainer extends React.Component<Props> {
                         }
                         className={classNames(
                           classes.margin,
-                          classes.actionButton,
+                          classes.actionButton
                         )}
                         onClick={setWbtcAllowance}
                       >

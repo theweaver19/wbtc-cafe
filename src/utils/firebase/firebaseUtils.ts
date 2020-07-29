@@ -9,7 +9,7 @@ require("firebase/firestore");
 const createProfileData = async (
   db: firebase.firestore.Firestore,
   signature: string,
-  uid: string,
+  uid: string
 ) => {
   // update user collection
   const doc = db.collection("users").doc(uid);
@@ -37,7 +37,7 @@ const createProfileData = async (
 // otherwise attempt to register
 const signInOrRegister = async (
   id: string,
-  signature: string,
+  signature: string
 ): Promise<firebase.User | null> => {
   console.log(id, signature);
   try {
@@ -63,7 +63,7 @@ const signInOrRegister = async (
 export const getUser = async (
   address: string,
   host: string,
-  signature: string,
+  signature: string
 ) => {
   const id = `${address.toLowerCase()}@${host}`;
   const { currentUser } = firebase.auth();

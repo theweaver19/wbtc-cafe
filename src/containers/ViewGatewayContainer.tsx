@@ -183,7 +183,7 @@ class ViewGatewayContainer extends React.Component<Props, State> {
                     className={classes.copyLink}
                     onClick={() => {
                       const copyText = document.getElementById(
-                        "gatewayAddress",
+                        "gatewayAddress"
                       );
                       if (copyText) {
                         (copyText as any).select();
@@ -191,7 +191,7 @@ class ViewGatewayContainer extends React.Component<Props, State> {
                         document.execCommand("copy");
                         alert(
                           "Address copied to clipboard: " +
-                            (copyText as any).value,
+                            (copyText as any).value
                         );
                       }
                     }}
