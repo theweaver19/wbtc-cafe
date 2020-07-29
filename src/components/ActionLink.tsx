@@ -10,18 +10,36 @@ const useStyles = makeStyles({
     textDecoration: "underline",
     cursor: "pointer",
   },
+  linkDisabled: {
+    opacity: 0.6,
+    cursor: "not-allowed",
+  },
 });
 
-interface Props extends AProps {}
+interface Props extends AProps {
+  disabled?: boolean;
+}
+
+const disabledOnClick = () => {};
 
 export const ActionLink: React.FC<Props> = ({
+  disabled,
   children,
   className,
+  onClick,
   ...restOfProps
 }) => {
   const classes = useStyles();
   return (
-    <a className={classNames(classes.link, className)} {...restOfProps}>
+    <a
+      className={classNames(
+        classes.link,
+        className,
+        disabled ? classes.linkDisabled : "",
+      )}
+      onClick={disabled ? disabledOnClick : onClick}
+      {...restOfProps}
+    >
       {children}
     </a>
   );

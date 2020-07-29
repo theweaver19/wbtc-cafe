@@ -13,7 +13,7 @@ import { ConversionActions } from "../components/ConversionActions";
 import { ConversionStatus } from "../components/ConversionStatus";
 import { Store } from "../store/store";
 import { Web3Store } from "../store/web3Store";
-import { Asset } from "../types/enums";
+import { Asset } from "../utils/assets";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -58,7 +58,7 @@ export const TransactionsTableContainer: React.FC<Props> = () => {
   const error = walletConnectError;
 
   const showTransactions =
-    signedIn && !loadingTransactions && !error && transactions.length > 0;
+    signedIn && !loadingTransactions && !error && transactions.size > 0;
 
   return (
     <div className={classes.container}>
@@ -114,7 +114,7 @@ export const TransactionsTableContainer: React.FC<Props> = () => {
                     Connect failed.{" "}
                     <ActionLink onClick={initLocalWeb3}>Retry</ActionLink>
                   </Typography>
-                ) : signedIn && !transactions.length ? (
+                ) : signedIn && !transactions.size ? (
                   <Typography variant="caption">No transactions</Typography>
                 ) : !signedIn ? (
                   <Typography variant="caption">

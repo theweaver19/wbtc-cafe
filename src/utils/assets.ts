@@ -1,6 +1,11 @@
 import BTC from "../assets/tokens/btc.png";
 import WBTC from "../assets/tokens/wbtc.png";
-import { Asset } from "../types/enums";
+
+export enum Asset {
+  BTC = "btc",
+  WBTC = "wbtc",
+  renBTC = "renbtc",
+}
 
 export const NAME_MAP = {
   [Asset.BTC]: "Bitcoin",

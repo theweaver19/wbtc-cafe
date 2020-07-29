@@ -70,7 +70,7 @@ export const ConversionActions: React.FC<Props> = ({ tx }) => {
               onClick={() => {
                 // view modal
                 setShowGatewayModal(true);
-                setGatewayModalTx(tx);
+                setGatewayModalTx(tx.id);
               }}
             >
               View Gateway Address
@@ -80,7 +80,7 @@ export const ConversionActions: React.FC<Props> = ({ tx }) => {
               onClick={() => {
                 // are you sure modal
                 setShowCancelModal(true);
-                setCancelModalTx(tx);
+                setCancelModalTx(tx.id);
               }}
             >
               Cancel

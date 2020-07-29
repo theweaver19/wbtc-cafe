@@ -5,6 +5,7 @@ import { AbiItem } from "web3-utils";
 import Web3Modal from "web3modal";
 import { createContainer } from "unstated-next";
 import { useCallback } from "react";
+import { List } from "immutable";
 
 import { useTaskSchedule } from "../hooks/useTaskScheduler";
 import { Transaction } from "../types/transaction";
@@ -49,7 +50,10 @@ function useWeb3() {
     setConvertAdapterWbtcAllowance,
   } = Store.useContainer();
 
-  const { gatherFeeData, initMonitoring } = TransactionStore.useContainer();
+  const {
+    gatherFeeData,
+    initMonitoringTrigger,
+  } = TransactionStore.useContainer();
 
   const updateAllowance = useCallback(async () => {
     const web3 = localWeb3;
@@ -252,14 +256,14 @@ function useWeb3() {
         (ltx: Transaction) => fsIds.indexOf(ltx.id) < 0,
       );
       const transactions = fsTransactions.concat(uniqueLsTransactions);
-      setConvertTransactions(transactions);
+      setConvertTransactions(List(transactions));
 
       setFsEnabled(true);
       setLoadingTransactions(false);
 
       watchWalletData().catch(console.error);
       gatherFeeData().catch(console.error);
-      initMonitoring();
+      initMonitoringTrigger();
 
       if ((currentProvider as any)?.on) {
         // listen for changes
@@ -287,7 +291,7 @@ function useWeb3() {
     disclosureAccepted,
     gatherFeeData,
     getSignatures,
-    initMonitoring,
+    initMonitoringTrigger,
     selectedNetwork,
     setConvertTransactions,
     setDisclosureAccepted,

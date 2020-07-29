@@ -4,11 +4,13 @@ import { AbiItem } from "web3-utils";
 import { LockAndMint } from "@renproject/ren/build/main/lockAndMint";
 import { BurnAndRelease } from "@renproject/ren/build/main/burnAndRelease";
 import { createContainer } from "unstated-next";
+import { List } from "immutable";
+import { useCallback, useEffect, useState } from "react";
 
-import { Asset } from "../types/enums";
 import { Transaction } from "../types/transaction";
 import adapterABI from "../utils/ABIs/adapterCurveABI.json";
 import curveABI from "../utils/ABIs/curveABI.json";
+import { Asset } from "../utils/assets";
 import { CURVE_MAIN, CURVE_TEST } from "../utils/environmentVariables";
 import { Store } from "./store";
 
@@ -48,9 +50,9 @@ function useTransactionStore() {
   // Changing TX State
   const addTx = (tx: Transaction) => {
     const storeString = "convert.transactions";
-    const txs = convertTransactions;
-    txs.push(tx);
-    setConvertTransactions(txs);
+    let txs = convertTransactions;
+    txs = txs.push(tx);
+    setConvertTransactions(List(txs.toArray()));
 
     // use localStorage
     localStorage.setItem(storeString, JSON.stringify(txs));
@@ -72,7 +74,7 @@ function useTransactionStore() {
       }
       return t;
     });
-    setConvertTransactions(txs);
+    setConvertTransactions(List(txs.toArray()));
 
     // use localStorage
     localStorage.setItem(storeString, JSON.stringify(txs));
@@ -91,7 +93,7 @@ function useTransactionStore() {
   const removeTx = (tx: Transaction) => {
     const storeString = "convert.transactions";
     const txs = convertTransactions.filter((t) => t.id !== tx.id);
-    setConvertTransactions(txs);
+    setConvertTransactions(List(txs.toArray()));
 
     // Use localStorage
     localStorage.setItem(storeString, JSON.stringify(txs));
@@ -106,11 +108,11 @@ function useTransactionStore() {
   };
 
   const getTx = (id: Transaction["id"]) => {
-    return convertTransactions.filter((t) => t.id === id)[0];
+    return convertTransactions.filter((t) => t.id === id).first(null);
   };
 
   const txExists = (tx: Transaction) => {
-    return convertTransactions.filter((t) => t.id === tx.id).length > 0;
+    return convertTransactions.filter((t) => t.id === tx.id).size > 0;
   };
 
   // External Data
@@ -226,7 +228,7 @@ function useTransactionStore() {
 
     const interval = setInterval(async () => {
       // Get latest tx state every iteration
-      const latestTx = getTx(tx.id);
+      const latestTx = getTx(tx.id) || tx;
 
       // Get transaction details
       const txDetails = await web3!.eth.getTransaction(latestTx.destTxHash!);
@@ -248,30 +250,20 @@ function useTransactionStore() {
             (receipt && ((receipt.status as unknown) as string) === "0x0") ||
             receipt.status === false
           ) {
-            updateTx(
-              Object.assign(latestTx, {
-                error: true,
-                destTxHash: "",
-              }),
-            );
+            updateTx(Object.assign(latestTx, { error: true, destTxHash: "" }));
           } else {
-            updateTx(
-              Object.assign(latestTx, {
-                destTxConfs: confs,
-                awaiting: "",
-                error: false,
-              }),
-            );
+            updateTx({
+              ...latestTx,
+              destTxConfs: confs,
+              awaiting: "",
+              error: false,
+            });
           }
 
           clearInterval(interval);
         }
       } else {
-        updateTx(
-          Object.assign(latestTx, {
-            error: true,
-          }),
-        );
+        updateTx(Object.assign(latestTx, { error: true }));
         clearInterval(interval);
       }
     }, 1000);
@@ -306,7 +298,7 @@ function useTransactionStore() {
     const exchangeRate = await getFinalDepositExchangeRate(tx);
     updateTx(Object.assign(tx, { exchangeRateOnSubmit: exchangeRate }));
     if (!approveSwappedAsset && exchangeRate! < minExchangeRate!) {
-      setSwapRevertModalTx(tx);
+      setSwapRevertModalTx(tx.id);
       setSwapRevertModalExchangeRate(exchangeRate!.toFixed(8));
       setShowSwapRevertModal(true);
       updateTx(Object.assign(tx, { awaiting: "eth-init" }));
@@ -321,11 +313,7 @@ function useTransactionStore() {
     }
 
     if (!tx.destTxHash) {
-      updateTx(
-        Object.assign(tx, {
-          awaiting: "eth-settle",
-        }),
-      );
+      updateTx(Object.assign(tx, { awaiting: "eth-settle" }));
       try {
         await adapterContract.methods
           .mintThenSwap(
@@ -342,10 +330,7 @@ function useTransactionStore() {
           })
           .on("transactionHash", (hash: string) => {
             const newTx = updateTx(
-              Object.assign(tx, {
-                destTxHash: hash,
-                error: false,
-              }),
+              Object.assign(tx, { destTxHash: hash, error: false }),
             );
             monitorMintTx(newTx).catch(console.error);
           });
@@ -356,7 +341,8 @@ function useTransactionStore() {
         updateTx(Object.assign(tx, { error: true }));
       }
     } else {
-      monitorMintTx(getTx(tx.id)).catch(console.error);
+      const transaction = getTx(tx.id) || tx;
+      monitorMintTx(transaction).catch(console.error);
     }
   };
 
@@ -457,13 +443,12 @@ function useTransactionStore() {
       const mint = await initMint(tx);
 
       if (!params) {
-        addTx(
-          Object.assign(tx, {
-            // @ts-ignore: property 'params' is private (TODO)
-            params: mint.params,
-            renBtcAddress: await mint.gatewayAddress(),
-          }),
-        );
+        addTx({
+          ...tx,
+          // @ts-ignore: property 'params' is private (TODO)
+          params: mint.params,
+          renBtcAddress: await mint.gatewayAddress(),
+        });
       }
 
       // wait for btc
@@ -498,22 +483,20 @@ function useTransactionStore() {
                 setShowGatewayModal(false);
                 setGatewayModalTx(null);
 
-                updateTx(
-                  Object.assign(tx, {
-                    awaiting: "btc-settle",
-                    btcConfirmations: dep.utxo.confirmations,
-                    sourceTxHash: dep.utxo.txHash,
-                    sourceTxVOut: dep.utxo.vOut,
-                  }),
-                );
+                updateTx({
+                  ...tx,
+                  awaiting: "btc-settle",
+                  btcConfirmations: dep.utxo.confirmations,
+                  sourceTxHash: dep.utxo.txHash,
+                  sourceTxVOut: dep.utxo.vOut,
+                });
               } else {
-                updateTx(
-                  Object.assign(tx, {
-                    btcConfirmations: dep.utxo.confirmations,
-                    sourceTxHash: dep.utxo.txHash,
-                    sourceTxVOut: dep.utxo.vOut,
-                  }),
-                );
+                updateTx({
+                  ...tx,
+                  btcConfirmations: dep.utxo.confirmations,
+                  sourceTxHash: dep.utxo.txHash,
+                  sourceTxVOut: dep.utxo.vOut,
+                });
               }
             }
           });
@@ -526,13 +509,12 @@ function useTransactionStore() {
 
       try {
         const signature = await deposit.submit();
-        updateTx(
-          Object.assign(tx, {
-            // @ts-ignore: `renVMResponse` is private (TODO)
-            renResponse: signature.renVMResponse,
-            renSignature: signature.signature,
-          }),
-        );
+        updateTx({
+          ...tx,
+          // @ts-ignore: `renVMResponse` is private (TODO)
+          renResponse: signature.renVMResponse,
+          renSignature: signature.signature,
+        });
 
         completeConvertToEthereum(tx).catch(console.error);
       } catch (e) {
@@ -563,7 +545,7 @@ function useTransactionStore() {
 
     const interval = setInterval(async () => {
       // Get latest tx state every iteration
-      const latestTx = getTx(tx.id);
+      const latestTx = getTx(tx.id) || tx;
 
       // Get transaction details
       const txDetails = await web3!.eth.getTransaction(latestTx.sourceTxHash!);
@@ -581,22 +563,17 @@ function useTransactionStore() {
       // After enough confs, start watching RenVM
       if (latestTx.sourceTxConfs! >= targetConfs) {
         if (latestTx.awaiting === "eth-settle") {
-          updateTx(
-            Object.assign(latestTx, {
-              awaiting: "ren-settle",
-            }),
-          );
+          updateTx(Object.assign(latestTx, { awaiting: "ren-settle" }));
         }
 
         try {
           const renVMTx = await burn.queryTx();
           if (renVMTx.txStatus === "done") {
-            updateTx(
-              Object.assign(latestTx, {
-                awaiting: "",
-                error: false,
-              }),
-            );
+            updateTx({
+              ...latestTx,
+              awaiting: "",
+              error: false,
+            });
             clearInterval(interval);
           }
         } catch (e) {
@@ -638,14 +615,14 @@ function useTransactionStore() {
         )
         .send({ from })
         .on("transactionHash", (hash: string) => {
-          updateTx(
-            Object.assign(tx, {
-              awaiting: "eth-settle",
-              sourceTxHash: hash,
-              error: false,
-            }),
-          );
-          monitorBurnTx(getTx(tx.id)).catch(console.error);
+          updateTx({
+            ...tx,
+            awaiting: "eth-settle",
+            sourceTxHash: hash,
+            error: false,
+          });
+          const transaction = getTx(tx.id) || tx;
+          monitorBurnTx(transaction).catch(console.error);
         });
     } catch (e) {
       console.error("eth burn error", e);
@@ -655,7 +632,16 @@ function useTransactionStore() {
   };
 
   // On start-up
-  const initMonitoring = function () {
+  const [monitoringStarted, setMonitoringStarted] = useState(false);
+  const initMonitoringTrigger = useCallback(() => {
+    setMonitoringStarted(true);
+  }, [setMonitoringStarted]);
+
+  useEffect(() => {
+    if (!monitoringStarted) {
+      return;
+    }
+
     const network = selectedNetwork;
     const txs = convertTransactions.filter(
       (t) => t.sourceNetworkVersion === network,
@@ -673,7 +659,7 @@ function useTransactionStore() {
       }
       return null;
     });
-  };
+  }, [monitoringStarted]);
 
   return {
     updateTx,
@@ -683,7 +669,7 @@ function useTransactionStore() {
     completeConvertToEthereum,
     initConvertToEthereum,
     initConvertFromEthereum,
-    initMonitoring,
+    initMonitoringTrigger,
   };
 }
 

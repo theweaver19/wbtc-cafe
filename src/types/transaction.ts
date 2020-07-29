@@ -20,7 +20,7 @@ export interface Transaction {
   localWeb3Address: string;
 
   // Optional
-  exchangeRateOnSubmit?: string;
+  exchangeRateOnSubmit?: string | number;
   destTxConfs?: number;
   destTxHash?: string;
   swapReverted?: boolean;

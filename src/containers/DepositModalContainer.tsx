@@ -14,8 +14,7 @@ import React, { useState } from "react";
 
 import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
-import { Asset } from "../types/enums";
-import { NAME_MAP } from "../utils/walletUtils";
+import { Asset, NAME_MAP } from "../utils/assets";
 
 const useStyles = makeStyles((theme) => ({
   modal: {
@@ -131,9 +130,9 @@ export const DepositModalContainer: React.FC<Props> = () => {
     convertConversionTotal,
 
     setShowDepositModal,
-    setDepositModalTx,
     setShowGatewayModal,
     setGatewayModalTx,
+    setDepositModalTx,
   } = Store.useContainer();
 
   const { initConvertToEthereum } = TransactionStore.useContainer();
@@ -150,7 +149,7 @@ export const DepositModalContainer: React.FC<Props> = () => {
     setDepositModalTx(null);
 
     setShowGatewayModal(true);
-    setGatewayModalTx(depositModalTx);
+    setGatewayModalTx(depositModalTx && depositModalTx.id);
   };
 
   const check = () => {

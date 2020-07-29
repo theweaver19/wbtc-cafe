@@ -3,6 +3,7 @@ import { UnmarshalledFees } from "@renproject/interfaces";
 import RenJS from "@renproject/ren";
 import Web3 from "web3";
 import { createContainer } from "unstated-next";
+import { List } from "immutable";
 
 import { Transaction } from "../types/transaction";
 import { Database } from "../utils/database/database";
@@ -44,16 +45,12 @@ const useStore = (database: Database<Transaction> | undefined) => {
     null as Transaction | null,
   );
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelModalTx, setCancelModalTx] = useState(
-    null as Transaction | null,
-  );
+  const [cancelModalTx, setCancelModalTx] = useState(null as string | null);
   const [showGatewayModal, setShowGatewayModal] = useState(false);
-  const [gatewayModalTx, setGatewayModalTx] = useState(
-    null as Transaction | null,
-  );
+  const [gatewayModalTx, setGatewayModalTx] = useState(null as string | null);
   const [showSwapRevertModal, setShowSwapRevertModal] = useState(false);
   const [swapRevertModalTx, setSwapRevertModalTx] = useState(
-    null as Transaction | null,
+    null as string | null,
   );
   const [
     swapRevertModalExchangeRate,
@@ -74,7 +71,7 @@ const useStore = (database: Database<Transaction> | undefined) => {
     setConvertAdapterWbtcAllowanceRequesting,
   ] = useState(false);
   const [convertTransactions, setConvertTransactions] = useState(
-    [] as Transaction[],
+    List<Transaction>(),
   );
   const [
     convertPendingConvertToEthereum,

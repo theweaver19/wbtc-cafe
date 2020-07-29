@@ -6,7 +6,7 @@ import Modal from "@material-ui/core/Modal";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import QRCode from "qrcode.react";
-import React from "react";
+import React, { useMemo } from "react";
 import { makeStyles } from "@material-ui/core";
 
 import { ActionLink } from "../components/ActionLink";
@@ -98,6 +98,7 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
     gatewayModalTx,
     setShowGatewayModal,
     setGatewayModalTx,
+    convertTransactions,
   } = Store.useContainer();
 
   const goBack = () => {
@@ -105,7 +106,16 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
     setGatewayModalTx(null);
   };
 
-  if (!gatewayModalTx) return null;
+  // const transaction = useMemo(
+  //   () =>
+  //     convertTransactions.filter((tx) => tx.id === gatewayModalTx).first(null),
+  //   [convertTransactions, gatewayModalTx],
+  // );
+  const transaction = convertTransactions
+    .filter((tx) => tx.id === gatewayModalTx)
+    .first(null);
+
+  if (!gatewayModalTx || !transaction) return null;
 
   return (
     <Modal
@@ -132,7 +142,7 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
                 }
 
                 <Typography variant="body1" className={classes.content}>
-                  Send {gatewayModalTx.amount} BTC to:
+                  Send {transaction.amount} BTC to:
                 </Typography>
 
                 <div className={classes.addressWrapper}>
@@ -140,7 +150,7 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
                     readOnly
                     id="gatewayAddress"
                     className={classes.address}
-                    value={gatewayModalTx.renBtcAddress || "Loading..."}
+                    value={transaction.renBtcAddress || "Loading..."}
                   />
                 </div>
 
@@ -162,9 +172,9 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
                   Copy Address
                 </ActionLink>
 
-                {gatewayModalTx.renBtcAddress && (
+                {transaction.renBtcAddress && (
                   <div className={classes.qrCode}>
-                    <QRCode size={116} value={gatewayModalTx.renBtcAddress} />
+                    <QRCode size={116} value={transaction.renBtcAddress} />
                   </div>
                 )}
 

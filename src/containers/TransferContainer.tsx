@@ -13,8 +13,7 @@ import { CurrencyInput } from "../components/CurrencyInput";
 import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
 import { Web3Store } from "../store/web3Store";
-import { Asset } from "../types/enums";
-import { MINI_ICON_MAP, NAME_MAP } from "../utils/walletUtils";
+import { Asset, MINI_ICON_MAP, NAME_MAP } from "../utils/assets";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -172,15 +171,14 @@ export const TransferContainer: React.FC<Props> = () => {
     walletConnectError,
     fsUser,
     loadingTransactions,
+    setDepositModalTx,
+    setShowDepositModal,
 
     setConvertDestination,
     setConvertSelectedDirection,
     setConvertAmount,
     setConvertMaxSlippage,
     setConvertDestinationValid,
-
-    setDepositModalTx,
-    setShowDepositModal,
   } = Store.useContainer();
 
   const {
@@ -400,6 +398,7 @@ export const TransferContainer: React.FC<Props> = () => {
                         </Grid>
                         <ActionLink
                           className={classes.maxLink}
+                          disabled={!localWeb3Address}
                           onClick={() => {
                             fillWalletAddress();
                           }}

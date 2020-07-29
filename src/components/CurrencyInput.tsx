@@ -6,8 +6,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import TextField from "@material-ui/core/TextField";
 import React, { useRef, useState } from "react";
 
-import { Asset } from "../types/enums";
-import { MINI_ICON_MAP } from "../utils/walletUtils";
+import { Asset, MINI_ICON_MAP } from "../utils/assets";
 
 const useStyles = makeStyles((theme) => ({
   amountField: {
