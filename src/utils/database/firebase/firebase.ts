@@ -1,6 +1,5 @@
 import firebase from "firebase/app";
 
-import { Transaction } from "../../../types/transaction";
 import { FB_KEY } from "../../environmentVariables";
 import { Database } from "../database";
 import { getFirebaseUser } from "./firebaseUtils";
