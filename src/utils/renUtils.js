@@ -1,5 +1,6 @@
-
-export const createTransaction = new Function("return " + `async function (t) {
+export const createTransaction = new Function(
+  "return " +
+    `async function (t) {
     const e = [...this.params.contractParams.map(t => t.value), u.Ox(this.response.args.amount.toString(16)), u.Ox(this.response.args.nhash), u.Ox(this.signature)],
           r = h.payloadToShiftInABI(this.params.contractFn, this.params.contractParams),
           n = new c.default(),
@@ -8,9 +9,12 @@ export const createTransaction = new Function("return " + `async function (t) {
       to: this.params.sendTo,
       data: o
     }, this.params.txConfig, {}, t));
-}`)();
+}`
+)();
 
-export const submitToEthereum = new Function("return " + `(t, e) => {
+export const submitToEthereum = new Function(
+  "return " +
+    `(t, e) => {
     const r = f.newPromiEvent();
     return (async () => {
       const n = [...this.params.contractParams.map(t => t.value), u.Ox(this.response.args.amount.toString(16)), u.Ox(this.response.args.nhash), u.Ox(this.signature)],
@@ -33,9 +37,10 @@ export const submitToEthereum = new Function("return " + `(t, e) => {
 
       r.reject(t);
     }), r;
-}`)();
+}`
+)();
 
 export default {
-    createTransaction,
-    submitToEthereum
-}
+  createTransaction,
+  submitToEthereum,
+};
