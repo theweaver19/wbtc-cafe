@@ -209,7 +209,7 @@ export const TransferContainer: React.FC<Props> = () => {
     const exchangeRate = convertExchangeRate;
     const expectedTotal = convertConversionTotal;
     const minSwapProceeds = Number(
-      (Number(expectedTotal) * Number(1 - maxSlippage)).toFixed(6),
+      (Number(expectedTotal) * Number(1 - maxSlippage)).toFixed(6)
     );
     const adapterAddress = convertAdapterAddress;
 
