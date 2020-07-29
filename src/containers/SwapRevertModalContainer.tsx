@@ -290,9 +290,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
             fullWidth={true}
             className={classNames(classes.button)}
             onClick={() => {
-              const newTx = updateTx(
-                Object.assign(transaction, { swapReverted: true }),
-              );
+              const newTx = updateTx({ ...transaction, swapReverted: true });
               completeConvertToEthereum(newTx, Asset.renBTC).catch(
                 console.error,
               );

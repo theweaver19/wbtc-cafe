@@ -250,7 +250,7 @@ function useTransactionStore() {
             (receipt && ((receipt.status as unknown) as string) === "0x0") ||
             receipt.status === false
           ) {
-            updateTx(Object.assign(latestTx, { error: true, destTxHash: "" }));
+            updateTx({ ...latestTx, error: true, destTxHash: "" });
           } else {
             updateTx({
               ...latestTx,
@@ -263,7 +263,7 @@ function useTransactionStore() {
           clearInterval(interval);
         }
       } else {
-        updateTx(Object.assign(latestTx, { error: true }));
+        updateTx({ ...latestTx, error: true });
         clearInterval(interval);
       }
     }, 1000);
@@ -285,7 +285,7 @@ function useTransactionStore() {
 
     // update amount to the actual amount sent
     const tx = updateTx(
-      Object.assign(transaction, { sourceAmount: userBtcTxAmount }),
+      { ...transaction, sourceAmount: userBtcTxAmount },
     );
 
     const { id, params, renSignature, minExchangeRate } = tx;
@@ -296,12 +296,12 @@ function useTransactionStore() {
 
     // if swap will revert to renBTC, let the user know before proceeding
     const exchangeRate = await getFinalDepositExchangeRate(tx);
-    updateTx(Object.assign(tx, { exchangeRateOnSubmit: exchangeRate }));
+    updateTx({ ...tx, exchangeRateOnSubmit: exchangeRate });
     if (!approveSwappedAsset && exchangeRate! < minExchangeRate!) {
       setSwapRevertModalTx(tx.id);
       setSwapRevertModalExchangeRate(exchangeRate!.toFixed(8));
       setShowSwapRevertModal(true);
-      updateTx(Object.assign(tx, { awaiting: "eth-init" }));
+      updateTx({ ...tx, awaiting: "eth-init" });
       return;
     }
 
@@ -313,7 +313,7 @@ function useTransactionStore() {
     }
 
     if (!tx.destTxHash) {
-      updateTx(Object.assign(tx, { awaiting: "eth-settle" }));
+      updateTx({ ...tx, awaiting: "eth-settle" });
       try {
         await adapterContract.methods
           .mintThenSwap(
@@ -330,7 +330,7 @@ function useTransactionStore() {
           })
           .on("transactionHash", (hash: string) => {
             const newTx = updateTx(
-              Object.assign(tx, { destTxHash: hash, error: false }),
+              { ...tx, destTxHash: hash, error: false },
             );
             monitorMintTx(newTx).catch(console.error);
           });
@@ -338,7 +338,7 @@ function useTransactionStore() {
         setConvertPendingConvertToEthereum(pending.filter((p) => p !== id));
       } catch (e) {
         console.error(e);
-        updateTx(Object.assign(tx, { error: true }));
+        updateTx({ ...tx, error: true });
       }
     } else {
       const transaction = getTx(tx.id) || tx;
@@ -432,7 +432,7 @@ function useTransactionStore() {
 
     // clear error when re-attempting
     if (error) {
-      updateTx(Object.assign(tx, { error: false }));
+      updateTx({ ...tx, error: false });
     }
 
     // ren already exposed a signature
@@ -504,7 +504,7 @@ function useTransactionStore() {
 
       // @ts-ignore: (combination of !== and || is wrong) (TODO)
       if (awaiting !== "eth-init" || awaiting !== "eth-settle") {
-        updateTx(Object.assign(tx, { awaiting: "ren-settle" }));
+        updateTx({ ...tx, awaiting: "ren-settle" });
       }
 
       try {
@@ -539,7 +539,7 @@ function useTransactionStore() {
         .readFromEthereum();
     } catch (e) {
       console.error(e);
-      updateTx(Object.assign(tx, { error: true }));
+      updateTx({ ...tx, error: true });
       return;
     }
 
@@ -557,13 +557,13 @@ function useTransactionStore() {
 
       // Update confs
       if (confs !== latestTx.sourceTxConfs) {
-        updateTx(Object.assign(latestTx, { sourceTxConfs: confs }));
+        updateTx({ ...latestTx, sourceTxConfs: confs });
       }
 
       // After enough confs, start watching RenVM
       if (latestTx.sourceTxConfs! >= targetConfs) {
         if (latestTx.awaiting === "eth-settle") {
-          updateTx(Object.assign(latestTx, { awaiting: "ren-settle" }));
+          updateTx({ ...latestTx, awaiting: "ren-settle" });
         }
 
         try {
@@ -599,7 +599,7 @@ function useTransactionStore() {
       addTx(tx);
     } else if (tx.error) {
       // clear error when re-attempting
-      updateTx(Object.assign(tx, { error: false }));
+      updateTx({ ...tx, error: false });
     }
 
     try {
@@ -626,7 +626,7 @@ function useTransactionStore() {
         });
     } catch (e) {
       console.error("eth burn error", e);
-      updateTx(Object.assign(tx, { error: true }));
+      updateTx({ ...tx, error: true });
       return;
     }
   };
