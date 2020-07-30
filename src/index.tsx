@@ -11,20 +11,23 @@ import { Web3Store } from "./store/web3Store";
 import { theme } from "./theme/theme";
 import { Transaction } from "./types/transaction";
 import { newDefaultDatabase } from "./utils/database/defaultDatabase";
+import { FeeStore } from "./store/feeStore";
 
 const database = newDefaultDatabase<Transaction>();
 
 ReactDOM.render(
   <Store.Provider initialState={database}>
-    <TransactionStore.Provider>
-      <Web3Store.Provider>
-        <ThemeProvider theme={theme}>
-          <App />
-        </ThemeProvider>
-      </Web3Store.Provider>
-    </TransactionStore.Provider>
+    <FeeStore.Provider>
+      <TransactionStore.Provider>
+        <Web3Store.Provider>
+          <ThemeProvider theme={theme}>
+            <App />
+          </ThemeProvider>
+        </Web3Store.Provider>
+      </TransactionStore.Provider>
+    </FeeStore.Provider>
   </Store.Provider>,
-  document.getElementById("root"),
+  document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change
