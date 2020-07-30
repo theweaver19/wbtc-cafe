@@ -19,6 +19,7 @@ import {
 } from "../utils/environmentVariables";
 import { Store } from "./store";
 import { TransactionStore } from "./transactionStore";
+import { FeeStore } from "./feeStore";
 
 function useWeb3() {
   const {
@@ -51,9 +52,12 @@ function useWeb3() {
   } = Store.useContainer();
 
   const {
-    gatherFeeData,
     initMonitoringTrigger,
   } = TransactionStore.useContainer();
+
+  const {
+    gatherFeeData,
+  } = FeeStore.useContainer();
 
   const updateAllowance = useCallback(async () => {
     const web3 = localWeb3;

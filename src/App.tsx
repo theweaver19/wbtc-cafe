@@ -17,6 +17,7 @@ import { TransferContainer } from "./containers/TransferContainer";
 import { ViewGatewayContainer } from "./containers/ViewGatewayContainer";
 import { TransactionStore } from "./store/transactionStore";
 import { Web3Store } from "./store/web3Store";
+import { FeeStore } from "./store/feeStore";
 
 require("dotenv").config();
 
@@ -54,7 +55,7 @@ const useStyles = makeStyles((theme) => ({
 interface Props {}
 
 export const App: React.FC<Props> = () => {
-  const { updateRenVMFees } = TransactionStore.useContainer();
+  const { updateRenVMFees } = FeeStore.useContainer();
   const { initDataWeb3, setNetwork } = Web3Store.useContainer();
   const classes = useStyles();
 

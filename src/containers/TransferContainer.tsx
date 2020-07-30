@@ -14,6 +14,7 @@ import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
 import { Web3Store } from "../store/web3Store";
 import { Asset, MINI_ICON_MAP, NAME_MAP } from "../utils/assets";
+import { FeeStore } from "../store/feeStore";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -182,9 +183,12 @@ export const TransferContainer: React.FC<Props> = () => {
   } = Store.useContainer();
 
   const {
-    gatherFeeData,
     initConvertFromEthereum,
   } = TransactionStore.useContainer();
+
+  const {
+    gatherFeeData,
+  } = FeeStore.useContainer();
 
   const { initLocalWeb3, setWbtcAllowance } = Web3Store.useContainer();
 
