@@ -263,73 +263,6 @@ function useTransactionStore() {
     ]
   );
 
-  const initMint = useCallback(
-    (tx: Transaction) => {
-      const {
-        type,
-        amount,
-        params,
-        destAddress,
-        minExchangeRate,
-        maxSlippage,
-      } = tx;
-
-      let adapterAddress = "";
-      let contractFn = "";
-      let contractParams: EthArgs = [];
-
-      if (type === "convert") {
-        adapterAddress = convertAdapterAddress;
-        contractFn = "mintThenSwap";
-        contractParams = [
-          {
-            name: "_minExchangeRate",
-            type: "uint256",
-            value: RenJS.utils
-              .value(minExchangeRate!, Asset.BTC)
-              .sats()
-              .toNumber()
-              .toFixed(0),
-          },
-          {
-            name: "_slippage",
-            type: "uint256",
-            value: Number(maxSlippage * 10000).toFixed(0),
-          },
-          {
-            name: "_wbtcDestination",
-            type: "address",
-            value: destAddress,
-          },
-          {
-            name: "_msgSender",
-            type: "address",
-            value: localWeb3Address,
-          },
-        ];
-      }
-
-      // store data or update params with nonce
-      const data = {
-        sendToken: RenJS.Tokens.BTC.Btc2Eth,
-        suggestedAmount: RenJS.utils
-          .value(amount, Asset.BTC)
-          .sats()
-          .toNumber()
-          .toFixed(0),
-        sendTo: adapterAddress,
-        contractFn,
-        contractParams,
-        nonce:
-          params && params.nonce ? params.nonce : RenJS.utils.randomNonce(),
-      };
-
-      const mint = sdk!.lockAndMint(data);
-
-      return mint;
-    },
-    [convertAdapterAddress, localWeb3Address, sdk]
-  );
 
   const initConvertToEthereum = useCallback(
     async function (tx: Transaction) {
@@ -448,7 +381,6 @@ function useTransactionStore() {
       addTx,
       completeConvertToEthereum,
       convertPendingConvertToEthereum,
-      initMint,
       setConvertPendingConvertToEthereum,
       setGatewayModalTx,
       setShowGatewayModal,
