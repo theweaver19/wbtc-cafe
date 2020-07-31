@@ -37,9 +37,7 @@ function useTransactionStore() {
     setConvertPendingConvertToEthereum,
   } = Store.useContainer();
 
-  const {
-    getFinalDepositExchangeRate,
-  } = FeeStore.useContainer();
+  const { getFinalDepositExchangeRate } = FeeStore.useContainer();
 
   // Changing TX State
   const addTx = useCallback(
@@ -124,7 +122,6 @@ function useTransactionStore() {
   const txExists = (tx: Transaction) => {
     return convertTransactions.filter((t) => t.id === tx.id).size > 0;
   };
-
 
   // BTC to WBTC
   const monitorMintTx = useCallback(
@@ -263,7 +260,6 @@ function useTransactionStore() {
     ]
   );
 
-
   const initConvertToEthereum = useCallback(
     async function (tx: Transaction) {
       const {
@@ -323,7 +319,7 @@ function useTransactionStore() {
           deposit = await mint
             .wait(
               targetConfs,
-              sourceTxHash && sourceTxVOut
+              sourceTxHash && String(sourceTxVOut) !== "undefined"
                 ? {
                     txHash: sourceTxHash,
                     // TODO: Can vOut be casted to number safely?
