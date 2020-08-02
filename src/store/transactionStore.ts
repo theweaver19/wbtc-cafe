@@ -1,11 +1,10 @@
-import { EthArgs } from "@renproject/interfaces";
 import RenJS from "@renproject/ren";
 import { AbiItem } from "web3-utils";
-import { LockAndMint } from "@renproject/ren/build/main/lockAndMint";
 import { BurnAndRelease } from "@renproject/ren/build/main/burnAndRelease";
 import { createContainer } from "unstated-next";
 import { List } from "immutable";
 import { useCallback, useEffect, useState } from "react";
+import { handleEvent } from "../utils/transaction";
 
 import { Transaction } from "../types/transaction";
 import adapterABI from "../utils/ABIs/adapterCurveABI.json";
@@ -22,22 +21,25 @@ function useTransactionStore() {
     selectedNetwork,
     localWeb3,
     sdk,
+    fees,
 
     convertTransactions,
+    convertExchangeRate,
     convertPendingConvertToEthereum,
     convertAdapterAddress,
 
     setSwapRevertModalTx,
     setSwapRevertModalExchangeRate,
     setShowSwapRevertModal,
-    setShowGatewayModal,
-    setGatewayModalTx,
 
     setConvertTransactions,
     setConvertPendingConvertToEthereum,
   } = Store.useContainer();
 
-  const { getFinalDepositExchangeRate } = FeeStore.useContainer();
+  const {
+    getFinalDepositExchangeRate,
+    gatherFeeData,
+  } = FeeStore.useContainer();
 
   // Changing TX State
   const addTx = useCallback(
@@ -260,130 +262,6 @@ function useTransactionStore() {
     ]
   );
 
-  const initConvertToEthereum = useCallback(
-    async function (tx: Transaction) {
-      const {
-        id,
-        params,
-        awaiting,
-        renResponse,
-        renSignature,
-        error,
-        sourceTxHash,
-        sourceTxVOut,
-      } = tx;
-
-      const pending = convertPendingConvertToEthereum;
-      if (pending.indexOf(id) < 0) {
-        setConvertPendingConvertToEthereum(pending.concat([id]));
-      }
-
-      // completed
-      if (!awaiting) return;
-
-      // clear error when re-attempting
-      if (error) {
-        updateTx({ ...tx, error: false });
-      }
-
-      // ren already exposed a signature
-      if (renResponse && renSignature) {
-        completeConvertToEthereum(tx).catch(console.error);
-      } else {
-        // create or re-create shift in
-        const mint = await initMint(tx);
-
-        if (!params) {
-          addTx({
-            ...tx,
-            // @ts-ignore: property 'params' is private (TODO)
-            params: mint.params,
-            renBtcAddress: await mint.gatewayAddress(),
-          });
-        }
-
-        // wait for btc
-        const targetConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
-        let deposit: LockAndMint;
-        if (
-          awaiting === "ren-settle" &&
-          sourceTxHash &&
-          String(sourceTxVOut) !== "undefined"
-        ) {
-          deposit = await mint.wait(targetConfs, {
-            txHash: sourceTxHash,
-            // TODO: Can vOut be casted to number safely?
-            vOut: sourceTxVOut as number,
-          });
-        } else {
-          deposit = await mint
-            .wait(
-              targetConfs,
-              sourceTxHash && String(sourceTxVOut) !== "undefined"
-                ? {
-                    txHash: sourceTxHash,
-                    // TODO: Can vOut be casted to number safely?
-                    vOut: sourceTxVOut as number,
-                  }
-                : // TODO: should be undefined?
-                  ((null as unknown) as undefined)
-            )
-            .on("deposit", (dep) => {
-              if (dep.utxo) {
-                if (awaiting === "btc-init") {
-                  setShowGatewayModal(false);
-                  setGatewayModalTx(null);
-
-                  updateTx({
-                    ...tx,
-                    awaiting: "btc-settle",
-                    btcConfirmations: dep.utxo.confirmations,
-                    sourceTxHash: dep.utxo.txHash,
-                    sourceTxVOut: dep.utxo.vOut,
-                  });
-                } else {
-                  updateTx({
-                    ...tx,
-                    btcConfirmations: dep.utxo.confirmations,
-                    sourceTxHash: dep.utxo.txHash,
-                    sourceTxVOut: dep.utxo.vOut,
-                  });
-                }
-              }
-            });
-        }
-
-        // @ts-ignore: (combination of !== and || is wrong) (TODO)
-        if (awaiting !== "eth-init" || awaiting !== "eth-settle") {
-          updateTx({ ...tx, awaiting: "ren-settle" });
-        }
-
-        try {
-          const signature = await deposit.submit();
-          updateTx({
-            ...tx,
-            // @ts-ignore: `renVMResponse` is private (TODO)
-            renResponse: signature.renVMResponse,
-            renSignature: signature.signature,
-          });
-
-          completeConvertToEthereum(tx).catch(console.error);
-        } catch (e) {
-          console.error("renvm submit error", e);
-        }
-      }
-    },
-    [
-      addTx,
-      completeConvertToEthereum,
-      convertPendingConvertToEthereum,
-      setConvertPendingConvertToEthereum,
-      setGatewayModalTx,
-      setShowGatewayModal,
-      updateTx,
-    ]
-  );
-
   // WBTC to BTC
   const monitorBurnTx = useCallback(
     async (tx: Transaction) => {
@@ -506,22 +384,59 @@ function useTransactionStore() {
   const [monitoring, setMonitoring] = useState(false);
 
   useEffect(() => {
-    if (!monitoringStarted || monitoring) {
+    if (
+      !monitoringStarted ||
+      monitoring ||
+      !localWeb3 ||
+      !sdk ||
+      !convertAdapterAddress
+    ) {
       return;
     }
+
+    // if (convertExchangeRate == "") {
+    //   gatherFeeData();
+    //   return;
+    // }
 
     const network = selectedNetwork;
     const txs = convertTransactions.filter(
       (t) => t.sourceNetworkVersion === network
     );
 
-    txs.map((tx) => {
+    txs.map(async (tx) => {
       if (tx.sourceNetwork === "bitcoin") {
-        if (tx.destTxHash) {
-          monitorMintTx(tx).catch(console.error);
-        } else {
-          initConvertToEthereum(tx).catch(console.error);
-        }
+        const targetConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
+
+        await handleEvent(
+          tx,
+          {
+            event: "restored",
+            context: {
+              exchangeRate: 0, //convertExchangeRate,
+              adapterAddress: convertAdapterAddress,
+              convertAdapterAddress,
+              targetConfs,
+              gatherFeeData,
+              localWeb3,
+              sdk,
+              localWeb3Address,
+            },
+          },
+          (tx, event) => {
+            console.log(tx, event);
+            updateTx(tx);
+            if (event.event === "confirmed") {
+              monitorMintTx(tx);
+            }
+          }
+        );
+
+        // if (tx.destTxHash) {
+        //   monitorMintTx(tx).catch(console.error);
+        // } else {
+        //   initConvertToEthereum(tx).catch(console.error);
+        // }
       } else if (tx.sourceNetwork === "ethereum" && tx.awaiting && !tx.error) {
         monitorBurnTx(tx).catch(console.error);
       }
@@ -530,14 +445,62 @@ function useTransactionStore() {
     setMonitoring(true);
   }, [
     convertTransactions,
+    convertExchangeRate,
+    convertAdapterAddress,
+    gatherFeeData,
+    updateTx,
     setMonitoring,
-    initConvertToEthereum,
     monitorBurnTx,
+    localWeb3,
+    localWeb3Address,
     monitorMintTx,
     monitoringStarted,
+    sdk,
     selectedNetwork,
     monitoring,
   ]);
+
+  const initConvertToEthereum = useCallback(
+    async (tx: Transaction) => {
+      if (!localWeb3 || !sdk || !fees || !convertAdapterAddress) {
+        return;
+      }
+      const targetConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
+
+      if (convertPendingConvertToEthereum.indexOf(tx.id) < 0) {
+        setConvertPendingConvertToEthereum(
+          convertPendingConvertToEthereum.concat([tx.id])
+        );
+      }
+      const initializedTx = await handleEvent(tx, {
+        event: "created",
+        context: {
+          exchangeRate: 0,
+          adapterAddress: convertAdapterAddress,
+          gatherFeeData,
+          convertAdapterAddress,
+          targetConfs,
+          localWeb3,
+          sdk,
+          localWeb3Address,
+        },
+      });
+      console.log(initializedTx);
+      addTx(initializedTx);
+      return initializedTx;
+    },
+    [
+      localWeb3,
+      sdk,
+      fees,
+      convertAdapterAddress,
+      convertPendingConvertToEthereum,
+      gatherFeeData,
+      localWeb3Address,
+      addTx,
+      setConvertPendingConvertToEthereum,
+    ]
+  );
 
   return {
     updateTx,

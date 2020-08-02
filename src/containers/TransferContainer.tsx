@@ -182,13 +182,9 @@ export const TransferContainer: React.FC<Props> = () => {
     setConvertDestinationValid,
   } = Store.useContainer();
 
-  const {
-    initConvertFromEthereum,
-  } = TransactionStore.useContainer();
+  const { initConvertFromEthereum } = TransactionStore.useContainer();
 
-  const {
-    gatherFeeData,
-  } = FeeStore.useContainer();
+  const { gatherFeeData } = FeeStore.useContainer();
 
   const { initLocalWeb3, setWbtcAllowance } = Web3Store.useContainer();
 
@@ -238,7 +234,7 @@ export const TransferContainer: React.FC<Props> = () => {
       minExchangeRate: exchangeRate,
       maxSlippage,
       minSwapProceeds,
-      exchangeRateOnSubmit: "",
+      exchangeRateOnSubmit: convertExchangeRate,
       adapterAddress,
       localWeb3Address: localWeb3Address.toLowerCase(),
     };
@@ -372,9 +368,11 @@ export const TransferContainer: React.FC<Props> = () => {
                     <Grid item xs={12}>
                       <CurrencyInput
                         onAmountChange={(value) => {
-                          let amount = value < 0 ? "" : value;
+                          const amount = value < 0 ? "" : value;
                           setConvertAmount(amount);
-                          gatherFeeData().catch(console.error);
+                          if (amount !== "") {
+                            gatherFeeData(amount).catch(console.error);
+                          }
                         }}
                         onCurrencyChange={() => {}}
                         items={["BTC"]}
@@ -394,8 +392,8 @@ export const TransferContainer: React.FC<Props> = () => {
                               setConvertDestinationValid(
                                 AddressValidator.validate(
                                   event.target.value,
-                                  "ETH",
-                                ),
+                                  "ETH"
+                                )
                               );
                             }}
                           />
@@ -458,10 +456,8 @@ export const TransferContainer: React.FC<Props> = () => {
                             AddressValidator.validate(
                               event.target.value,
                               selectedDirection ? "BTC" : "ETH",
-                              selectedNetwork === "testnet"
-                                ? "testnet"
-                                : "prod",
-                            ),
+                              selectedNetwork === "testnet" ? "testnet" : "prod"
+                            )
                           );
                         }}
                       />
@@ -478,7 +474,7 @@ export const TransferContainer: React.FC<Props> = () => {
                       <span>
                         {exchangeRate && amount
                           ? `1 ${sourceAsset} = ${Number(exchangeRate).toFixed(
-                              4,
+                              4
                             )} ${destAsset}`
                           : "-"}{" "}
                       </span>
@@ -550,7 +546,7 @@ export const TransferContainer: React.FC<Props> = () => {
                               setConvertMaxSlippage(1);
                             } else {
                               setConvertMaxSlippage(
-                                Number((float / 100).toFixed(4)),
+                                Number((float / 100).toFixed(4))
                               );
                             }
                           }}

@@ -51,13 +51,9 @@ function useWeb3() {
     setConvertAdapterWbtcAllowance,
   } = Store.useContainer();
 
-  const {
-    initMonitoringTrigger,
-  } = TransactionStore.useContainer();
+  const { initMonitoringTrigger } = TransactionStore.useContainer();
 
-  const {
-    gatherFeeData,
-  } = FeeStore.useContainer();
+  const { gatherFeeData, updateRenVMFees } = FeeStore.useContainer();
 
   const updateAllowance = useCallback(async () => {
     const web3 = localWeb3;
@@ -74,7 +70,7 @@ function useWeb3() {
       .call();
 
     setConvertAdapterWbtcAllowance(
-      Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8),
+      Number(parseInt(allowance.toString()) / 10 ** 8).toFixed(8)
     );
   }, [
     convertAdapterAddress,
@@ -145,11 +141,11 @@ function useWeb3() {
         new Web3(
           `https://${
             providedNetworkOrStore === "testnet" ? "kovan" : "mainnet"
-          }.infura.io/v3/${INFURA_KEY}`,
-        ),
+          }.infura.io/v3/${INFURA_KEY}`
+        )
       );
     },
-    [selectedNetwork, setDataWeb3],
+    [selectedNetwork, setDataWeb3]
   );
 
   const getSignatures = useCallback(async (address: string, web3: Web3) => {
@@ -164,7 +160,7 @@ function useWeb3() {
       const sig = await web3.eth.personal.sign(
         web3.utils.utf8ToHex("Signing in to WBTC Cafe"),
         addressLowerCase,
-        "",
+        ""
       );
       signature = web3.utils.sha3(sig);
       localSigMapData[addressLowerCase] = signature;
@@ -221,7 +217,7 @@ function useWeb3() {
 
     const lsTransactions = lsData
       ? JSON.parse(lsData).filter(
-          (tx: Transaction) => tx.localWeb3Address === addressLowerCase,
+          (tx: Transaction) => tx.localWeb3Address === addressLowerCase
         )
       : [];
 
@@ -230,7 +226,7 @@ function useWeb3() {
 
       if (!disclosureAccepted) {
         const ok = window.confirm(
-          `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`,
+          `Please take note that this is beta software and is provided on an "as is" and "as available" basis. WBTC Cafe does not give any warranties and will not be liable for any loss, direct or indirect through continued use of this site.`
         );
 
         setDisclosureAccepted(ok);
@@ -257,7 +253,7 @@ function useWeb3() {
       const fsIds = fsTransactions.map((f) => f.id);
 
       const uniqueLsTransactions = lsTransactions.filter(
-        (ltx: Transaction) => fsIds.indexOf(ltx.id) < 0,
+        (ltx: Transaction) => fsIds.indexOf(ltx.id) < 0
       );
       const transactions = fsTransactions.concat(uniqueLsTransactions);
       setConvertTransactions(List(transactions));
@@ -266,7 +262,7 @@ function useWeb3() {
       setLoadingTransactions(false);
 
       watchWalletData().catch(console.error);
-      gatherFeeData().catch(console.error);
+      updateRenVMFees().then(() => gatherFeeData().catch(console.error));
       initMonitoringTrigger();
 
       if ((currentProvider as any)?.on) {
@@ -307,6 +303,7 @@ function useWeb3() {
     setLocalWeb3Address,
     setShowNetworkModal,
     setWalletConnectError,
+    updateRenVMFees,
     watchWalletData,
   ]);
 
@@ -320,7 +317,7 @@ function useWeb3() {
         setWbtcAddress(WBTC_MAIN);
       }
     },
-    [setConvertAdapterAddress, setWbtcAddress],
+    [setConvertAdapterAddress, setWbtcAddress]
   );
 
   const setNetwork = useCallback(
@@ -330,7 +327,7 @@ function useWeb3() {
 
       setAddresses(network).catch(console.error);
     },
-    [setAddresses, setSdk, setSelectedNetwork],
+    [setAddresses, setSdk, setSelectedNetwork]
   );
 
   return {
