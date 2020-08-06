@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": ["dom", "dom.iterable", "esnext", "ES2015"],
     "allowJs": false,
     "skipLibCheck": true,
+    "downlevelIteration": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -16,10 +17,8 @@
     "noEmit": true,
     "jsx": "react",
     "plugins": [
-      {
-        "name": "typescript-eslint-language-service"
-      }
-      ]
+      { "name": "typescript-eslint-language-service" }
+    ]
   },
   "include": ["src"]
 }

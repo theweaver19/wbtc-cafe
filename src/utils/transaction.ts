@@ -3,51 +3,65 @@ import { EthArgs, UTXOIndex } from "@renproject/interfaces";
 import { Asset } from "./assets";
 import RenJS from "@renproject/ren";
 import Web3 from "web3";
-import { AbiItem } from "web3-utils";
-import adapterABI from "../utils/ABIs/adapterCurveABI.json";
+import { useFeesStore } from "../store/feeStore";
+import { TxEvent } from "../store/transactionStore";
 
 interface TransactionEvent {
   event:
     | "restored" // Has been persisted, but could be in any state
     | "created" // Created locally, but no external calls
     | "initialized" // Gateway address generated, but not submitted to renvm
+    | "deposited" // RenVM detects a deposit confirmation from the source chain
     | "accepted" // Submitted to RenVM
+    | "confirmation" // Source chain confirmation event (not neccessarily fully confirmed)
     | "confirmed"; // Accepted by RenVM and confirmed by source Network
-  context: MintingContext;
+  context: MintingContext; // Have to be careful with stale context
 }
+
+// Transaction build (RenLockAndMint) -> Get gateway addr -> get utxo by waiting for deposit -> submit after UTXO present and store signature
+// -> wait for more btc confirmations -> submit to eth when finalized -> wait for eth confirmations
+
+type TxDispatch = (txEvent: TxEvent) => void;
 
 export const handleEvent = async (
   tx: Transaction,
   event: TransactionEvent,
-  listener?: (tx: Transaction, event: TransactionEvent) => void
+  dispatch: TxDispatch
 ): Promise<Transaction> => {
-  console.log("handing tx event");
+  if (localStorage.getItem("nuking")) {
+    return tx;
+  }
   switch (event.event) {
     case "restored":
       switch (tx.awaiting) {
+        case "btc-construct":
+          return handleEvent(tx, { ...event, event: "created" }, dispatch);
         case "btc-init":
-          return handleEvent(tx, { ...event, event: "created" }, listener);
+          return handleEvent(tx, { ...event, event: "initialized" }, dispatch);
         case "btc-settle":
-          return handleEvent(tx, { ...event, event: "accepted" }, listener);
+          return handleEvent(tx, { ...event, event: "accepted" }, dispatch);
         case "ren-settle":
           if (!tx.sourceTxHash) {
-            return handleEvent(tx, { ...event, event: "accepted" }, listener);
+            return handleEvent(tx, { ...event, event: "accepted" }, dispatch);
           }
-          return handleEvent(tx, { ...event, event: "initialized" }, listener);
+          return handleEvent(tx, { ...event, event: "initialized" }, dispatch);
         case "eth-settle":
-          listener &&
-            listener(tx, { event: "confirmed", context: event.context });
+          dispatch({ tx, type: "confirmed" });
           return tx;
       }
       break;
     case "created":
+      console.log("handling created");
       if (tx.type === "convert") {
         if (tx.sourceAsset === Asset.BTC) {
           const res = await initializeMinting(tx, event.context);
           console.log(res);
-          listener &&
-            listener(res, { event: "created", context: event.context });
-          handleEvent(res, { event: "initialized", context: event.context });
+          dispatch({ tx: res, type: "created" });
+          handleEvent(
+            res,
+            { event: "initialized", context: event.context },
+            dispatch
+          );
           return res;
         }
         if (tx.sourceNetwork === "ethereum") {
@@ -56,34 +70,61 @@ export const handleEvent = async (
       }
       break;
     case "initialized":
+      console.log("handling initialized");
       if (tx.type === "convert") {
         // doesn't quite make sense because we need the deposit txHash to continue
-        const res = await getRenVMResponse(tx, event.context);
-        listener &&
-          listener(res, { event: "initialized", context: event.context });
+        let initTx = tx;
+        if (!tx.sourceTxHash) {
+          initTx = await waitForDeposit(tx, event.context, dispatch);
+        } else {
+          waitForDeposit(tx, event.context, dispatch);
+        }
+        const res = await submitToRenVM(initTx, event.context);
+        dispatch({ tx: res, type: "initialized" });
 
-        handleEvent(res, { event: "accepted", context: event.context });
+        handleEvent(
+          res,
+          { event: "accepted", context: event.context },
+          dispatch
+        );
         return res;
       }
       break;
 
     case "accepted":
-      const res3 = await waitForDeposit(tx, event.context, listener);
-      listener && listener(res3, { event: "accepted", context: event.context });
+      console.log("handling accepted");
+      const res3 = await waitForDeposit(tx, event.context, dispatch);
+      dispatch({ tx: res3, type: "accepted" });
       if (res3.btcConfirmations ?? 0 > event.context.targetConfs) {
         return handleEvent(
           res3,
           { event: "confirmed", context: event.context },
-          listener
+          dispatch
         );
       }
       return res3;
 
+    case "deposited":
+      console.log("handling deposited");
+      if (
+        tx.renSignature &&
+        (tx.btcConfirmations ?? 0 > event.context.targetConfs)
+      ) {
+        return handleEvent(
+          tx,
+          { event: "confirmed", context: event.context },
+          dispatch
+        );
+      }
+      return tx;
+
     case "confirmed":
-      // Need to break this up so that we don't need to wait for the method to confirm
-      const res2 = await submitToEthereum(tx, event.context);
-      listener &&
-        listener(res2, { event: "confirmed", context: event.context });
+      console.log("handling confirmed");
+      // submission is actually handled by a call from a modal
+      // although previously it would auto-submit if within bounds
+      // await submitToEthereum(tx, event.context);
+      const res2 = { ...tx, awaiting: "eth-init" };
+      dispatch({ tx: res2, type: "confirmed" });
       return res2;
   }
 
@@ -94,70 +135,67 @@ interface MintingContext {
   sdk: RenJS;
   adapterAddress: string;
   localWeb3Address: string;
-  gatherFeeData: any;
+  gatherFeeData: ReturnType<typeof useFeesStore>["gatherFeeData"];
   localWeb3: Web3;
   targetConfs: number;
-  exchangeRate: number;
   convertAdapterAddress: string;
 }
 
-const submitToEthereum = async (
-  tx: Transaction,
-  context: MintingContext
-): Promise<Transaction> => {
-  console.log("Submit to Ethereum");
-  const {
-    localWeb3,
-    localWeb3Address,
-    gatherFeeData,
-    convertAdapterAddress,
-  } = context;
+// As this is explicitly triggered by the user, we don't need this here
+// const submitToEthereum = async (
+//   tx: Transaction,
+//   context: MintingContext
+// ): Promise<Transaction> => {
+//   console.log("Submit to Ethereum");
+//   const {
+//     localWeb3,
+//     localWeb3Address,
+//     gatherFeeData,
+//     convertAdapterAddress,
+//   } = context;
 
-  const { params, renSignature, renResponse } = tx;
+//   const { params, renSignature, renResponse } = tx;
 
-  const adapterContract = new localWeb3.eth.Contract(
-    adapterABI as AbiItem[],
-    convertAdapterAddress
-  );
+//   const adapterContract = new localWeb3.eth.Contract(
+//     adapterABI as AbiItem[],
+//     convertAdapterAddress
+//   );
 
-  const { exchangeRate } = await gatherFeeData(tx.amount);
+//   const feeData = await gatherFeeData(Number(tx.amount));
+//   if (!feeData) {
+//     throw new Error("Failed to fetch fee data");
+//   }
+//   const newMinExchangeRate = params.contractCalls[0].contractParams[0].value;
 
-  let newMinExchangeRate = params.contractCalls[0].contractParams[0].value;
-  if (/* approveSwappedAsset === */ Asset.WBTC) {
-    const rateMinusOne =
-      RenJS.utils.value(exchangeRate, Asset.BTC).sats().toNumber() - 1;
-    newMinExchangeRate = rateMinusOne.toFixed(0);
-  }
-
-  return new Promise<Transaction>(async (resolve, reject) => {
-    try {
-      await adapterContract.methods
-        .mintThenSwap(
-          params.contractCalls[0].contractParams[0].value,
-          newMinExchangeRate,
-          params.contractCalls[0].contractParams[1].value,
-          params.contractCalls[0].contractParams[2].value,
-          renResponse.autogen.amount,
-          renResponse.autogen.nhash,
-          renSignature
-        )
-        .send({
-          from: localWeb3Address,
-        })
-        .on("transactionHash", (hash: string) => {
-          const newTx = {
-            ...tx,
-            awaiting: "eth-settle",
-            destTxHash: hash,
-            error: false,
-          };
-          return resolve(newTx);
-        });
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
+//   return new Promise<Transaction>(async (resolve, reject) => {
+//     try {
+//       await adapterContract.methods
+//         .mintThenSwap(
+//           params.contractCalls[0].contractParams[0].value,
+//           newMinExchangeRate,
+//           params.contractCalls[0].contractParams[1].value,
+//           params.contractCalls[0].contractParams[2].value,
+//           renResponse.autogen.amount,
+//           renResponse.autogen.nhash,
+//           renSignature
+//         )
+//         .send({
+//           from: localWeb3Address,
+//         })
+//         .on("transactionHash", (hash: string) => {
+//           const newTx = {
+//             ...tx,
+//             awaiting: "eth-settle",
+//             destTxHash: hash,
+//             error: false,
+//           };
+//           return resolve(newTx);
+//         });
+//     } catch (error) {
+//       reject(error);
+//     }
+//   });
+// };
 
 const renLockAndMint = (tx: Transaction, context: MintingContext) => {
   console.log("Ren Lock and Mint");
@@ -225,10 +263,12 @@ const renLockAndMint = (tx: Transaction, context: MintingContext) => {
 };
 
 // Wait for deposits, utxo might be present
+// Called when waiting to for pre-confirmation to provide utxo to renvm
+// then to wait for number of confirmations to finalize transaction
 const waitForDeposit = async (
   tx: Transaction,
   context: MintingContext,
-  listener?: any
+  dispatch: TxDispatch
 ) => {
   console.log("Waiting for Deposit");
 
@@ -249,46 +289,48 @@ const waitForDeposit = async (
     };
   }
 
-  console.log(source, tx);
   const { targetConfs } = context;
 
-  return new Promise<Transaction>(async (resolve) => {
+  return new Promise<Transaction>(async (resolve, reject) => {
     const deposit = renLockAndMint(tx, context);
-    console.log(deposit);
-    deposit.wait(targetConfs, source).on("deposit", (dep) => {
-      console.log("deposited", dep);
-      const newTx = {
-        ...tx,
-        awaiting: tx.renSignature ? "btc-settle" : "ren-settle",
-        btcConfirmations: dep.utxo.confirmations,
-        sourceTxHash: dep.utxo.txHash,
-        sourceTxVOut: dep.utxo.vOut,
-      };
-      listener && listener(newTx, { event: "deposited", context });
-      resolve(newTx);
-    });
+    return deposit
+      .wait(targetConfs, source)
+      .on("deposit", async (dep) => {
+        console.log("deposited", dep);
+        const newTx: Transaction = {
+          ...tx,
+          awaiting: tx.renSignature ? "btc-settle" : "ren-settle",
+          btcConfirmations: dep.utxo.confirmations ?? 0,
+          sourceTxHash: dep.utxo.txHash,
+          sourceTxVOut: dep.utxo.vOut,
+        };
+        // FIXME: kill this listener at some point
+        // We can't trust this firing multiple times as tx will be out of date
+        dispatch({ tx: newTx, type: "deposited" });
+        resolve(newTx);
+      })
+      .catch(reject);
   });
 };
 
-// Transaction build (RenLockAndMint) -> Get gateway addr -> get utxo by waiting for deposit -> submit after UTXO present and store signature
-// -> wait for more btc confirmations -> submit to eth when finalized
-
 // After we have a deposit, submit after fetching by utxo details
-const getRenVMResponse = async (tx: Transaction, context: MintingContext) => {
+const submitToRenVM = async (tx: Transaction, context: MintingContext) => {
   console.log("Getting renVM response");
   // Should always have these if waiting for a response
   if (!tx.sourceTxHash || String(tx.sourceTxVOut) === "undefined") {
+    console.error("tried to submit without sourcetxhash");
     return { ...tx, error: true };
   }
   const mint = renLockAndMint(tx, context);
 
   // @ts-ignore: `renVMResponse` is private (TODO)
   const { renVMResponse, signature } = await (
-    await mint.wait(0, {
+    await mint.wait(context.targetConfs, {
       txHash: tx.sourceTxHash,
       vOut: tx.sourceTxVOut as number,
     })
   ).submit();
+  console.log("submitted to renvm");
 
   const userBtcTxAmount = Number(
     (renVMResponse.in.utxo.amount / 10 ** 8).toFixed(8)
@@ -296,7 +338,7 @@ const getRenVMResponse = async (tx: Transaction, context: MintingContext) => {
 
   if (!renVMResponse || !signature || !userBtcTxAmount) {
     console.error("Invalid submission");
-    throw "Failed to submit tx";
+    throw new Error("Failed to submit tx to RenVM");
   }
 
   return {
@@ -308,15 +350,17 @@ const getRenVMResponse = async (tx: Transaction, context: MintingContext) => {
   };
 };
 
-// Submit a mint request to RenVM
+// Construct a mint request & set gateway address
 const initializeMinting = async (tx: Transaction, context: MintingContext) => {
-  console.log("initizliaing minting");
+  console.log("init mint parameters");
   const deposit = renLockAndMint(tx, context);
   try {
+    const renBtcAddress = await deposit.gatewayAddress();
     return {
       ...tx,
-      awaiting: "btc-settle",
-      renBtcAddress: await deposit.gatewayAddress(),
+      // to match the previous flow, we first need to check for a btc-init tx
+      awaiting: "btc-init", // "btc-settle",
+      renBtcAddress,
       // @ts-ignore: property 'params' is private (TODO)
       params: deposit.params,
     };
@@ -332,129 +376,3 @@ const initializeMinting = async (tx: Transaction, context: MintingContext) => {
 const initializeBurning = (tx: Transaction) => {
   return tx;
 };
-
-// const;
-
-// const initConvertToEthereum = useCallback(
-//   async function (tx: Transaction) {
-//     const {
-//       id,
-//       params,
-//       awaiting,
-//       renResponse,
-//       renSignature,
-//       error,
-//       sourceTxHash,
-//       sourceTxVOut,
-//     } = tx;
-
-//     const pending = convertPendingConvertToEthereum;
-//     if (pending.indexOf(id) < 0) {
-//       setConvertPendingConvertToEthereum(pending.concat([id]));
-//     }
-
-//     // completed
-//     if (!awaiting) return;
-
-//     // clear error when re-attempting
-//     if (error) {
-//       updateTx({ ...tx, error: false });
-//     }
-
-//     // ren already exposed a signature
-//     if (renResponse && renSignature) {
-//       completeConvertToEthereum(tx).catch(console.error);
-//     } else {
-//       // create or re-create shift in
-//       const mint = await initMint(tx);
-
-//       if (!params) {
-//         addTx({
-//           ...tx,
-//           // @ts-ignore: property 'params' is private (TODO)
-//           params: mint.params,
-//           renBtcAddress: await mint.gatewayAddress(),
-//         });
-//       }
-
-//       // wait for btc
-//       const targetConfs = tx.sourceNetworkVersion === "testnet" ? 2 : 6;
-//       let deposit: LockAndMint;
-//       if (
-//         awaiting === "ren-settle" &&
-//         sourceTxHash &&
-//         String(sourceTxVOut) !== "undefined"
-//       ) {
-//         deposit = await mint.wait(targetConfs, {
-//           txHash: sourceTxHash,
-//           // TODO: Can vOut be casted to number safely?
-//           vOut: sourceTxVOut as number,
-//         });
-//       } else {
-//         deposit = await mint
-//           .wait(
-//             targetConfs,
-//             sourceTxHash && String(sourceTxVOut) !== "undefined"
-//               ? {
-//                   txHash: sourceTxHash,
-//                   // TODO: Can vOut be casted to number safely?
-//                   vOut: sourceTxVOut as number,
-//                 }
-//               : // TODO: should be undefined?
-//                 ((null as unknown) as undefined)
-//           )
-//           .on("deposit", (dep) => {
-//             if (dep.utxo) {
-//               if (awaiting === "btc-init") {
-//                 setShowGatewayModal(false);
-//                 setGatewayModalTx(null);
-
-//                 updateTx({
-//                   ...tx,
-//                   awaiting: "btc-settle",
-//                   btcConfirmations: dep.utxo.confirmations,
-//                   sourceTxHash: dep.utxo.txHash,
-//                   sourceTxVOut: dep.utxo.vOut,
-//                 });
-//               } else {
-//                 updateTx({
-//                   ...tx,
-//                   btcConfirmations: dep.utxo.confirmations,
-//                   sourceTxHash: dep.utxo.txHash,
-//                   sourceTxVOut: dep.utxo.vOut,
-//                 });
-//               }
-//             }
-//           });
-//       }
-
-//       // @ts-ignore: (combination of !== and || is wrong) (TODO)
-//       if (awaiting !== "eth-init" || awaiting !== "eth-settle") {
-//         updateTx({ ...tx, awaiting: "ren-settle" });
-//       }
-
-//       try {
-//         const signature = await deposit.submit();
-//         updateTx({
-//           ...tx,
-//           // @ts-ignore: `renVMResponse` is private (TODO)
-//           renResponse: signature.renVMResponse,
-//           renSignature: signature.signature,
-//         });
-
-//         completeConvertToEthereum(tx).catch(console.error);
-//       } catch (e) {
-//         console.error("renvm submit error", e);
-//       }
-//     }
-//   },
-//   [
-//     addTx,
-//     completeConvertToEthereum,
-//     convertPendingConvertToEthereum,
-//     setConvertPendingConvertToEthereum,
-//     setGatewayModalTx,
-//     setShowGatewayModal,
-//     updateTx,
-//   ]
-// );

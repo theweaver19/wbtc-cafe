@@ -217,7 +217,7 @@ export const TransferContainer: React.FC<Props> = () => {
       id: "tx-" + Math.floor(Math.random() * 10 ** 16),
       type: "convert",
       instant: false,
-      awaiting: "btc-init",
+      awaiting: "btc-construct",
       sourceAsset: Asset.BTC,
       sourceAmount: "",
       sourceNetwork: "bitcoin",
