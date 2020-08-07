@@ -4,7 +4,7 @@ import { Asset } from "./assets";
 import RenJS from "@renproject/ren";
 import Web3 from "web3";
 import { useFeesStore } from "../store/feeStore";
-import { TxEvent } from "../store/transactionStore";
+import { TxEvent } from "../hooks/useTransactionLifecycle";
 
 interface TransactionEvent {
   event:
@@ -13,7 +13,6 @@ interface TransactionEvent {
     | "initialized" // Gateway address generated, but not submitted to renvm
     | "deposited" // RenVM detects a deposit confirmation from the source chain
     | "accepted" // Submitted to RenVM
-    | "confirmation" // Source chain confirmation event (not neccessarily fully confirmed)
     | "confirmed"; // Accepted by RenVM and confirmed by source Network
   context: MintingContext; // Have to be careful with stale context
 }

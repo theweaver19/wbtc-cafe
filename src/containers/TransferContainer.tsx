@@ -422,9 +422,9 @@ export const TransferContainer: React.FC<Props> = () => {
                           <CurrencyInput
                             inputRef={wbtcAmountRef}
                             onAmountChange={(value) => {
-                              let amount = value < 0 ? "" : value;
+                              const amount = value < 0 ? 0 : value;
                               setConvertAmount(amount);
-                              gatherFeeData().catch(console.error);
+                              gatherFeeData(amount).catch(console.error);
                             }}
                             onCurrencyChange={() => {}}
                             items={["WBTC"]}
