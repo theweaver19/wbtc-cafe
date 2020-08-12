@@ -32,7 +32,8 @@ function useTransactionStore() {
         return;
         // return updateTx(tx);
       }
-      txs = txs.push(tx);
+      const timestamp = new Date().getTime();
+      txs = txs.push({ ...tx, txCreatedAt: timestamp, txUpdatedAt: timestamp });
       setConvertTransactions(List(txs.toArray()));
 
       // use localStorage
@@ -61,7 +62,7 @@ function useTransactionStore() {
     (newTx: Transaction): Transaction => {
       const txs = convertTransactions.map((t) => {
         if (t.id === newTx.id) {
-          return newTx;
+          return { ...newTx, txUpdatedAt: new Date().getTime() };
         }
         return t;
       });
@@ -118,7 +119,7 @@ function useTransactionStore() {
     [convertTransactions]
   );
 
-  // reset all txs
+  // delete all txs, locally and remotely
   const nuke = useCallback(async () => {
     localStorage.setItem("nuking", "true");
 

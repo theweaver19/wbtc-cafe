@@ -51,7 +51,7 @@ export const TransactionsTableContainer: React.FC<Props> = () => {
   const { initLocalWeb3 } = Web3Store.useContainer();
 
   const transactions = convertTransactions.filter(
-    (t) => t.sourceNetworkVersion === selectedNetwork,
+    (t) => t.sourceNetworkVersion === selectedNetwork
   );
 
   const signedIn = fsSignature;
@@ -74,32 +74,36 @@ export const TransactionsTableContainer: React.FC<Props> = () => {
         </TableHead>
         <TableBody>
           {showTransactions &&
-            transactions.map((tx, i) => {
-              const destAsset = tx.swapReverted
-                ? Asset.renBTC
-                : tx.destAsset.toUpperCase();
-              const sourceAsset = tx.sourceAsset.toUpperCase();
-              return (
-                <TableRow key={i}>
-                  <TableCell align="left">
-                    <Typography variant="caption">
-                      {tx.sourceAmount ? tx.sourceAmount : tx.amount}{" "}
-                      {sourceAsset} → {destAsset}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption">
-                      <ConversionStatus tx={tx} />
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Grid container justify="flex-end">
-                      <ConversionActions tx={tx} />
-                    </Grid>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            transactions
+              .sort((txa, txb) => {
+                return (txa.txCreatedAt ?? 0) < (txb?.txCreatedAt ?? 0) ? 1 : 0;
+              })
+              .map((tx, i) => {
+                const destAsset = tx.swapReverted
+                  ? Asset.renBTC
+                  : tx.destAsset.toUpperCase();
+                const sourceAsset = tx.sourceAsset.toUpperCase();
+                return (
+                  <TableRow key={i}>
+                    <TableCell align="left">
+                      <Typography variant="caption">
+                        {tx.sourceAmount ? tx.sourceAmount : tx.amount}{" "}
+                        {sourceAsset} → {destAsset}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption">
+                        <ConversionStatus tx={tx} />
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Grid container justify="flex-end">
+                        <ConversionActions tx={tx} />
+                      </Grid>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
         </TableBody>
       </Table>
       <div>

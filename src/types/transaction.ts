@@ -33,6 +33,10 @@ export interface Transaction {
   renSignature?: any;
   params?: any;
 
+  // manual timestamps
+  txCreatedAt?: number;
+  txUpdatedAt?: number;
+
   // Database specific
   created?: unknown;
   updated?: unknown;
