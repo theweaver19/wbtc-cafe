@@ -5,7 +5,7 @@ import Grid from "@material-ui/core/Grid";
 import Modal from "@material-ui/core/Modal";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-import React, { useMemo } from "react";
+import React from "react";
 import { makeStyles } from "@material-ui/core";
 
 import { Store } from "../store/store";
@@ -69,9 +69,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const SwapRevertModalContainer: React.FC<Props> = () => {
+export const SwapRevertModalContainer: React.FC = () => {
   const classes = useStyles();
   const {
     showSwapRevertModal,
@@ -89,13 +87,6 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
     updateTx,
   } = TransactionStore.useContainer();
 
-  // const transaction = useMemo(
-  //   () =>
-  //     convertTransactions
-  //       .filter((tx) => tx.id === swapRevertModalTx)
-  //       .first(null),
-  //   [convertTransactions, swapRevertModalTx],
-  // );
   const transaction = convertTransactions
     .filter((tx) => tx.id === swapRevertModalTx)
     .first(null);
@@ -108,7 +99,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
   const fixedFee = Number(fees[Asset.BTC]["lock"] / 10 ** 8);
   const dynamicFeeRate = Number(fees[Asset.BTC].ethereum["mint"] / 10000);
   const renVMFee = (Number(transaction.sourceAmount) * dynamicFeeRate).toFixed(
-    8,
+    8
   );
   const networkFee = Number(fixedFee).toFixed(8);
   const net =
@@ -116,7 +107,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
       ? Number(Number(amount) - Number(renVMFee) - fixedFee).toFixed(8)
       : "0.00000000";
   const total = Number(
-    Number(net) * Number(swapRevertModalExchangeRate),
+    Number(net) * Number(swapRevertModalExchangeRate)
   ).toFixed(8);
   const minRate = Number(Number(transaction.minExchangeRate).toFixed(8));
 
@@ -185,7 +176,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
                   className={classNames(
                     classes.receiptTitle,
                     classes.total,
-                    classes.continueTitle,
+                    classes.continueTitle
                   )}
                 >
                   Continuing With renBTC
@@ -277,7 +268,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
             className={classNames(classes.button)}
             onClick={() => {
               completeConvertToEthereum(transaction, Asset.WBTC).catch(
-                console.error,
+                console.error
               );
               setShowSwapRevertModal(false);
             }}
@@ -292,7 +283,7 @@ export const SwapRevertModalContainer: React.FC<Props> = () => {
             onClick={() => {
               const newTx = updateTx({ ...transaction, swapReverted: true });
               completeConvertToEthereum(newTx, Asset.renBTC).catch(
-                console.error,
+                console.error
               );
               setShowSwapRevertModal(false);
             }}

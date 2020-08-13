@@ -33,9 +33,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const Footer: React.FC<Props> = () => {
+export const Footer: React.FC = () => {
   const classes = useStyles();
   const { selectedNetwork } = Store.useContainer();
 

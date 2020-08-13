@@ -116,9 +116,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const DepositModalContainer: React.FC<Props> = () => {
+export const DepositModalContainer: React.FC = () => {
   const classes = useStyles();
   const {
     depositModalTx,
@@ -138,7 +136,7 @@ export const DepositModalContainer: React.FC<Props> = () => {
   const { initConvertToEthereum } = TransactionStore.useContainer();
 
   const [depositDisclosureChecked, setDepositDisclosureChecked] = useState(
-    false,
+    false
   );
 
   const createDeposit = () => {

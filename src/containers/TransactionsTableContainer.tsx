@@ -36,9 +36,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const TransactionsTableContainer: React.FC<Props> = () => {
+export const TransactionsTableContainer: React.FC = () => {
   const classes = useStyles();
   const {
     convertTransactions,

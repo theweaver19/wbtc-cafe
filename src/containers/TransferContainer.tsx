@@ -147,9 +147,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const TransferContainer: React.FC<Props> = () => {
+export const TransferContainer: React.FC = () => {
   const classes = useStyles();
   const {
     convertAmount,

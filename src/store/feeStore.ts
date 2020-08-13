@@ -119,7 +119,7 @@ export function useFeesStore() {
         console.error(e);
       }
     },
-    [dataWeb3, fees, convertSelectedDirection]
+    [convertAmount, convertSelectedDirection, fees, dataWeb3, selectedNetwork, setConvertExchangeRate, setConvertRenVMFee, setConvertNetworkFee, setConvertConversionTotal]
   );
 
   const getFinalDepositExchangeRate = useCallback(

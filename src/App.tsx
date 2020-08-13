@@ -52,9 +52,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const App: React.FC<Props> = () => {
+export const App: React.FC = () => {
   const { updateRenVMFees } = FeeStore.useContainer();
   const { initDataWeb3, setNetwork } = Web3Store.useContainer();
   const classes = useStyles();

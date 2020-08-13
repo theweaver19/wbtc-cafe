@@ -6,7 +6,7 @@ import Grid from "@material-ui/core/Grid";
 import Modal from "@material-ui/core/Modal";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-import React, { useMemo } from "react";
+import React from "react";
 
 import { Store } from "../store/store";
 import { TransactionStore } from "../store/transactionStore";
@@ -61,9 +61,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const CancelModalContainer: React.FC<Props> = () => {
+export const CancelModalContainer: React.FC = () => {
   const classes = useStyles();
   const {
     cancelModalTx,
@@ -73,19 +71,17 @@ export const CancelModalContainer: React.FC<Props> = () => {
     convertTransactions,
   } = Store.useContainer();
 
-  // const transaction = useMemo(
-  //   () =>
-  //     convertTransactions.filter((tx) => tx.id === cancelModalTx).first(null),
-  //   [convertTransactions, cancelModalTx],
-  // );
   const transaction = convertTransactions
     .filter((tx) => tx.id === cancelModalTx)
     .first(null);
 
   const { removeTx } = TransactionStore.useContainer();
 
+  if (!transaction) return null;
+
   const cancelDeposit = () => {
-    removeTx(transaction!);
+    if (!transaction) return;
+    removeTx(transaction);
 
     setShowCancelModal(false);
     setCancelModalTx(null);
@@ -95,8 +91,6 @@ export const CancelModalContainer: React.FC<Props> = () => {
     setShowCancelModal(false);
     setCancelModalTx(null);
   };
-
-  if (!transaction) return null;
 
   return (
     <Modal

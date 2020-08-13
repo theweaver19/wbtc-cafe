@@ -41,9 +41,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const NetworkModalContainer: React.FC<Props> = () => {
+export const NetworkModalContainer: React.FC = () => {
   const classes = useStyles();
   const {
     showNetworkModal,

@@ -6,7 +6,7 @@ import Modal from "@material-ui/core/Modal";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import QRCode from "qrcode.react";
-import React, { useMemo } from "react";
+import React from "react";
 import { makeStyles } from "@material-ui/core";
 
 import { ActionLink } from "../components/ActionLink";
@@ -89,9 +89,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const ViewGatewayContainer: React.FC<Props> = () => {
+export const ViewGatewayContainer: React.FC = () => {
   const classes = useStyles();
   const {
     showGatewayModal,
@@ -106,11 +104,6 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
     setGatewayModalTx(null);
   };
 
-  // const transaction = useMemo(
-  //   () =>
-  //     convertTransactions.filter((tx) => tx.id === gatewayModalTx).first(null),
-  //   [convertTransactions, gatewayModalTx],
-  // );
   const transaction = convertTransactions
     .filter((tx) => tx.id === gatewayModalTx)
     .first(null);
@@ -164,7 +157,7 @@ export const ViewGatewayContainer: React.FC<Props> = () => {
                       document.execCommand("copy");
                       alert(
                         "Address copied to clipboard: " +
-                          (copyText as any).value,
+                          (copyText as any).value
                       );
                     }
                   }}

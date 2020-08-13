@@ -80,9 +80,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface Props {}
-
-export const NavContainer: React.FC<Props> = () => {
+export const NavContainer: React.FC = () => {
   const classes = useStyles();
   const {
     localWeb3Address,
