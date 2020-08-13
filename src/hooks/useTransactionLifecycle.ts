@@ -10,13 +10,12 @@ import adapterABI from "../utils/ABIs/adapterCurveABI.json";
 import { Asset } from "../utils/assets";
 import Web3 from "web3";
 import { Transaction as EthTransaction } from "web3-core";
-import { useFeesStore } from "../store/feeStore";
 
 export enum TransactionEventTypes {
   "restored", // Transaction loaded from persistence, and needs to have lifecyle action determined
   "created", // User has provided parameters to create a transaction which has been persisted
   "initialized", // Gateway address generated, but no deposit yet detected
-  "detected", // UTXO is detected in a deposit event
+  "detected", // UTXO / txhash is detected in a deposit event / contract call
   "deposited", // RenVM detects a deposit confirmation from the source chain, utxo is present
   "confirmed", // Source chain has posted all neccessary confirmations
   "accepted", // Submitted to RenVM & signature returned
@@ -28,16 +27,24 @@ export enum TransactionEventTypes {
 
 export interface TxEvent {
   type: TransactionEventTypes;
-  tx: Transaction; // tx
+  tx: Transaction;
 }
 
 export interface MintingContext {
   sdk: RenJS;
   adapterAddress: string;
   localWeb3Address: string;
-  gatherFeeData: ReturnType<typeof useFeesStore>["gatherFeeData"];
-  localWeb3: Web3;
   convertAdapterAddress: string;
+}
+
+export interface TransactionLifecycleMethods {
+  completeConvertToEthereum: (
+    transaction: Transaction,
+    approveSwappedAsset?: string
+  ) => Promise<void>;
+  initConvertToEthereum: (tx: Transaction) => Promise<void>;
+  initConvertFromEthereum: (tx: Transaction) => Promise<void>;
+  initMonitoringTrigger: () => void;
 }
 
 const getTargetConfs = (
@@ -82,7 +89,7 @@ export function useTransactionLifecycle(
   getTx: (x: string) => Transaction | null,
   updateTx: (x: Transaction) => Transaction,
   txExists: (x: Transaction) => boolean
-) {
+): TransactionLifecycleMethods {
   const {
     localWeb3Address,
     selectedNetwork,
@@ -112,19 +119,17 @@ export function useTransactionLifecycle(
     if (!localWeb3 || !sdk) return;
     mintingContext.current = {
       adapterAddress: convertAdapterAddress,
-      gatherFeeData,
       convertAdapterAddress,
-      localWeb3,
       sdk,
       localWeb3Address,
     };
   }, [convertAdapterAddress, gatherFeeData, localWeb3, sdk, localWeb3Address]);
 
+  // We use a simple queue to store events that need to be processed
   const [txEvents, setTxEvents] = useState<TxEvent[]>([]);
   const addTxEvent = useCallback(
     (t: TxEvent) =>
       setTxEvents((x) => {
-        console.log("adding txevent", t, x);
         return [t, ...x];
       }),
     [setTxEvents]
@@ -132,24 +137,19 @@ export function useTransactionLifecycle(
 
   // Check confirmation status of ethereum minting transaction
   const checkMintingTx = useCallback(
-    async (tx) => {
-      if (!localWeb3) {
-        return;
-      }
-      // Get latest tx state every iteration
-      const latestTx = getTx(tx.id) || tx;
-      if (!latestTx.destTxHash) {
+    async (tx: Transaction) => {
+      if (!localWeb3 || !tx.destTxHash) {
         return;
       }
 
       // Get transaction details
-      const txDetails = await localWeb3.eth.getTransaction(latestTx.destTxHash);
+      const txDetails = await localWeb3.eth.getTransaction(tx.destTxHash);
       if (txDetails) {
         // Update confs
         const confs = await getEthConfs(localWeb3.eth, txDetails);
         if (confs > 0) {
           const receipt = await localWeb3.eth.getTransactionReceipt(
-            latestTx.destTxHash
+            tx.destTxHash
           );
 
           // reverted because gas ran out
@@ -157,11 +157,11 @@ export function useTransactionLifecycle(
             (receipt && ((receipt.status as unknown) as string) === "0x0") ||
             receipt.status === false
           ) {
-            // addEvent "revered"
-            updateTx({ ...latestTx, error: true, destTxHash: "" });
+            // addEvent "reverted"
+            updateTx({ ...tx, error: true, destTxHash: "" });
           } else {
             updateTx({
-              ...latestTx,
+              ...tx,
               destTxConfs: confs,
               awaiting: "",
               error: false,
@@ -169,13 +169,13 @@ export function useTransactionLifecycle(
           }
         }
       } else {
-        updateTx({ ...latestTx, error: true });
+        updateTx({ ...tx, error: true });
       }
     },
-    [getTx, updateTx, localWeb3]
+    [updateTx, localWeb3]
   );
 
-  // Given a transaction, check it's current ethereum confirmation status
+  // Given a transaction, check its current ethereum confirmation status
   // and submit to renVM if ready
   const checkBurningTx = useCallback(
     async (tx) => {
@@ -229,7 +229,7 @@ export function useTransactionLifecycle(
         }
       }
     },
-    [sdk, localWeb3, updateTx, getTx]
+    [sdk, localWeb3, updateTx, addTxEvent, getTx]
   );
 
   // monitor pending ethereum minting transactions
@@ -247,6 +247,7 @@ export function useTransactionLifecycle(
     }
   }, [convertTransactions, checkMintingTx, checkBurningTx]);
 
+  // Check txs every 5 seconds
   useInterval(monitorTxs, 5000);
 
   // Called to check if the tx is aproved for current exchange rate,
@@ -271,10 +272,13 @@ export function useTransactionLifecycle(
       const { params, renSignature, minExchangeRate } = tx;
       // if swap will revert to renBTC, let the user know before proceeding
       const exchangeRate = await getFinalDepositExchangeRate(tx);
+      if (!exchangeRate || !minExchangeRate) {
+        throw Error("missing exchange rates");
+      }
       updateTx({ ...tx, exchangeRateOnSubmit: exchangeRate });
-      if (!approveSwappedAsset && exchangeRate! < minExchangeRate!) {
+      if (!approveSwappedAsset && exchangeRate < minExchangeRate) {
         setSwapRevertModalTx(tx.id);
-        setSwapRevertModalExchangeRate(exchangeRate!.toFixed(8));
+        setSwapRevertModalExchangeRate(exchangeRate.toFixed(8));
         setShowSwapRevertModal(true);
         updateTx({ ...tx, awaiting: "eth-init" });
         return;
@@ -283,7 +287,7 @@ export function useTransactionLifecycle(
       let newMinExchangeRate = params.contractCalls[0].contractParams[0].value;
       if (approveSwappedAsset === Asset.WBTC) {
         const rateMinusOne =
-          RenJS.utils.value(exchangeRate!, Asset.BTC).sats().toNumber() - 1;
+          RenJS.utils.value(exchangeRate, Asset.BTC).sats().toNumber() - 1;
         newMinExchangeRate = rateMinusOne.toFixed(0);
       }
 
@@ -307,11 +311,14 @@ export function useTransactionLifecycle(
             from: localWeb3Address,
           })
           .on("transactionHash", (hash: string) => {
-            updateTx({
-              ...tx,
-              awaiting: "eth-settle",
-              destTxHash: hash,
-              error: false,
+            addTxEvent({
+              tx: {
+                ...tx,
+                awaiting: "eth-settle",
+                destTxHash: hash,
+                error: false,
+              },
+              type: TransactionEventTypes.claimed,
             });
           });
       } catch (e) {
@@ -320,6 +327,7 @@ export function useTransactionLifecycle(
       }
     },
     [
+      addTxEvent,
       convertAdapterAddress,
       getFinalDepositExchangeRate,
       localWeb3,
@@ -356,19 +364,23 @@ export function useTransactionLifecycle(
           amount,
           minSwapProceeds
         ).on("transactionHash", (hash: string) => {
+          const newTx = {
+            ...tx,
+            awaiting: "eth-settle",
+            sourceTxHash: hash,
+            error: false,
+          };
           addTxEvent({
-            type: TransactionEventTypes.created,
-            tx: {
-              ...tx,
-              awaiting: "eth-settle",
-              sourceTxHash: hash,
-              error: false,
-            },
+            type: TransactionEventTypes.detected,
+            tx: newTx,
           });
         });
       } catch (e) {
         console.error("eth burn error", e);
-        updateTx({ ...tx, error: true });
+        addTxEvent({
+          tx: { ...tx, error: true },
+          type: TransactionEventTypes.error,
+        });
         return;
       }
     },
@@ -405,7 +417,7 @@ export function useTransactionLifecycle(
         try {
           addTxEvent({ tx, type: TransactionEventTypes.restored });
         } catch (err) {
-          console.log(err);
+          console.error(err);
         }
       }
       return null;
@@ -429,28 +441,29 @@ export function useTransactionLifecycle(
     [addTxEvent, addTx]
   );
 
-  // handle tx events
-  useEffect(() => {
-    if (!mintingContext.current) return;
-    if (txEvents.length === 0) return;
-    const handledEvents = [...txEvents];
-    console.log("handling events", handledEvents);
-    setTxEvents([]);
-    while (handledEvents.length > 0) {
-      const event = handledEvents.pop();
-      if (!event) {
-        break;
-      }
-      console.log("handling event", event);
-      const { type, tx } = event;
+  const burnLifecycle = useCallback(
+    (tx: Transaction, type: TransactionEventTypes) => {
+      if (!mintingContext.current) return;
       switch (type) {
         case TransactionEventTypes.restored:
           switch (tx.awaiting) {
-            // determine which event to be handled by translating tx awaiting
-            // Should match the event that put the transaction in that state
-            case "btc-construct":
-              addTxEvent({ tx, type: TransactionEventTypes.created });
-              break;
+          }
+          break;
+        default:
+          updateTx(tx);
+      }
+    },
+    [mintingContext, updateTx]
+  );
+
+  const mintLifecycle = useCallback(
+    (tx: Transaction, type: TransactionEventTypes) => {
+      if (!mintingContext.current) return;
+      switch (type) {
+        case TransactionEventTypes.restored:
+          // determine which event to be handled by translating tx awaiting
+          // Should match the event that put the transaction in that state
+          switch (tx.awaiting) {
             case "btc-init":
               addTxEvent({ tx, type: TransactionEventTypes.initialized });
               break;
@@ -463,10 +476,17 @@ export function useTransactionLifecycle(
               break;
             case "ren-settle":
               if (!tx.sourceTxHash) {
+                // We don't have the transaction hash so wait for deposits
                 addTxEvent({ tx, type: TransactionEventTypes.initialized });
               } else {
+                // We just need to wait for renvm's response
                 addTxEvent({ tx, type: TransactionEventTypes.detected });
               }
+              break;
+            case "eth-init":
+              // Do we want to do this? If the user has multiple un-submitted txs
+              // they may recieve multiple prompts & the prompts may override eachother
+              // addTxEvent({ tx, type: TransactionEventTypes.accepted });
               break;
             case "eth-settle":
               addTxEvent({ tx, type: TransactionEventTypes.confirmed });
@@ -474,21 +494,13 @@ export function useTransactionLifecycle(
           }
           break;
         case TransactionEventTypes.created:
-          console.log("handling created");
-          // we need to construct the mint parameters
-          if (tx.sourceAsset === Asset.BTC) {
-            initializeMinting(tx, mintingContext.current, addTxEvent);
-            break;
-          }
-          if (tx.sourceNetwork === "ethereum") {
-            // return initializeBurning(tx);
-          }
+          initializeMinting(tx, mintingContext.current, addTxEvent);
           break;
 
         case TransactionEventTypes.initialized:
           updateTx(tx);
           // also start waiting for deposits
-          waitForDeposit(tx, mintingContext, addTxEvent);
+          waitForDeposit(tx, mintingContext.current, addTxEvent);
           break;
 
         case TransactionEventTypes.deposited:
@@ -525,20 +537,45 @@ export function useTransactionLifecycle(
           // so that lightnodes are aware of tx and approval is immediate
           submitToRenVM(tx, mintingContext.current, addTxEvent);
           break;
+        case TransactionEventTypes.accepted:
+          updateTx(tx);
+          // Automatically submit if exchange rate is above minimum
+          completeConvertToEthereum(tx);
+          break;
         default:
           updateTx(tx);
       }
+    },
+    [
+      addTxEvent,
+      getTx,
+      updateTx,
+      mintingContext,
+      setGatewayModalTx,
+      completeConvertToEthereum,
+      setShowGatewayModal,
+    ]
+  );
+
+  // handle tx events
+  useEffect(() => {
+    if (txEvents.length === 0) return;
+    const handledEvents = [...txEvents];
+    setTxEvents([]);
+    while (handledEvents.length > 0) {
+      const event = handledEvents.pop();
+      if (!event) {
+        break;
+      }
+      const { type, tx } = event;
+      if (tx.sourceNetwork === "bitcoin") {
+        mintLifecycle(tx, type);
+      }
+      if (tx.sourceNetwork === "ethereum") {
+        burnLifecycle(tx, type);
+      }
     }
-  }, [
-    addTxEvent,
-    mintingContext,
-    setGatewayModalTx,
-    setShowGatewayModal,
-    txEvents,
-    addTx,
-    getTx,
-    updateTx,
-  ]);
+  }, [burnLifecycle, mintLifecycle, txEvents]);
 
   return {
     completeConvertToEthereum,
@@ -621,7 +658,6 @@ const initializeMinting = async (
   context: MintingContext,
   dispatch: TxDispatch
 ) => {
-  console.log("init mint parameters");
   const deposit = renLockAndMint(tx, context);
   try {
     const renBtcAddress = await deposit.gatewayAddress();
@@ -653,11 +689,9 @@ const initializeMinting = async (
 // then to wait for number of confirmations to finalize transaction
 const waitForDeposit = async (
   tx: Transaction,
-  context: React.MutableRefObject<MintingContext | undefined>,
+  context: MintingContext,
   dispatch: TxDispatch
 ) => {
-  const currentContext = context.current;
-  if (!currentContext) return;
   console.log("Waiting for Deposit");
 
   let source: UTXOIndex | undefined = undefined;
@@ -680,11 +714,10 @@ const waitForDeposit = async (
   const targetConfs = getTargetConfs(tx, "bitcoin");
 
   return new Promise<Transaction>(async (resolve, reject) => {
-    const deposit = renLockAndMint(tx, currentContext);
+    const deposit = renLockAndMint(tx, context);
     return deposit
       .wait(targetConfs, source)
       .on("deposit", async (dep) => {
-        console.log("deposited", dep);
         const newTx: Transaction = {
           ...tx,
           btcConfirmations: dep.utxo.confirmations ?? 0,
@@ -708,7 +741,6 @@ const submitToRenVM = async (
   context: MintingContext,
   dispatch: TxDispatch
 ) => {
-  console.log("Getting renVM response");
   // Should always have these if waiting for a response
   if (!tx.sourceTxHash || String(tx.sourceTxVOut) === "undefined") {
     console.error("tried to submit without sourcetxhash");
@@ -725,7 +757,6 @@ const submitToRenVM = async (
       vOut: tx.sourceTxVOut as number,
     })
   ).submit();
-  console.log("submitted to renvm");
 
   const userBtcTxAmount = Number(
     (renVMResponse.in.utxo.amount / 10 ** 8).toFixed(8)
