@@ -31,7 +31,7 @@ const useStore = (database: Database<Transaction> | undefined) => {
   const [fsUser, setFsUser] = useState(
     null as {
       uid: string;
-    } | null,
+    } | null
   );
 
   const [fsSignature, setFsSignature] = useState(null as string | null);
@@ -42,7 +42,7 @@ const useStore = (database: Database<Transaction> | undefined) => {
   // modals
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositModalTx, setDepositModalTx] = useState(
-    null as Transaction | null,
+    null as Transaction | null
   );
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelModalTx, setCancelModalTx] = useState(null as string | null);
@@ -50,7 +50,7 @@ const useStore = (database: Database<Transaction> | undefined) => {
   const [gatewayModalTx, setGatewayModalTx] = useState(null as string | null);
   const [showSwapRevertModal, setShowSwapRevertModal] = useState(false);
   const [swapRevertModalTx, setSwapRevertModalTx] = useState(
-    null as string | null,
+    null as string | null
   );
   const [
     swapRevertModalExchangeRate,
@@ -60,7 +60,7 @@ const useStore = (database: Database<Transaction> | undefined) => {
 
   // conversions
   const [convertAdapterAddress, setConvertAdapterAddress] = useState(
-    ADAPTER_TEST,
+    ADAPTER_TEST
   );
   const [
     convertAdapterWbtcAllowance,
@@ -71,7 +71,7 @@ const useStore = (database: Database<Transaction> | undefined) => {
     setConvertAdapterWbtcAllowanceRequesting,
   ] = useState(false);
   const [convertTransactions, setConvertTransactions] = useState(
-    List<Transaction>(),
+    List<Transaction>()
   );
   const [
     convertPendingConvertToEthereum,
@@ -82,12 +82,12 @@ const useStore = (database: Database<Transaction> | undefined) => {
   const [convertDestination, setConvertDestination] = useState("");
   const [convertDestinationValid, setConvertDestinationValid] = useState(false);
   const [convertExchangeRate, setConvertExchangeRate] = useState(
-    "" as "" | number,
+    "" as "" | number
   );
   const [convertNetworkFee, setConvertNetworkFee] = useState("" as "" | number);
   const [convertRenVMFee, setConvertRenVMFee] = useState("" as "" | number);
   const [convertConversionTotal, setConvertConversionTotal] = useState(
-    "" as string | number,
+    "" as string | number
   );
   const [convertMaxSlippage, setConvertMaxSlippage] = useState(0.01);
 

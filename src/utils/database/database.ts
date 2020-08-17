@@ -2,7 +2,7 @@ export interface Database<Transaction extends { id: string }> {
   addTx: (
     tx: Transaction,
     localWeb3Address: string,
-    fsSignature: string | null,
+    fsSignature: string | null
   ) => Promise<void>;
 
   updateTx: (tx: Transaction) => Promise<void>;
@@ -13,6 +13,6 @@ export interface Database<Transaction extends { id: string }> {
 
   getUser: (
     address: string,
-    signature: string,
+    signature: string
   ) => Promise<{ uid: string } | null>;
 }

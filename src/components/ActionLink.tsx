@@ -35,7 +35,7 @@ export const ActionLink: React.FC<Props> = ({
       className={classNames(
         classes.link,
         className,
-        disabled ? classes.linkDisabled : "",
+        disabled ? classes.linkDisabled : ""
       )}
       onClick={disabled ? disabledOnClick : onClick}
       {...restOfProps}

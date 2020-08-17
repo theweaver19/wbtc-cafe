@@ -27,11 +27,11 @@ export class FireBase<Transaction extends { id: string }>
   public addTx = async (
     tx: Transaction,
     localWeb3Address: string,
-    fsSignature: string | null,
+    fsSignature: string | null
   ) => {
     // add timestamps
     const timestamp = firebase.firestore.Timestamp.fromDate(
-      new Date(Date.now()),
+      new Date(Date.now())
     );
 
     await this.db
@@ -49,7 +49,7 @@ export class FireBase<Transaction extends { id: string }>
 
   public updateTx = async (tx: Transaction) => {
     const timestamp = firebase.firestore.Timestamp.fromDate(
-      new Date(Date.now()),
+      new Date(Date.now())
     );
     await this.db
       .collection("transactions")
