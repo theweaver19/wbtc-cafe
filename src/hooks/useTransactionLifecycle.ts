@@ -179,7 +179,7 @@ export function useTransactionLifecycle(
       }
 
       // After enough confs, start watching RenVM
-      if (latestTx.sourceTxConfs ?? 0 >= targetConfs) {
+      if (latestTx.sourceTxConfs ?? 0 > targetConfs) {
         if (latestTx.awaiting === "eth-settle") {
           updateTx({ ...latestTx, awaiting: "ren-settle" });
         }
@@ -486,13 +486,20 @@ export function useTransactionLifecycle(
           // Because deposit listener is long lived
           // tx in listener will be stale, so we should re-fetch
           const latestTx = getTx(tx.id) ?? tx;
+          let btcConfirmations = tx.btcConfirmations ?? 0;
+          // Sometimes confirmations come with large negative numbers,
+          // which makes no sense, so reset to 0
+          if (btcConfirmations < 0) {
+            btcConfirmations = 0;
+          }
           const newTx = {
             ...latestTx,
-            btcConfirmations: tx.btcConfirmations ?? 0,
+            btcConfirmations,
             sourceTxHash: tx.sourceTxHash,
             sourceTxVOut: tx.sourceTxVOut,
           };
 
+          // First time a deposit has been detected
           if (newTx.awaiting === "btc-init") {
             addTxEvent({ tx: newTx, type: TransactionEventType.DETECTED });
           }
@@ -500,7 +507,7 @@ export function useTransactionLifecycle(
           const targetConfs = getTargetConfs(tx, "bitcoin");
 
           let awaiting = "btc-settle";
-          if (tx.btcConfirmations ?? 0 >= targetConfs) {
+          if (btcConfirmations ?? 0 > targetConfs) {
             awaiting = tx.renSignature ? "eth-init" : "ren-settle";
           }
           newTx.awaiting = awaiting;
