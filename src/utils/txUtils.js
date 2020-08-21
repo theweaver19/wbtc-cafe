@@ -389,25 +389,26 @@ export const completeConvertToEthereum = async function (
     );
     try {
       let gasParams = {};
-      const contractCall = adapterContract.methods
-            .mintThenSwap(
-              params.contractCalls[0].contractParams[0].value,
-              newMinExchangeRate,
-              params.contractCalls[0].contractParams[1].value,
-              params.contractCalls[0].contractParams[2].value,
-              utxoAmountSats,
-              renResponse.autogen.nhash,
-              renSignature
-            );
+      const contractCall = adapterContract.methods.mintThenSwap(
+        params.contractCalls[0].contractParams[0].value,
+        newMinExchangeRate,
+        params.contractCalls[0].contractParams[1].value,
+        params.contractCalls[0].contractParams[2].value,
+        utxoAmountSats,
+        renResponse.autogen.nhash,
+        renSignature
+      );
       if (localWeb3.currentProvider.isWalletConnect) {
         gasParams = {
-          gas: await contractCall.estimateGas({ from: localWeb3Address }) + 1000,
+          gas:
+            (await contractCall.estimateGas({ from: localWeb3Address })) + 1000,
           gasPrice: await localWeb3.eth.getGasPrice(),
-          nonce: await localWeb3.eth.getTransactionCount(localWeb3Address)
+          nonce: await localWeb3.eth.getTransactionCount(localWeb3Address),
         };
-        console.log('setting gas params', gasParams)
+        console.log("setting gas params", gasParams);
       }
-      await contractCall.send({
+      await contractCall
+        .send({
           from: localWeb3Address,
           ...gasParams,
         })
@@ -707,25 +708,24 @@ export const initConvertFromEthereum = async function (tx) {
   }
 
   try {
-
     let gasParams = {};
-    const contractCall = adapter.methods
-          .swapThenBurn(
-            RenJS.utils.BTC.addressToHex(destAddress), //_to
-            RenJS.utils.value(amount, "btc").sats().toNumber().toFixed(0), // _amount in Satoshis
-            RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0)
-          );
+    const contractCall = adapter.methods.swapThenBurn(
+      RenJS.utils.BTC.addressToHex(destAddress), //_to
+      RenJS.utils.value(amount, "btc").sats().toNumber().toFixed(0), // _amount in Satoshis
+      RenJS.utils.value(minSwapProceeds, "btc").sats().toNumber().toFixed(0)
+    );
     if (web3.currentProvider.isWalletConnect) {
       gasParams = {
-        gas: await contractCall.estimateGas({ from }) + 1000,
+        gas: (await contractCall.estimateGas({ from })) + 1000,
         gasPrice: await web3.eth.getGasPrice(),
-        nonce: await web3.eth.getTransactionCount(from)
+        nonce: await web3.eth.getTransactionCount(from),
       };
     }
-    await contractCall.send({
-      from,
-      ...gasParams,
-    })
+    await contractCall
+      .send({
+        from,
+        ...gasParams,
+      })
       .on("transactionHash", (hash) => {
         // console.log(hash)
         updateTx(

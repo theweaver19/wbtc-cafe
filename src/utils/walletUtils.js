@@ -162,21 +162,24 @@ export const initLocalWeb3 = async function () {
   const db = store.get("db");
   const fsUser = store.get("fsUser");
   const disclosureAccepted = store.get("disclosureAccepted");
-  const walletConnectEnabled = (store.get('queryParams') ?? {}).walletConnect ?? false;
+  const walletConnectEnabled =
+    (store.get("queryParams") ?? {}).walletConnect ?? false;
 
-  const providerOptions = walletConnectEnabled ? {
-    walletconnect: {
-      package: WalletConnectProvider, // required
-      display: {
-        name: "WalletConnect",
-        description: "BETA - not all WalletConnect wallets are supported, use with caution"
-      },
-      options: {
-        infuraId: "6de9092ee3284217bb744cc1a6daab94", // required
-      },
-    },
-  } : {
-  };
+  const providerOptions = walletConnectEnabled
+    ? {
+        walletconnect: {
+          package: WalletConnectProvider, // required
+          display: {
+            name: "WalletConnect",
+            description:
+              "BETA - not all WalletConnect wallets are supported, use with caution",
+          },
+          options: {
+            infuraId: "6de9092ee3284217bb744cc1a6daab94", // required
+          },
+        },
+      }
+    : {};
 
   const web3Modal = new Web3Modal({
     network: selectedNetwork === "testnet" ? "kovan" : "mainnet", // optional
