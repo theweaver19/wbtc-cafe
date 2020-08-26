@@ -355,12 +355,13 @@ export const completeConvertToEthereum = async function (
     Object.assign(transaction, { sourceAmount: userBtcTxAmount })
   );
 
-  const adapterAddress = transaction.adapterAddress || store.get("convert.adapterAddress");
+  const adapterAddress =
+    transaction.adapterAddress || store.get("convert.adapterAddress");
 
   const { id, params, renSignature, minExchangeRate } = tx;
   const adapterContract = new localWeb3.eth.Contract(
     adapterABI,
-    adapterAddress,
+    adapterAddress
   );
 
   // if swap will revert to renBTC, let the user know before proceeding
@@ -403,7 +404,9 @@ export const completeConvertToEthereum = async function (
       if (localWeb3.currentProvider.isWalletConnect) {
         gasParams = {
           gas:
-            (await contractCall.estimateGas({ from: localWeb3Address })) + 1000,
+            (await contractCall.estimateGas({
+              from: localWeb3Address,
+            })) + 1000,
           gasPrice: await localWeb3.eth.getGasPrice(),
           nonce: await localWeb3.eth.getTransactionCount(localWeb3Address),
         };
@@ -570,9 +573,9 @@ export const initConvertToEthereum = async function (tx) {
           targetConfs,
           sourceTxHash && sourceTxVOut
             ? {
-              txHash: sourceTxHash,
-              vOut: sourceTxVOut,
-            }
+                txHash: sourceTxHash,
+                vOut: sourceTxVOut,
+              }
             : null
         )
         .on("deposit", (dep) => {
