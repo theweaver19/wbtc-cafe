@@ -159,7 +159,11 @@ export function useTransactionLifecycle(
       if (!web3 || !sdk) return;
       const targetConfs = tx.sourceNetworkVersion === "testnet" ? 13 : 30;
       // Get latest tx state every iteration
-      const latestTx = getTx(tx.id) || tx;
+      let latestTx = getTx(tx.id) || tx;
+      // tx update might not be persisted yet
+      if (!latestTx.sourceTxHash) {
+        latestTx = tx;
+      }
       if (!latestTx.sourceTxHash) {
         console.error("Missing ethereum tx!");
         addTxEvent({
@@ -171,7 +175,7 @@ export function useTransactionLifecycle(
 
       // Get transaction details
       const txDetails = await web3.eth.getTransaction(latestTx.sourceTxHash);
-      const confs = getEthConfs(web3.eth, txDetails);
+      const confs = await getEthConfs(web3.eth, txDetails);
 
       // Update confs
       if (confs !== latestTx.sourceTxConfs) {
@@ -216,6 +220,7 @@ export function useTransactionLifecycle(
       } else if (
         (tx.awaiting === "eth-settle" || tx.awaiting === "ren-settle") &&
         tx.sourceNetwork === "ethereum" &&
+        tx.sourceTxHash &&
         !tx.error
       ) {
         checkBurningTx(tx);
@@ -350,7 +355,7 @@ export function useTransactionLifecycle(
           ? await getGasParams(localWeb3, contractCall, localWeb3Address)
           : {};
 
-        contractCall
+        await contractCall
           .send({ from: localWeb3Address, ...gasParams })
           .on("transactionHash", (hash: string) => {
             const newTx = {
