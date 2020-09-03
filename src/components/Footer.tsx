@@ -14,8 +14,6 @@ import {
 } from "../utils/environmentVariables";
 import { ExternalLink } from "./ExternalLink";
 
-require("dotenv").config();
-
 const useStyles = makeStyles((theme) => ({
   footerContainer: {
     paddingTop: theme.spacing(3),

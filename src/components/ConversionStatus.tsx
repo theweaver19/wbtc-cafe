@@ -20,11 +20,11 @@ export const ConversionStatus: React.FC<Props> = ({ tx }) => {
           ) : null}
           {tx.awaiting === "btc-settle" ? (
             <span>
-              {`BTC transaction confirming (${
-                tx.btcConfirmations === undefined || tx.btcConfirmations < 0
-                  ? "..."
-                  : tx.btcConfirmations
-              }/${targetBtcConfs} complete)`}
+              BTC transaction confirming (
+              {tx.btcConfirmations === undefined || tx.btcConfirmations < 0
+                ? "..."
+                : tx.btcConfirmations}
+              /{targetBtcConfs} complete)
             </span>
           ) : null}
           {tx.awaiting === "ren-settle" ? (

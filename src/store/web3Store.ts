@@ -6,6 +6,7 @@ import Web3Modal from "web3modal";
 import { createContainer } from "unstated-next";
 import { useCallback } from "react";
 import { List } from "immutable";
+import * as queryString from "query-string";
 
 import { useTaskSchedule } from "../hooks/useTaskScheduler";
 import { Transaction } from "../types/transaction";
@@ -170,19 +171,30 @@ function useWeb3() {
   }, []);
 
   const initLocalWeb3 = useCallback(async () => {
-    const providerOptions = {
-      walletconnect: {
-        package: WalletConnectProvider, // required
-        options: {
-          infuraId: INFURA_KEY, // required
-        },
-      },
-    };
+    const queryParams = queryString.parse(window.location.search);
+    const walletConnectEnabled = (queryParams ?? {}).walletConnect ?? false;
+
+    // seems like there's a typing issue with Web3Modal
+    const providerOptions: any = walletConnectEnabled
+      ? {
+          walletconnect: {
+            package: WalletConnectProvider, // required
+            display: {
+              name: "WalletConnect",
+              description:
+                "BETA - not all WalletConnect wallets are supported, use with caution",
+            },
+            options: {
+              infuraId: INFURA_KEY,
+            },
+          },
+        }
+      : {};
 
     const web3Modal = new Web3Modal({
       network: selectedNetwork === "testnet" ? "kovan" : "mainnet", // optional
-      cacheProvider: false, // optional
-      providerOptions, // required
+      cacheProvider: false,
+      providerOptions,
     });
 
     const provider = await web3Modal.connect();

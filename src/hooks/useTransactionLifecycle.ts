@@ -179,7 +179,7 @@ export function useTransactionLifecycle(
       }
 
       // After enough confs, start watching RenVM
-      if (latestTx.sourceTxConfs ?? 0 > targetConfs) {
+      if ((latestTx.sourceTxConfs ?? 0) >= targetConfs) {
         if (latestTx.awaiting === "eth-settle") {
           updateTx({ ...latestTx, awaiting: "ren-settle" });
         }
@@ -273,18 +273,24 @@ export function useTransactionLifecycle(
       );
 
       try {
-        await adapterContract.methods
-          .mintThenSwap(
-            params.contractCalls[0].contractParams[0].value,
-            newMinExchangeRate,
-            params.contractCalls[0].contractParams[1].value,
-            params.contractCalls[0].contractParams[2].value,
-            utxoAmountSats,
-            renResponse.autogen.nhash,
-            renSignature
-          )
+        const contractCall = adapterContract.methods.mintThenSwap(
+          params.contractCalls[0].contractParams[0].value,
+          newMinExchangeRate,
+          params.contractCalls[0].contractParams[1].value,
+          params.contractCalls[0].contractParams[2].value,
+          utxoAmountSats,
+          renResponse.autogen.nhash,
+          renSignature
+        );
+
+        const gasParams = (localWeb3.currentProvider as any)?.isWalletConnect
+          ? await getGasParams(localWeb3, contractCall, localWeb3Address)
+          : {};
+
+        await contractCall
           .send({
             from: localWeb3Address,
+            ...gasParams,
           })
           .on("transactionHash", (hash: string) => {
             addTxEvent({
@@ -333,24 +339,31 @@ export function useTransactionLifecycle(
       }
 
       try {
-        await swapThenBurn(
+        const contractCall = swapThenBurn(
           adapter,
           destAddress,
-          localWeb3Address,
           amount,
           minSwapProceeds
-        ).on("transactionHash", (hash: string) => {
-          const newTx = {
-            ...tx,
-            awaiting: "eth-settle",
-            sourceTxHash: hash,
-            error: false,
-          };
-          addTxEvent({
-            type: TransactionEventType.DETECTED,
-            tx: newTx,
+        );
+
+        const gasParams = (localWeb3.currentProvider as any)?.isWalletConnect
+          ? await getGasParams(localWeb3, contractCall, localWeb3Address)
+          : {};
+
+        contractCall
+          .send({ from: localWeb3Address, ...gasParams })
+          .on("transactionHash", (hash: string) => {
+            const newTx = {
+              ...tx,
+              awaiting: "eth-settle",
+              sourceTxHash: hash,
+              error: false,
+            };
+            addTxEvent({
+              type: TransactionEventType.DETECTED,
+              tx: newTx,
+            });
           });
-        });
       } catch (e) {
         console.error("eth burn error", e);
         addTxEvent({
@@ -507,7 +520,7 @@ export function useTransactionLifecycle(
           const targetConfs = getTargetConfs(tx, "bitcoin");
 
           let awaiting = "btc-settle";
-          if (btcConfirmations ?? 0 > targetConfs) {
+          if ((btcConfirmations ?? 0) >= targetConfs) {
             awaiting = tx.renSignature ? "eth-init" : "ren-settle";
           }
           newTx.awaiting = awaiting;
@@ -648,17 +661,14 @@ const getTargetConfs = (
 const swapThenBurn = (
   adapter: any,
   to: string,
-  from: string,
   amount: string | number,
   minSwapProceeds: number
 ) =>
-  adapter.methods
-    .swapThenBurn(
-      RenJS.utils.BTC.addressToHex(to), //_to
-      RenJS.utils.value(amount, Asset.BTC).sats().toNumber().toFixed(0), // _amount in Satoshis
-      RenJS.utils.value(minSwapProceeds, Asset.BTC).sats().toNumber().toFixed(0)
-    )
-    .send({ from });
+  adapter.methods.swapThenBurn(
+    RenJS.utils.BTC.addressToHex(to), //_to
+    RenJS.utils.value(amount, Asset.BTC).sats().toNumber().toFixed(0), // _amount in Satoshis
+    RenJS.utils.value(minSwapProceeds, Asset.BTC).sats().toNumber().toFixed(0)
+  );
 
 const getEthConfs = async (
   eth: Web3["eth"],
@@ -668,6 +678,14 @@ const getEthConfs = async (
   return txDetails.blockNumber === null || txDetails.blockNumber > currentBlock
     ? 0
     : currentBlock - txDetails.blockNumber;
+};
+
+const getGasParams = async (web3: Web3, call: any, from: string) => {
+  return {
+    gas: (await call.estimateGas({ from })) + 1000,
+    gasPrice: await web3.eth.getGasPrice(),
+    nonce: await web3.eth.getTransactionCount(from),
+  };
 };
 
 // Construct a mint request & set gateway address
