@@ -15,7 +15,7 @@ import { FeeStore } from "./store/feeStore";
 
 const database = newDefaultDatabase<Transaction>();
 
-const render = (Component: React.FC<{}>) => {
+const render = (Component: React.FC<any>) => {
   ReactDOM.render(
     <Store.Provider initialState={database}>
       <FeeStore.Provider>
