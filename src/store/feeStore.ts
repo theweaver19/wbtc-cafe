@@ -49,7 +49,7 @@ export function useFeesStore() {
 
   const gatherFeeData = useCallback(
     async (directAmount?: number) => {
-      const amount = convertAmount || directAmount;
+      const amount = directAmount || convertAmount;
       const selectedDirection = convertSelectedDirection;
       const fixedFeeKey = selectedDirection ? "release" : "lock";
       const dynamicFeeKey = selectedDirection ? "burn" : "mint";
