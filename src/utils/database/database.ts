@@ -13,6 +13,6 @@ export interface Database<Transaction extends { id: string }> {
 
   getUser: (
     address: string,
-    signature: string
+    signatures: { rawSignature: string; signature: string }
   ) => Promise<{ uid: string } | null>;
 }
