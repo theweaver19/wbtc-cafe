@@ -594,10 +594,11 @@ const renLockAndMint = (tx: Transaction, context: MintingContext) => {
     params,
     destAddress,
     minExchangeRate,
+    adapterAddress,
     maxSlippage,
   } = tx;
 
-  const { adapterAddress, localWeb3Address, sdk } = context;
+  const { localWeb3Address, sdk } = context;
 
   let contractFn = "";
   let contractParams: EthArgs = [];
