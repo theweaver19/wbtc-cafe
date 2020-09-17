@@ -274,7 +274,7 @@ export function useTransactionLifecycle(
 
       const adapterContract = new localWeb3.eth.Contract(
         adapterABI as AbiItem[],
-        convertAdapterAddress
+        tx.adapterAddress
       );
 
       try {
@@ -329,11 +329,11 @@ export function useTransactionLifecycle(
   const initConvertFromEthereum = useCallback(
     async function (tx: Transaction) {
       if (!localWeb3) return;
-      const { amount, destAddress, minSwapProceeds } = tx;
+      const { amount, adapterAddress, destAddress, minSwapProceeds } = tx;
 
       const adapter = new localWeb3.eth.Contract(
         adapterABI as AbiItem[],
-        convertAdapterAddress
+        adapterAddress
       );
 
       if (!txExists(tx)) {
