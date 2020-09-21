@@ -274,7 +274,7 @@ export function useTransactionLifecycle(
 
       const adapterContract = new localWeb3.eth.Contract(
         adapterABI as AbiItem[],
-        convertAdapterAddress
+        tx.adapterAddress
       );
 
       try {
@@ -329,11 +329,11 @@ export function useTransactionLifecycle(
   const initConvertFromEthereum = useCallback(
     async function (tx: Transaction) {
       if (!localWeb3) return;
-      const { amount, destAddress, minSwapProceeds } = tx;
+      const { amount, adapterAddress, destAddress, minSwapProceeds } = tx;
 
       const adapter = new localWeb3.eth.Contract(
         adapterABI as AbiItem[],
-        convertAdapterAddress
+        adapterAddress
       );
 
       if (!txExists(tx)) {
@@ -594,10 +594,11 @@ const renLockAndMint = (tx: Transaction, context: MintingContext) => {
     params,
     destAddress,
     minExchangeRate,
+    adapterAddress,
     maxSlippage,
   } = tx;
 
-  const { adapterAddress, localWeb3Address, sdk } = context;
+  const { localWeb3Address, sdk } = context;
 
   let contractFn = "";
   let contractParams: EthArgs = [];
