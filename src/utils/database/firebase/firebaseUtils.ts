@@ -2,11 +2,12 @@ import firebase from "firebase/app";
 
 require("firebase/auth");
 require("firebase/firestore");
+require("firebase/functions");
 
 // Creates a user profile that is used for authenticating provision
 // to transaction records
 // FIXME: don't think this approach really provides value as a user can only ever have one signature
-const createProfileData = async (
+const createOrUpdateProfileData = async (
   db: firebase.firestore.Firestore,
   signature: string,
   uid: string
@@ -37,23 +38,51 @@ const createProfileData = async (
 // otherwise attempt to register
 const signInOrRegister = async (
   id: string,
-  signature: string
+  signatures: { rawSignature: string; signature: string }
 ): Promise<firebase.User | null> => {
+  let token: string | null = null;
   try {
-    const { user } = await firebase
-      .auth()
-      .signInWithEmailAndPassword(id, signature);
-    if (user) return user;
+    const res = await firebase.functions().httpsCallable("authenticate")({
+      signed: signatures.rawSignature,
+      account: id.split("@")[0],
+    });
+
+    token = res.data.token;
+    if (!token) {
+      throw new Error("missing token");
+    }
+  } catch (e) {
+    console.log("No token auth, falling back to email / sig");
+  }
+
+  let user;
+  try {
+    user = token
+      ? (await firebase.auth().signInWithCustomToken(token)).user
+      : (
+          await firebase
+            .auth()
+            .signInWithEmailAndPassword(id, signatures.signature)
+        ).user;
   } catch (e) {
     // FIXME: we should probably handle wrong signatures here, as it would imply
     // some sort of corruption or attack.
     console.error(e);
+    if (e.message.includes("There is no user record")) {
+      user = (
+        await firebase
+          .auth()
+          .createUserWithEmailAndPassword(id, signatures.signature)
+      )?.user;
+    }
   }
-  const { user } = await firebase
-    .auth()
-    .createUserWithEmailAndPassword(id, signature);
   if (!user) return null;
-  await createProfileData(firebase.firestore(), signature, user.uid);
+  // always create / update profile data
+  await createOrUpdateProfileData(
+    firebase.firestore(),
+    signatures.signature,
+    user.uid
+  );
   return user;
 };
 
@@ -62,13 +91,17 @@ const signInOrRegister = async (
 export const getFirebaseUser = async (
   address: string,
   host: string,
-  signature: string
+  signatures: { rawSignature: string; signature: string }
 ) => {
   const id = `${address.toLowerCase()}@${host}`;
   const { currentUser } = firebase.auth();
 
-  if (!currentUser || currentUser.email !== id) {
-    return signInOrRegister(id, signature);
+  if (
+    !currentUser ||
+    (currentUser.email && currentUser.email !== id) ||
+    (!currentUser.email && currentUser.uid !== address)
+  ) {
+    return signInOrRegister(id, signatures);
   } else {
     return currentUser;
   }

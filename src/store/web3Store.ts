@@ -150,24 +150,30 @@ function useWeb3() {
   );
 
   const getSignatures = useCallback(async (address: string, web3: Web3) => {
-    const localSigMap = localStorage.getItem("sigMap");
+    const localSigMap = JSON.parse(localStorage.getItem("sigMap") || "{}");
+    const localRawSigMap = JSON.parse(
+      localStorage.getItem("rawSigMap") || "{}"
+    );
     const addressLowerCase = address.toLowerCase();
-    const localSigMapData = localSigMap ? JSON.parse(localSigMap) : {};
-    let signature: string | null;
-    if (localSigMapData[addressLowerCase]) {
-      signature = localSigMapData[addressLowerCase];
-    } else {
+
+    let signature: string | null = localSigMap[addressLowerCase];
+    let rawSignature: string | null = localRawSigMap[addressLowerCase];
+
+    if (!signature || !rawSignature) {
       // get unique wallet signature for database backup
-      const sig = await web3.eth.personal.sign(
+      rawSignature = await web3.eth.personal.sign(
         web3.utils.utf8ToHex("Signing in to WBTC Cafe"),
         addressLowerCase,
         ""
       );
-      signature = web3.utils.sha3(sig);
-      localSigMapData[addressLowerCase] = signature;
-      localStorage.setItem("sigMap", JSON.stringify(localSigMapData));
+      localRawSigMap[addressLowerCase] = rawSignature;
+      localStorage.setItem("rawSigMap", JSON.stringify(localRawSigMap));
+
+      signature = web3.utils.sha3(rawSignature);
+      localSigMap[addressLowerCase] = signature;
+      localStorage.setItem("sigMap", JSON.stringify(localSigMap));
     }
-    return signature;
+    return { signature, rawSignature };
   }, []);
 
   const initLocalWeb3 = useCallback(async () => {
@@ -248,7 +254,7 @@ function useWeb3() {
         }
       }
 
-      const signature = await getSignatures(address, web3);
+      const { signature, rawSignature } = await getSignatures(address, web3);
       if (!signature) {
         throw new Error("couldn't sign");
       }
@@ -259,7 +265,9 @@ function useWeb3() {
 
       // auth with firestore
 
-      setFsUser(await db.getUser(addressLowerCase, signature));
+      setFsUser(
+        await db.getUser(addressLowerCase, { signature, rawSignature })
+      );
 
       const fsTransactions = await db.getTxs(signature);
       const fsIds = fsTransactions.map((f) => f.id);

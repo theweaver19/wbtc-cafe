@@ -61,7 +61,10 @@ export class FireBase<Transaction extends { id: string }>
   };
 
   public deleteTx = async (tx: Transaction) => {
-    await this.db.collection("transactions").doc(tx.id).delete();
+    await this.db
+      .collection("transactions")
+      .doc(tx.id)
+      .update({ deleted: true });
   };
 
   public getTxs = async (signature: string): Promise<Transaction[]> => {
@@ -73,7 +76,9 @@ export class FireBase<Transaction extends { id: string }>
     const fsTransactions: Transaction[] = [];
     if (!fsDataSnapshot.empty) {
       fsDataSnapshot.forEach((doc) => {
-        const tx: Transaction = JSON.parse(doc.data().data);
+        const data = doc.data();
+        if (data.deleted) return;
+        const tx: Transaction = JSON.parse(data.data);
         fsTransactions.push(tx);
       });
     }
@@ -81,8 +86,11 @@ export class FireBase<Transaction extends { id: string }>
     return fsTransactions;
   };
 
-  public getUser = async (address: string, signature: string) => {
-    const user = await getFirebaseUser(address, "wbtc.cafe", signature);
+  public getUser = async (
+    address: string,
+    signatures: { signature: string; rawSignature: string }
+  ) => {
+    const user = await getFirebaseUser(address, "wbtc.cafe", signatures);
     return (
       user && {
         uid: user.uid,
