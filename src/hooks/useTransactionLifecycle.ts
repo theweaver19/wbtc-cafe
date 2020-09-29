@@ -1,5 +1,6 @@
 import RenJS from "@renproject/ren";
 import { useCallback, useEffect, useState, useRef } from "react";
+import * as Sentry from "@sentry/react";
 import { EthArgs, UTXOIndex } from "@renproject/interfaces";
 import { AbiItem } from "web3-utils";
 import { useInterval } from "../hooks/useInterval";
@@ -134,6 +135,10 @@ export function useTransactionLifecycle(
             receipt.status === false
           ) {
             // addEvent "reverted"
+            Sentry.withScope(function (scope) {
+              scope.setTag("error-hint", "transaction reverted");
+              Sentry.captureException(new Error("No reciept status"));
+            });
             updateTx({ ...tx, error: true, destTxHash: "" });
           } else {
             updateTx({
@@ -258,6 +263,10 @@ export function useTransactionLifecycle(
       }
       updateTx({ ...tx, exchangeRateOnSubmit: exchangeRate });
       if (!approveSwappedAsset && exchangeRate < minExchangeRate) {
+        Sentry.withScope(function (scope) {
+          scope.setTag("error-hint", "exchange rate changed");
+          Sentry.captureMessage("Exchange rate below minimum");
+        });
         setSwapRevertModalTx(tx.id);
         setSwapRevertModalExchangeRate(exchangeRate.toFixed(8));
         setShowSwapRevertModal(true);
@@ -309,13 +318,16 @@ export function useTransactionLifecycle(
             });
           });
       } catch (e) {
+        Sentry.withScope(function (scope) {
+          scope.setTag("error-hint", "error submitting mint");
+          Sentry.captureException(e);
+        });
         console.error(e);
         updateTx({ ...tx, error: true });
       }
     },
     [
       addTxEvent,
-      convertAdapterAddress,
       getFinalDepositExchangeRate,
       localWeb3,
       localWeb3Address,
@@ -371,6 +383,11 @@ export function useTransactionLifecycle(
           });
       } catch (e) {
         console.error("eth burn error", e);
+        Sentry.withScope(function (scope) {
+          scope.setTag("error-hint", "error submitting burn");
+          Sentry.captureException(e);
+        });
+        console.error(e);
         addTxEvent({
           tx: { ...tx, error: true },
           type: TransactionEventType.ERROR,
@@ -378,15 +395,7 @@ export function useTransactionLifecycle(
         return;
       }
     },
-    [
-      updateTx,
-      txExists,
-      addTxEvent,
-      convertAdapterAddress,
-      localWeb3,
-      localWeb3Address,
-      addTx,
-    ]
+    [updateTx, txExists, addTxEvent, localWeb3, localWeb3Address, addTx]
   );
 
   // On start-up
@@ -451,7 +460,7 @@ export function useTransactionLifecycle(
   );
 
   const mintLifecycle = useCallback(
-    (tx: Transaction, type: TransactionEventType) => {
+    async (tx: Transaction, type: TransactionEventType) => {
       if (!mintingContext.current) return;
       switch (type) {
         case TransactionEventType.RESTORED:
@@ -488,13 +497,13 @@ export function useTransactionLifecycle(
           }
           break;
         case TransactionEventType.CREATED:
-          initializeMinting(tx, mintingContext.current, addTxEvent);
+          await initializeMinting(tx, mintingContext.current, addTxEvent);
           break;
 
         case TransactionEventType.INITIALIZED:
           updateTx(tx);
           // also start waiting for deposits
-          waitForDeposit(tx, mintingContext.current, addTxEvent);
+          await waitForDeposit(tx, mintingContext.current, addTxEvent);
           break;
 
         case TransactionEventType.DEPOSITED:
@@ -536,12 +545,12 @@ export function useTransactionLifecycle(
           updateTx(tx);
           // submit to renvm even though tx is not confirmed,
           // so that lightnodes are aware of tx and approval is immediate
-          submitToRenVM(tx, mintingContext.current, addTxEvent);
+          await submitToRenVM(tx, mintingContext.current, addTxEvent);
           break;
         case TransactionEventType.ACCEPTED:
           updateTx(tx);
           // Automatically submit if exchange rate is above minimum
-          completeConvertToEthereum(tx);
+          await completeConvertToEthereum(tx);
           break;
         default:
           updateTx(tx);
@@ -570,7 +579,12 @@ export function useTransactionLifecycle(
       }
       const { type, tx } = event;
       if (tx.sourceNetwork === "bitcoin") {
-        mintLifecycle(tx, type);
+        mintLifecycle(tx, type).catch((e) =>
+          Sentry.withScope(function (scope) {
+            scope.setTag("error-hint", "mint lifecycle error");
+            Sentry.captureException(e);
+          })
+        );
       }
       if (tx.sourceNetwork === "ethereum") {
         burnLifecycle(tx, type);

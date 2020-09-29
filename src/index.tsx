@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { ThemeProvider } from "@material-ui/core";
+import * as Sentry from "@sentry/react";
 
 import { App } from "./App";
 import "./index.css";
@@ -14,6 +15,19 @@ import { newDefaultDatabase } from "./utils/database/defaultDatabase";
 import { FeeStore } from "./store/feeStore";
 
 const database = newDefaultDatabase<Transaction>();
+
+if (process.env.REACT_APP_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.REACT_APP_SENTRY_DSN,
+    environment:
+      process.env.NODE_ENV === "development"
+        ? "dev"
+        : window.location.origin.includes("wbtc.cafe")
+        ? "prod"
+        : "staging",
+    release: process.env.REACT_APP_VERSION,
+  });
+}
 
 const render = (Component: React.FC<any>) => {
   ReactDOM.render(
