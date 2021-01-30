@@ -297,17 +297,21 @@ export const TransferContainer: React.FC = () => {
   const convertAddressValid = convertDestinationValid;
   const canConvertTo =
     Number(amount) > 0.00010001 &&
-    convertAddressValid &&
-    !walletConnectError &&
-    validUser &&
-    !loadingTransactions;
+    convertAddressValid 
+    // &&
+    // !walletConnectError 
+    // &&
+    // validUser 
+    // && !loadingTransactions;
   const canConvertFrom =
     Number(total) > 0.00010001 &&
     Number(amount) <= Number(wbtcBalance) &&
-    convertAddressValid &&
-    !walletConnectError &&
-    validUser &&
-    !loadingTransactions;
+    convertAddressValid 
+    // &&
+    // !walletConnectError 
+    // &&
+    // validUser 
+    // && !loadingTransactions;
 
   const sourceAsset = selectedDirection ? "WBTC" : "BTC";
   const destAsset = selectedDirection ? "BTC" : "WBTC";

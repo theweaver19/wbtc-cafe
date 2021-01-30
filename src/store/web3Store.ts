@@ -138,13 +138,14 @@ function useWeb3() {
   const initDataWeb3 = useCallback(
     async (network: string) => {
       const providedNetworkOrStore = network || selectedNetwork;
-      setDataWeb3(
-        new Web3(
-          `https://${
-            providedNetworkOrStore === "testnet" ? "kovan" : "mainnet"
-          }.infura.io/v3/${INFURA_KEY}`
-        )
-      );
+      setDataWeb3(new Web3(Web3.givenProvider));
+      // setDataWeb3(
+      //   new Web3(
+      //     `https://${
+      //       providedNetworkOrStore === "testnet" ? "kovan" : "mainnet"
+      //     }.infura.io/v3/${INFURA_KEY}`
+      //   )
+      // );
     },
     [selectedNetwork, setDataWeb3]
   );
@@ -179,7 +180,6 @@ function useWeb3() {
   const initLocalWeb3 = useCallback(async () => {
     const queryParams = queryString.parse(window.location.search);
     const walletConnectEnabled = (queryParams ?? {}).walletConnect ?? false;
-
     // seems like there's a typing issue with Web3Modal
     const providerOptions: any = walletConnectEnabled
       ? {
@@ -204,7 +204,7 @@ function useWeb3() {
     });
 
     const provider = await web3Modal.connect();
-    const web3 = new Web3(provider);
+    const web3 = new Web3(Web3.givenProvider);
     const currentProvider = web3.currentProvider;
     if (typeof currentProvider === "string") return;
     if (!currentProvider) return;
